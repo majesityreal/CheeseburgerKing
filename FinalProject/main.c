@@ -9,6 +9,9 @@
 #include "gamebackground.h"
 #include "spritesheet.h"
 
+#include "marioMap.h"
+#include "marioMapCollisionMap.h"
+
 
 
 /*
@@ -110,8 +113,8 @@ void initialize()
 {
     REG_DISPCTL = MODE0 | SPRITE_ENABLE | BG0_ENABLE | BG1_ENABLE;
 
-    REG_BG1CNT = BG_CHARBLOCK(2) | BG_SCREENBLOCK(30) | BG_SIZE_SMALL;
-    REG_BG0CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(26) | BG_SIZE_SMALL | BG_4BPP;
+    REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(30) | BG_SIZE_SMALL;
+    REG_BG0CNT = BG_CHARBLOCK(2) | BG_SCREENBLOCK(26) | BG_SIZE_SMALL | BG_4BPP;
 }
 
 // sets up title screen in MODE 4
@@ -136,7 +139,7 @@ void titleScreen() {
 // sets up the game into mode 0 and all the required setups
 void startGame() {
     REG_DISPCTL = MODE0 | SPRITE_ENABLE | BG1_ENABLE;
-    REG_BG1CNT = BG_CHARBLOCK(2) | BG_SCREENBLOCK(26) | BG_SIZE_SMALL | BG_4BPP;
+    REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(30) | BG_SIZE_SMALL | BG_4BPP;
 
     // sets up the background offset
     REG_BG1VOFF = vOff;
@@ -154,9 +157,15 @@ void startGame() {
 //     DMANow(3, testmapTiles, &CHARBLOCK[2], testmapTilesLen / 2);
 //     DMANow(3, testmapMap, &SCREENBLOCK[26], testmapMapLen / 2);
 
-   DMANow(3, GameBackgroundPal, PALETTE, 16);
-    DMANow(3, GameBackgroundTiles, &CHARBLOCK[2], GameBackgroundTilesLen / 2);
-    DMANow(3, GameBackgroundMap, &SCREENBLOCK[26], GameBackgroundMapLen / 2);
+    // adding temp mario map
+    DMANow(3, marioMapPal, PALETTE, 16);
+    DMANow(3, marioMapTiles, &CHARBLOCK[0], marioMapTilesLen / 2);
+    DMANow(3, marioMapMap, &SCREENBLOCK[30], marioMapMapLen / 2);
+
+    // old aadding maop
+    // DMANow(3, GameBackgroundPal, PALETTE, 16);
+    // DMANow(3, GameBackgroundTiles, &CHARBLOCK[2], GameBackgroundTilesLen / 2);
+    // DMANow(3, GameBackgroundMap, &SCREENBLOCK[26], GameBackgroundMapLen / 2);
 
     // setting up the sprites
     DMANow(3, spritesheetPal, SPRITEPALETTE, spritesheetPalLen / 2);

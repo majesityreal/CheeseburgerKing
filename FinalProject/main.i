@@ -1377,6 +1377,7 @@ void animatePlayer();
 void drawPlayer();
 void drawFont();
 void drawPellets();
+int groundCheck();
 # 5 "main.c" 2
 # 1 "text.h" 1
 
@@ -1421,7 +1422,25 @@ extern const unsigned short spritesheetMap[1024];
 
 extern const unsigned short spritesheetPal[256];
 # 11 "main.c" 2
-# 28 "main.c"
+
+# 1 "marioMap.h" 1
+# 22 "marioMap.h"
+extern const unsigned short marioMapTiles[16384];
+
+
+extern const unsigned short marioMapMap[1024];
+
+
+extern const unsigned short marioMapPal[16];
+# 13 "main.c" 2
+# 1 "marioMapCollisionMap.h" 1
+# 21 "marioMapCollisionMap.h"
+extern const unsigned short marioMapCollisionMapBitmap[32768];
+
+
+extern const unsigned short marioMapCollisionMapPal[256];
+# 14 "main.c" 2
+# 31 "main.c"
 void initialize();
 
 
@@ -1507,8 +1526,8 @@ void initialize()
 {
     (*(volatile unsigned short *)0x4000000) = 0 | (1 << 12) | (1 << 8) | (1 << 9);
 
-    (*(volatile unsigned short *)0x400000A) = ((2) << 2) | ((30) << 8) | (0 << 14);
-    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | ((26) << 8) | (0 << 14) | (0 << 7);
+    (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((30) << 8) | (0 << 14);
+    (*(volatile unsigned short *)0x4000008) = ((2) << 2) | ((26) << 8) | (0 << 14) | (0 << 7);
 }
 
 
@@ -1533,7 +1552,7 @@ void titleScreen() {
 
 void startGame() {
     (*(volatile unsigned short *)0x4000000) = 0 | (1 << 12) | (1 << 9);
-    (*(volatile unsigned short *)0x400000A) = ((2) << 2) | ((26) << 8) | (0 << 14) | (0 << 7);
+    (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((30) << 8) | (0 << 14) | (0 << 7);
 
 
     (*(volatile unsigned short *)0x04000016) = vOff;
@@ -1544,16 +1563,15 @@ void startGame() {
     srand(timer);
 
     waitForVBlank();
+# 161 "main.c"
+    DMANow(3, marioMapPal, ((unsigned short *)0x5000000), 16);
+    DMANow(3, marioMapTiles, &((charblock *)0x6000000)[0], 32768 / 2);
+    DMANow(3, marioMapMap, &((screenblock *)0x6000000)[30], 2048 / 2);
 
 
 
 
 
-
-
-   DMANow(3, GameBackgroundPal, ((unsigned short *)0x5000000), 16);
-    DMANow(3, GameBackgroundTiles, &((charblock *)0x6000000)[2], 32768 / 2);
-    DMANow(3, GameBackgroundMap, &((screenblock *)0x6000000)[26], 2048 / 2);
 
 
     DMANow(3, spritesheetPal, ((unsigned short *)0x5000200), 512 / 2);
@@ -1588,7 +1606,7 @@ void game() {
 
 
 }
-# 212 "main.c"
+# 221 "main.c"
 void goToPause() {
     state = PAUSE;
 }

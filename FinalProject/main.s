@@ -24,8 +24,8 @@ initialize:
 	@ link register save eliminated.
 	mov	r3, #67108864
 	mov	r0, #4864
-	mov	r2, #6656
-	ldr	r1, .L3
+	mov	r1, #7680
+	ldr	r2, .L3
 	strh	r0, [r3]	@ movhi
 	strh	r1, [r3, #10]	@ movhi
 	strh	r2, [r3, #8]	@ movhi
@@ -33,7 +33,7 @@ initialize:
 .L4:
 	.align	2
 .L3:
-	.word	7688
+	.word	6664
 	.size	initialize, .-initialize
 	.align	2
 	.global	setupTitleScreen
@@ -88,87 +88,85 @@ startGame:
 	@ frame_needed = 0, uses_anonymous_args = 0
 	mov	r3, #67108864
 	mov	r2, #4608
+	mov	r1, #7680
 	push	{r4, lr}
-	ldr	r1, .L11
 	strh	r2, [r3]	@ movhi
-	ldr	r2, .L11+4
+	ldr	r2, .L11
 	strh	r1, [r3, #10]	@ movhi
 	ldrh	r1, [r2]
-	ldr	r2, .L11+8
+	ldr	r2, .L11+4
 	strh	r1, [r3, #22]	@ movhi
 	ldrh	r1, [r2]
-	ldr	r2, .L11+12
+	ldr	r2, .L11+8
 	strh	r1, [r3, #20]	@ movhi
 	ldr	r0, [r2]
-	ldr	r3, .L11+16
+	ldr	r3, .L11+12
 	mov	lr, pc
 	bx	r3
-	ldr	r3, .L11+20
-	ldr	r4, .L11+24
+	ldr	r3, .L11+16
+	ldr	r4, .L11+20
 	mov	lr, pc
 	bx	r3
 	mov	r3, #16
 	mov	r2, #83886080
 	mov	r0, #3
-	ldr	r1, .L11+28
+	ldr	r1, .L11+24
 	mov	lr, pc
 	bx	r4
 	mov	r3, #16384
+	mov	r2, #100663296
+	mov	r0, #3
+	ldr	r1, .L11+28
+	mov	lr, pc
+	bx	r4
+	mov	r3, #1024
 	mov	r0, #3
 	ldr	r2, .L11+32
 	ldr	r1, .L11+36
 	mov	lr, pc
 	bx	r4
-	mov	r3, #1024
+	mov	r3, #256
 	mov	r0, #3
 	ldr	r2, .L11+40
 	ldr	r1, .L11+44
 	mov	lr, pc
 	bx	r4
-	mov	r3, #256
 	mov	r0, #3
 	ldr	r2, .L11+48
 	ldr	r1, .L11+52
-	mov	lr, pc
-	bx	r4
-	mov	r0, #3
-	ldr	r2, .L11+56
-	ldr	r1, .L11+60
 	mov	r3, #16384
 	mov	lr, pc
 	bx	r4
-	ldr	r3, .L11+64
+	ldr	r3, .L11+56
 	mov	lr, pc
 	bx	r3
 	mov	r2, #117440512
 	mov	r3, #512
 	mov	r0, #3
-	ldr	r1, .L11+68
+	ldr	r1, .L11+60
 	mov	lr, pc
 	bx	r4
-	ldr	r3, .L11+72
+	ldr	r3, .L11+64
 	mov	lr, pc
 	bx	r3
 	mov	r2, #1
-	ldr	r3, .L11+76
+	ldr	r3, .L11+68
 	pop	{r4, lr}
 	str	r2, [r3]
 	bx	lr
 .L12:
 	.align	2
 .L11:
-	.word	6664
 	.word	vOff
 	.word	hOff
 	.word	.LANCHOR0
 	.word	srand
 	.word	waitForVBlank
 	.word	DMANow
-	.word	GameBackgroundPal
-	.word	100696064
-	.word	GameBackgroundTiles
-	.word	100716544
-	.word	GameBackgroundMap
+	.word	marioMapPal
+	.word	marioMapTiles
+	.word	100724736
+	.word	marioMapMap
 	.word	83886592
 	.word	spritesheetPal
 	.word	100728832

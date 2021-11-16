@@ -172,11 +172,20 @@ extern const unsigned short collisionMapBitmap[32768];
 extern const unsigned short collisionMapPal[256];
 # 5 "game.c" 2
 
+
+# 1 "marioMapCollisionMap.h" 1
+# 21 "marioMapCollisionMap.h"
+extern const unsigned short marioMapCollisionMapBitmap[32768];
+
+
+extern const unsigned short marioMapCollisionMapPal[256];
+# 8 "game.c" 2
+
 OBJ_ATTR shadowOAM[128];
 ANISPRITE pacman;
 short pellets[1024];
 
-unsigned char* collisionMap = collisionMapBitmap;
+unsigned char* collisionMap = marioMapCollisionMapBitmap;
 
 int score = 0;
 int pelletsEaten = 0;
@@ -243,7 +252,6 @@ void updateGame() {
     }
  updatePlayer();
 
-    gTimer++;
 }
 
 
@@ -267,7 +275,7 @@ void updatePlayer() {
 
     grounded = groundCheck();
 
-    if (!grounded && (gTimer % 30 == 0)) {
+    if (!grounded && (gTimer % 4 == 0)) {
         yVel++;
     }
 
@@ -292,10 +300,10 @@ void updatePlayer() {
             if ((vOff < 256 && (pacman.worldRow - vOff >= 160 / 2)) || (vOff > 0 && (pacman.worldRow - vOff <= 160 / 2))) {
                 vOff += yVel;
             }
-# 139 "game.c"
+# 141 "game.c"
     if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 5)))
         && !collisionMap[((pacman.worldRow) * (256) + (pacman.worldCol - 1))]
-        && !collisionMap[((pacman.worldRow + pacman.height) * (256) + (pacman.worldCol - 1))]) {
+        && !collisionMap[((pacman.worldRow + pacman.height - 1) * (256) + (pacman.worldCol - 1))]) {
         if (pacman.worldCol >= 0) {
             pacman.worldCol--;
             if (hOff >= 0 && (pacman.worldCol - hOff < (240 / 2))) {
@@ -306,7 +314,7 @@ void updatePlayer() {
     }
     if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 4)))
         && !collisionMap[((pacman.worldRow) * (256) + (pacman.worldCol + pacman.width + 1))]
-        && !collisionMap[((pacman.worldRow + pacman.height) * (256) + (pacman.worldCol + pacman.width + 1))]) {
+        && !collisionMap[((pacman.worldRow + pacman.height - 1) * (256) + (pacman.worldCol + pacman.width + 1))]) {
         if (pacman.worldCol <= 256 + 240 - 30) {
             pacman.worldCol++;
             if (hOff <= 240 && (pacman.worldCol - hOff > (240 / 2))) {
@@ -317,11 +325,24 @@ void updatePlayer() {
     }
 
 
+    gTimer++;
+
+
 
 }
 
 
 int groundCheck() {
+
+    for (int i = yVel; i > 0; i--) {
+        if (!collisionMap[((pacman.worldRow + pacman.height + i) * (256) + (pacman.worldCol))]
+        && !collisionMap[((pacman.worldRow + pacman.height + i) * (256) + (pacman.worldCol + pacman.width))]) {
+
+
+
+            return 0;
+    }
+    }
 
     if (!collisionMap[((pacman.worldRow + pacman.height + 1) * (256) + (pacman.worldCol))]
         && !collisionMap[((pacman.worldRow + pacman.height + 1) * (256) + (pacman.worldCol + pacman.width))]) {

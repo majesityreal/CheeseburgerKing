@@ -3,11 +3,14 @@
 #include "testmapcollisionmap.h"
 #include "collisionmap.h"
 
+// this is the mario map collision map
+#include "marioMapCollisionMap.h"
+
 OBJ_ATTR shadowOAM[128];
 ANISPRITE pacman;
 short pellets[1024];
 // gets the collision map set up
-unsigned char* collisionMap = collisionMapBitmap;
+unsigned char* collisionMap = marioMapCollisionMapBitmap;
 
 int score = 0;
 int pelletsEaten = 0;
@@ -74,7 +77,6 @@ void updateGame() {
     }
 	updatePlayer();
     // simple timer to keep track of gravity
-    gTimer++;
 }
 
 // Draws the game each frame
@@ -93,12 +95,12 @@ void drawGame() {
 // Handle every-frame actions of the player
 void updatePlayer() {
 
-    // TODO - fix gravity implementation
+    // TODO - jump height is sometimes random for some reason
 
     // #region vertical vel
     grounded = groundCheck();
     // moves down if in air
-    if (!grounded && (gTimer % 30 == 0)) {
+    if (!grounded && (gTimer % 4 == 0)) {
         yVel++;
     }
 
@@ -138,7 +140,7 @@ void updatePlayer() {
     // }
     if(BUTTON_HELD(BUTTON_LEFT)
         && !collisionMap[OFFSET(pacman.worldCol - 1, pacman.worldRow, MAPWIDTH)]
-        && !collisionMap[OFFSET(pacman.worldCol - 1, pacman.worldRow + pacman.height, MAPWIDTH)]) {
+        && !collisionMap[OFFSET(pacman.worldCol - 1, pacman.worldRow + pacman.height - 1, MAPWIDTH)]) {
         if (pacman.worldCol >= 0) {
             pacman.worldCol--;
             if (hOff >= 0 && (pacman.worldCol - hOff < (SCREENWIDTH / 2))) {
@@ -149,7 +151,7 @@ void updatePlayer() {
     }
     if(BUTTON_HELD(BUTTON_RIGHT) 
         && !collisionMap[OFFSET(pacman.worldCol + pacman.width + 1, pacman.worldRow, MAPWIDTH)]
-        && !collisionMap[OFFSET(pacman.worldCol + pacman.width + 1, pacman.worldRow + pacman.height, MAPWIDTH)]) {
+        && !collisionMap[OFFSET(pacman.worldCol + pacman.width + 1, pacman.worldRow + pacman.height - 1, MAPWIDTH)]) {
         if (pacman.worldCol <= MAPWIDTH + SCREENWIDTH - 30) {
             pacman.worldCol++;
             if (hOff <= 240 && (pacman.worldCol - hOff > (SCREENWIDTH / 2))) {
@@ -159,13 +161,26 @@ void updatePlayer() {
         }
     }
 
+    // update the gravity check timer, so gravity is more smooth
+    gTimer++;
+
     // TODO add player animations in
     // animatePlayer();
 }
 
 // function to check if player is on ground. returns 0 if there is ground, 1 if there is not
 int groundCheck() {
-    // this checks if there isn't ground directly below the player
+    // loops through pixels below player to check ground, if they are falling (yVel > 0)
+    for (int i = yVel; i > 0; i--) {
+        if (!collisionMap[OFFSET(pacman.worldCol, pacman.worldRow + pacman.height + i, MAPWIDTH)]
+        && !collisionMap[OFFSET(pacman.worldCol + pacman.width, pacman.worldRow + pacman.height + i, MAPWIDTH)]) {
+            // snaps player to ground and resets yVel
+            // pacman.worldRow += yVel;
+            // yVel = 0;
+            return 0;
+    }
+    }
+    // this is when player is standing on ground
     if (!collisionMap[OFFSET(pacman.worldCol, pacman.worldRow + pacman.height + 1, MAPWIDTH)]
         && !collisionMap[OFFSET(pacman.worldCol + pacman.width, pacman.worldRow + pacman.height + 1, MAPWIDTH)]) {
             return 0;
