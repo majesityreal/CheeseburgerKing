@@ -19,9 +19,11 @@ typedef struct {
     int targetX;
     int direction;
     int speed;
-    } ORC;
+    int targetRange;
+    } GOBLIN;
 
 typedef struct {
+    // screen stuff
     int screenRow;
     int screenCol;
     int worldRow;
@@ -30,12 +32,16 @@ typedef struct {
     int cdel;
     int width;
     int height;
+    // animation stuff
     int aniCounter;
     int aniState;
     int prevAniState;
     int curFrame;
     int numFrames;
+    // whether or not to hide
     int hide;
+    // extra util stuff
+    int direction;
 } PLAYER;
 
 typedef struct {
@@ -74,3 +80,7 @@ void drawPlayer();
 void drawFont();
 void drawPellets();
 int groundCheck();
+// enemies
+void updateEnemies();
+void drawEnemies();
+void animateEnemies();

@@ -9,6 +9,10 @@
 
 OBJ_ATTR shadowOAM[128];
 PLAYER player;
+
+// temp placeholder for the first goblin for testing
+GOBLIN goblin1;
+
 short pellets[1024];
 // gets the collision map set up
 unsigned char* collisionMap = marioMapCollisionMapBitmap;
@@ -39,7 +43,7 @@ int framesInAir = 0;
 int gTimer = 0;
 
 // Pacman animation states for aniState
-enum {PACDOWN, PACUP, PACRIGHT, PACLEFT, PACIDLE};
+enum {IDLE, RUNNING, PACRIGHT, PACLEFT, PACIDLE};
 
 // Initialize the game
 // #region init
@@ -51,8 +55,8 @@ void initGame() {
 // Initialize the player
 void initPlayer() {
     player.hide = 0;
-    player.width = 8;
-    player.height = 8;
+    player.width = 16;
+    player.height = 20;
     player.rdel = 1;
     player.cdel = 1;
 
@@ -61,8 +65,8 @@ void initPlayer() {
     player.worldCol = 20;
     player.aniCounter = 0;
     player.curFrame = 0;
-    player.numFrames = 3;
-    player.aniState = PACDOWN;
+    player.numFrames = 4;
+    player.aniState = IDLE;
 }
 
 // #endregion
@@ -74,12 +78,14 @@ void updateGame() {
         pauseVar = 1;
     }
 	updatePlayer();
+    updateEnemies();
 }
 
 // Draws the game each frame
 void drawGame() {
 
     drawPlayer();
+    drawEnemies();
 
     waitForVBlank();
 
@@ -223,7 +229,7 @@ void updatePlayer() {
     gTimer++;
 
     // TODO add player animations in
-    // animatePlayer();
+    animatePlayer();
 }
 
 // function to check if player is on ground. returns 0 if there is ground, 1 if there is not
@@ -242,33 +248,40 @@ int groundCheck() {
 // Handle player animation states
 void animatePlayer() {
 
-    // Set previous state to current state
+    // Set previous state to current state, defaults to idle if no button held
     player.prevAniState = player.aniState;
-    player.aniState = PACIDLE;
+    player.aniState = IDLE;
 
-    // Change the animation frame every 20 frames of gameplay
+    // Change the animation frame every 10 frames of gameplay
     if(player.aniCounter % 10 == 0) {
         player.curFrame = (player.curFrame + 1) % player.numFrames;
     }
 
     // Control movement and change animation state
-    if(BUTTON_HELD(BUTTON_UP))
-        player.aniState = PACUP;
-    if(BUTTON_HELD(BUTTON_DOWN))
-        player.aniState = PACDOWN;
-    if(BUTTON_HELD(BUTTON_LEFT))
-        player.aniState = PACLEFT;
-    if(BUTTON_HELD(BUTTON_RIGHT))
-        player.aniState = PACRIGHT;
-
-    // If the pacman aniState is idle, frame is pacman standing
-    if (player.aniState == PACIDLE) {
-        player.curFrame = 0;
-        player.aniCounter = 0;
-        player.aniState = player.prevAniState;
-    } else {
-        player.aniCounter++;
+    // if(BUTTON_HELD(BUTTON_UP))
+    //     player.aniState = PACUP;
+    // if(BUTTON_HELD(BUTTON_DOWN))
+    //     player.aniState = PACDOWN;
+    if(BUTTON_HELD(BUTTON_LEFT)) {
+        player.aniState = RUNNING;
+        player.direction = 1;
     }
+    if(BUTTON_HELD(BUTTON_RIGHT)) {
+        player.aniState = RUNNING;
+        player.direction = 0;
+    }
+
+        player.aniCounter++;
+
+    // TODO - fix this part up, for not it is commented out
+    // If the pacman aniState is idle, frame is pacman standing
+    // if (player.aniState == PACIDLE) {
+    //     player.curFrame = 0;
+    //     player.aniCounter = 0;
+    //     player.aniState = player.prevAniState;
+    // } else {
+    //     player.aniCounter++;
+    // }
 }
 
 // Draw the player
@@ -277,14 +290,36 @@ void drawPlayer() {
         shadowOAM[0].attr0 |= ATTR0_HIDE;
     } else {
         // the reason vOff and hOff are included in here is to keep them according to the camera
-        shadowOAM[0].attr0 = (ROWMASK & (player.worldRow - vOff)) | ATTR0_SQUARE;
-        shadowOAM[0].attr1 = (COLMASK & (player.worldCol - hOff)) | ATTR1_TINY;
-        if (player.aniState == PACDOWN) {
-            shadowOAM[0].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(0, 0);
+        shadowOAM[0].attr0 = (ROWMASK & (player.worldRow - vOff)) | ATTR0_TALL;
+        shadowOAM[0].attr1 = (COLMASK & (player.worldCol - hOff)) | ATTR1_MEDIUM;
+        // if player is facing left, flip sprite to left
+        if (player.direction) {
+            shadowOAM[0].attr1 |= ATTR1_HFLIP;
         }
+        if (player.aniState == IDLE) {
+            shadowOAM[0].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(0, (player.curFrame * 4));
+        }
+        // TODO, change based on the animation row state thingy
         else
-            shadowOAM[0].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(0, 0);
+            shadowOAM[0].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(player.aniState * 2, (player.curFrame * 4));
     }
+}
+
+void updateEnemies() {
+    int range = 0;
+    if (range < goblin1.targetRange) {
+
+    }
+
+    animateEnemies();
+}
+
+void animateEnemies() {
+
+}
+
+void drawEnemies() {
+
 }
 
 void drawFont() {

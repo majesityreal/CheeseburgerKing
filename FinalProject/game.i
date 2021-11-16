@@ -998,9 +998,11 @@ typedef struct {
     int targetX;
     int direction;
     int speed;
-    } ORC;
+    int targetRange;
+    } GOBLIN;
 
 typedef struct {
+
     int screenRow;
     int screenCol;
     int worldRow;
@@ -1009,12 +1011,16 @@ typedef struct {
     int cdel;
     int width;
     int height;
+
     int aniCounter;
     int aniState;
     int prevAniState;
     int curFrame;
     int numFrames;
+
     int hide;
+
+    int direction;
 } PLAYER;
 
 typedef struct {
@@ -1024,7 +1030,7 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 57 "game.h"
+# 63 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
@@ -1045,6 +1051,10 @@ void drawPlayer();
 void drawFont();
 void drawPellets();
 int groundCheck();
+
+void updateEnemies();
+void drawEnemies();
+void animateEnemies();
 # 4 "game.c" 2
 # 1 "testmapcollisionmap.h" 1
 # 21 "testmapcollisionmap.h"
@@ -1072,6 +1082,10 @@ extern const unsigned short marioMapCollisionMapPal[256];
 
 OBJ_ATTR shadowOAM[128];
 PLAYER player;
+
+
+GOBLIN goblin1;
+
 short pellets[1024];
 
 unsigned char* collisionMap = marioMapCollisionMapBitmap;
@@ -1102,7 +1116,7 @@ int framesInAir = 0;
 int gTimer = 0;
 
 
-enum {PACDOWN, PACUP, PACRIGHT, PACLEFT, PACIDLE};
+enum {IDLE, RUNNING, PACRIGHT, PACLEFT, PACIDLE};
 
 
 
@@ -1114,8 +1128,8 @@ void initGame() {
 
 void initPlayer() {
     player.hide = 0;
-    player.width = 8;
-    player.height = 8;
+    player.width = 16;
+    player.height = 20;
     player.rdel = 1;
     player.cdel = 1;
 
@@ -1124,8 +1138,8 @@ void initPlayer() {
     player.worldCol = 20;
     player.aniCounter = 0;
     player.curFrame = 0;
-    player.numFrames = 3;
-    player.aniState = PACDOWN;
+    player.numFrames = 4;
+    player.aniState = IDLE;
 }
 
 
@@ -1137,13 +1151,14 @@ void updateGame() {
         pauseVar = 1;
     }
  updatePlayer();
-
+    updateEnemies();
 }
 
 
 void drawGame() {
 
     drawPlayer();
+    drawEnemies();
 
     waitForVBlank();
 
@@ -1206,19 +1221,6 @@ void updatePlayer() {
     }
 
 
-    player.worldRow += yVel;
-
-
-    if (vOff < 256 && (player.worldRow - vOff >= 160 / 2) && (yVel > 0)) {
-        vOff += yVel;
-    }
-
-
-    if (vOff > 0 && (player.worldRow - vOff <= 160 / 2) && (yVel < 0)) {
-        vOff += yVel;
-    }
-
-
     if (yVel < 0) {
         for (int i = 0; i > yVel; i--) {
             if (collisionMap[((player.worldRow + player.height + i) * (256) + (player.worldCol))]
@@ -1229,6 +1231,8 @@ void updatePlayer() {
                 yVel = 0;
                 jumping = 0;
                 jumpThud = 1;
+
+                framesInAir = 0;
                 break;
             }
         }
@@ -1245,7 +1249,20 @@ void updatePlayer() {
             break;
         }
     }
-# 198 "game.c"
+
+
+    player.worldRow += yVel;
+
+
+    if (vOff < 256 && (player.worldRow - vOff >= 160 / 2) && (yVel > 0)) {
+        vOff += yVel;
+    }
+
+
+    if (vOff > 0 && (player.worldRow - vOff <= 160 / 2) && (yVel < 0)) {
+        vOff += yVel;
+    }
+# 205 "game.c"
     if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 5)))
         && !collisionMap[((player.worldRow) * (256) + (player.worldCol - 1))]
         && !collisionMap[((player.worldRow + player.height - 1) * (256) + (player.worldCol - 1))]) {
@@ -1273,7 +1290,7 @@ void updatePlayer() {
     gTimer++;
 
 
-
+    animatePlayer();
 }
 
 
@@ -1281,6 +1298,7 @@ int groundCheck() {
 
     if (collisionMap[((player.worldRow + player.height + 1) * (256) + (player.worldCol))]
         && collisionMap[((player.worldRow + player.height + 1) * (256) + (player.worldCol + player.width))]) {
+
             jumpThud = 0;
             return 1;
     }
@@ -1293,7 +1311,7 @@ void animatePlayer() {
 
 
     player.prevAniState = player.aniState;
-    player.aniState = PACIDLE;
+    player.aniState = IDLE;
 
 
     if(player.aniCounter % 10 == 0) {
@@ -1301,23 +1319,21 @@ void animatePlayer() {
     }
 
 
-    if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))))
-        player.aniState = PACUP;
-    if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 7))))
-        player.aniState = PACDOWN;
-    if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 5))))
-        player.aniState = PACLEFT;
-    if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 4))))
-        player.aniState = PACRIGHT;
 
 
-    if (player.aniState == PACIDLE) {
-        player.curFrame = 0;
-        player.aniCounter = 0;
-        player.aniState = player.prevAniState;
-    } else {
-        player.aniCounter++;
+
+
+    if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 5)))) {
+        player.aniState = RUNNING;
+        player.direction = 1;
     }
+    if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 4)))) {
+        player.aniState = RUNNING;
+        player.direction = 0;
+    }
+
+        player.aniCounter++;
+# 285 "game.c"
 }
 
 
@@ -1326,14 +1342,36 @@ void drawPlayer() {
         shadowOAM[0].attr0 |= (2 << 8);
     } else {
 
-        shadowOAM[0].attr0 = (0xFF & (player.worldRow - vOff)) | (0 << 14);
-        shadowOAM[0].attr1 = (0x1FF & (player.worldCol - hOff)) | (0 << 14);
-        if (player.aniState == PACDOWN) {
-            shadowOAM[0].attr2 = ((0) << 12) | ((0)*32 + (0));
+        shadowOAM[0].attr0 = (0xFF & (player.worldRow - vOff)) | (2 << 14);
+        shadowOAM[0].attr1 = (0x1FF & (player.worldCol - hOff)) | (2 << 14);
+
+        if (player.direction) {
+            shadowOAM[0].attr1 |= (1 << 12);
         }
+        if (player.aniState == IDLE) {
+            shadowOAM[0].attr2 = ((0) << 12) | (((player.curFrame * 4))*32 + (0));
+        }
+
         else
-            shadowOAM[0].attr2 = ((0) << 12) | ((0)*32 + (0));
+            shadowOAM[0].attr2 = ((0) << 12) | (((player.curFrame * 4))*32 + (player.aniState * 2));
     }
+}
+
+void updateEnemies() {
+    int range = 0;
+    if (range < goblin1.targetRange) {
+
+    }
+
+    animateEnemies();
+}
+
+void animateEnemies() {
+
+}
+
+void drawEnemies() {
+
 }
 
 void drawFont() {

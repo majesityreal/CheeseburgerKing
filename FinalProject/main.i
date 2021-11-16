@@ -1329,9 +1329,34 @@ int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, i
 # 1 "mylib.h" 1
 # 2 "game.h" 2
 
+
+
 typedef struct {
+
+    int active;
     int worldRow;
     int worldCol;
+    int width;
+    int height;
+
+    int aniCounter;
+    int aniState;
+    int prevAniState;
+    int curFrame;
+    int numFrames;
+
+    int targetX;
+    int direction;
+    int speed;
+    } ORC;
+
+typedef struct {
+    int screenRow;
+    int screenCol;
+    int worldRow;
+    int worldCol;
+    int rdel;
+    int cdel;
     int width;
     int height;
     int aniCounter;
@@ -1340,10 +1365,7 @@ typedef struct {
     int curFrame;
     int numFrames;
     int hide;
-    int targetX;
-    int targetY;
-    int direction;
-    } GHOST;
+} PLAYER;
 
 typedef struct {
     int worldRow;
@@ -1352,16 +1374,11 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-
-
-
-
-
-
+# 57 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
-extern ANISPRITE player;
+extern PLAYER player;
 
 extern int lives;
 extern int pauseVar;
