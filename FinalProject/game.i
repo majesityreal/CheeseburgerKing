@@ -1084,9 +1084,6 @@ enum {PACDOWN, PACUP, PACRIGHT, PACLEFT, PACIDLE};
 
 
 
-
-
-
 void initGame() {
     initPlayer();
     gTimer = 0;
@@ -1136,6 +1133,8 @@ void drawGame() {
 
 
 void updatePlayer() {
+
+
 
 
 
@@ -1224,7 +1223,7 @@ void updatePlayer() {
             break;
         }
     }
-# 199 "game.c"
+# 198 "game.c"
     if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 5)))
         && !collisionMap[((pacman.worldRow) * (256) + (pacman.worldCol - 1))]
         && !collisionMap[((pacman.worldRow + pacman.height - 1) * (256) + (pacman.worldCol - 1))]) {
