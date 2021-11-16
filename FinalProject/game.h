@@ -27,6 +27,9 @@ typedef struct {
 // Constants
 #define MAPHEIGHT 256
 #define MAPWIDTH 256
+#define GRAVITY 1
+#define JUMPVEL -5
+
 
 // Variables
 extern int hOff;
