@@ -1134,7 +1134,7 @@ void initPlayer() {
     player.cdel = 1;
 
 
-    player.worldRow = 20;
+    player.worldRow = 60;
     player.worldCol = 20;
     player.aniCounter = 0;
     player.curFrame = 0;
@@ -1179,7 +1179,7 @@ void updatePlayer() {
     grounded = groundCheck();
 
 
-    if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && grounded
+    if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))) && grounded
         && !collisionMap[((player.worldRow - 1) * (256) + (player.worldCol))]
         && !collisionMap[((player.worldRow - 1) * (256) + (player.worldCol + player.width)) ]) {
 
@@ -1187,44 +1187,12 @@ void updatePlayer() {
 
             grounded = 0;
             jumping = 1;
-            drawFont();
     }
 
 
-    if (!grounded) {
-            if ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))) && jumping && !jumpThud) {
-                yVel = -5 + (1 * framesInAir);
-            }
-            else {
-                if (jumpThud) {
-                    yVel = (1 * framesInAir);
-                }
-                else {
-                    yVel = ((-5 * 3) / 4) + (1 * framesInAir);
-                }
-                jumping = 0;
-            }
-            yVel = fmin(3, yVel);
-            if (gTimer % 4 == 0) {
-            framesInAir++;
-                    drawFont();
-            }
-
-
-    }
-
-
-    if (grounded) {
-        yVel = 0;
-        framesInAir = 0;
-        jumping = 0;
-    }
-
-
-    if (yVel < 0) {
         for (int i = 0; i > yVel; i--) {
-            if (collisionMap[((player.worldRow + player.height + i) * (256) + (player.worldCol))]
-            && collisionMap[((player.worldRow + player.height + i) * (256) + (player.worldCol + player.width))]) {
+            if (collisionMap[((player.worldRow + i) * (256) + (player.worldCol))]
+            || collisionMap[((player.worldRow + i) * (256) + (player.worldCol + player.width))]) {
 
                 player.worldRow += (i + 1);
                 vOff += (i + 1);
@@ -1236,18 +1204,65 @@ void updatePlayer() {
                 break;
             }
         }
-    }
 
 
-    for (int i = yVel; i > 0; i--) {
+
+
+        if ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))) && (~((*(volatile unsigned short *)0x04000130)) & ((1 << 4))) && yVel > 0) {
+            for (int i = 0; i > -2; i--) {
+                if (collisionMap[((player.worldRow + i) * (256) + (player.worldCol - i))]
+                || collisionMap[((player.worldRow + i) * (256) + (player.worldCol + player.width - i))]) {
+
+                    yVel = 0;
+                    jumping = 0;
+                    jumpThud = 1;
+                    break;
+                }
+        }
+        }
+
+
+    for (int i = 0; i < yVel; i++) {
         if (collisionMap[((player.worldRow + player.height + i) * (256) + (player.worldCol))]
-        && collisionMap[((player.worldRow + player.height + i) * (256) + (player.worldCol + player.width))]) {
+        || collisionMap[((player.worldRow + player.height + i) * (256) + (player.worldCol + player.width))]) {
 
             player.worldRow += (i - 2);
             vOff += (i - 2);
             yVel = 0;
             break;
         }
+    }
+
+
+    if (!grounded) {
+            if ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))) && jumping && !jumpThud) {
+                yVel = -5 + (1 * framesInAir);
+            }
+            else {
+                if (jumpThud || !(!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6))))) {
+                    yVel = (1 * framesInAir);
+                }
+                else {
+                    yVel = ((-5 * 3) / 4) + (1 * framesInAir);
+                }
+
+                jumping = 0;
+            }
+
+            yVel = fmin(3, yVel);
+
+            if (gTimer % 4 == 0) {
+            framesInAir++;
+            }
+
+
+    }
+
+
+    if (grounded) {
+        yVel = 0;
+        framesInAir = 0;
+        jumping = 0;
     }
 
 
@@ -1262,7 +1277,7 @@ void updatePlayer() {
     if (vOff > 0 && (player.worldRow - vOff <= 160 / 2) && (yVel < 0)) {
         vOff += yVel;
     }
-# 205 "game.c"
+# 220 "game.c"
     if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 5)))
         && !collisionMap[((player.worldRow) * (256) + (player.worldCol - 1))]
         && !collisionMap[((player.worldRow + player.height - 1) * (256) + (player.worldCol - 1))]) {
@@ -1333,7 +1348,7 @@ void animatePlayer() {
     }
 
         player.aniCounter++;
-# 285 "game.c"
+# 300 "game.c"
 }
 
 

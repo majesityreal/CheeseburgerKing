@@ -61,7 +61,7 @@ void initPlayer() {
     player.cdel = 1;
 
     // Place in the middle of the screen in the world location chosen earlier
-    player.worldRow = 20;
+    player.worldRow = 60;
     player.worldCol = 20;
     player.aniCounter = 0;
     player.curFrame = 0;
@@ -99,7 +99,7 @@ void drawGame() {
 void updatePlayer() {
     // TODO - not super happy with gravity implementation so far, jumps are random?
 
-    // FIXME - jump thuds
+    // FIXME - jump thuds, top right and top left clipping
     // FIXME - sometimes the player falls into ground :(
 
     // #region yVel + jumping
@@ -114,44 +114,12 @@ void updatePlayer() {
             // need this
             grounded = 0;
             jumping = 1;
-            drawFont();
-    }
-
-    // moves down if in air, handles gravity
-    if (!grounded) {
-            if (BUTTON_HELD(BUTTON_UP) && jumping && !jumpThud) {
-                yVel = JUMPVEL + (GRAVITY * framesInAir);
-            }
-            else {
-                if (jumpThud) {
-                    yVel = (GRAVITY * framesInAir);
-                }
-                else {
-                    yVel = ((JUMPVEL * 3) / 4) + (GRAVITY * framesInAir);
-                }
-                jumping = 0;
-            }
-            yVel = fmin(3, yVel);
-            if (gTimer % 4 == 0) {
-            framesInAir++;
-                    drawFont();
-            }
-        // this adds in button holding to affect jump height. (&& jumping) is to prevent quick release and press again
-
-    }
-
-    // if on the ground, shouldn't have vertical motionn
-    if (grounded) {
-        yVel = 0;
-        framesInAir = 0;
-        jumping = 0;
     }
 
     // loops through pixels above player to check if head collision
-    if (yVel < 0) {
         for (int i = 0; i > yVel; i--) {
-            if (collisionMap[OFFSET(player.worldCol, player.worldRow + player.height + i, MAPWIDTH)]
-            && collisionMap[OFFSET(player.worldCol + player.width, player.worldRow + player.height + i, MAPWIDTH)]) {
+            if (collisionMap[OFFSET(player.worldCol, player.worldRow + i, MAPWIDTH)]
+            || collisionMap[OFFSET(player.worldCol + player.width, player.worldRow + i, MAPWIDTH)]) {
                 // snaps player to ground and resets yVel
                 player.worldRow += (i + 1);
                 vOff += (i + 1);
@@ -163,18 +131,65 @@ void updatePlayer() {
                 break;
             }
         }
-    }
+
+
+        // TODO - UNINTENTIONAL ZIPLINE
+        // hardcoded upright check
+        if (BUTTON_HELD(BUTTON_UP) && BUTTON_HELD(BUTTON_RIGHT) && yVel > 0) {
+            for (int i = 0; i > -2; i--) {
+                if (collisionMap[OFFSET(player.worldCol - i, player.worldRow + i, MAPWIDTH)]
+                || collisionMap[OFFSET(player.worldCol + player.width - i, player.worldRow + i, MAPWIDTH)]) {
+                    // snaps player to ground and resets yVel
+                    yVel = 0;
+                    jumping = 0;
+                    jumpThud = 1;
+                    break;
+                }
+        }
+        }
 
     // loops through pixels below player to check ground, if they are falling (yVel > 0)
-    for (int i = yVel; i > 0; i--) {
+    for (int i = 0; i < yVel; i++) {
         if (collisionMap[OFFSET(player.worldCol, player.worldRow + player.height + i, MAPWIDTH)]
-        && collisionMap[OFFSET(player.worldCol + player.width, player.worldRow + player.height + i, MAPWIDTH)]) {
+        || collisionMap[OFFSET(player.worldCol + player.width, player.worldRow + player.height + i, MAPWIDTH)]) {
             // snaps player to ground and resets yVel
             player.worldRow += (i - 2);
             vOff += (i - 2);
             yVel = 0;
             break;
         }
+    }
+
+    // moves down if in air, handles gravity
+    if (!grounded) {
+            if (BUTTON_HELD(BUTTON_UP) && jumping && !jumpThud) {
+                yVel = JUMPVEL + (GRAVITY * framesInAir);
+            }
+            else {
+                if (jumpThud || !BUTTON_PRESSED(BUTTON_UP)) {
+                    yVel = (GRAVITY * framesInAir);
+                }
+                else {
+                    yVel = ((JUMPVEL * 3) / 4) + (GRAVITY * framesInAir);
+                }
+                // this prevents pressing jump again midair
+                jumping = 0;
+            }
+            // makes sure gravity never gets too insane
+            yVel = fmin(3, yVel);
+            // smooths out air frames
+            if (gTimer % 4 == 0) {
+            framesInAir++;
+            }
+        // this adds in button holding to affect jump height. (&& jumping) is to prevent quick release and press again
+
+    }
+
+    // if on the ground, shouldn't have vertical motionn
+    if (grounded) {
+        yVel = 0;
+        framesInAir = 0;
+        jumping = 0;
     }
 
         // moves the y vel accordingly
@@ -192,16 +207,6 @@ void updatePlayer() {
 
     // #endregion
 
-    // if(BUTTON_HELD(BUTTON_DOWN) 
-    //     && !collisionMap[OFFSET(pacman.worldCol, pacman.worldRow + pacman.height + 1, MAPWIDTH)]
-    //     && !collisionMap[OFFSET(pacman.worldCol + pacman.width, pacman.worldRow + pacman.height + 1, MAPWIDTH)]) {
-    //     if (pacman.worldRow <= MAPHEIGHT + SCREENHEIGHT - 16) {
-    //         pacman.worldRow++;
-    //         if (vOff < MAPHEIGHT && (pacman.worldRow - vOff >= SCREENHEIGHT / 2)) {
-    //             vOff++;
-    //         }
-    //     }
-    // }
     if(BUTTON_HELD(BUTTON_LEFT)
         && !collisionMap[OFFSET(player.worldCol - 1, player.worldRow, MAPWIDTH)]
         && !collisionMap[OFFSET(player.worldCol - 1, player.worldRow + player.height - 1, MAPWIDTH)]) {
@@ -225,10 +230,11 @@ void updatePlayer() {
         }
     }
 
+    // TODO add in combat
+
     // update the gravity check timer, so gravity is more smooth
     gTimer++;
 
-    // TODO add player animations in
     animatePlayer();
 }
 
