@@ -42,7 +42,7 @@ drawPlayer.part.0:
 .L4:
 	.align	2
 .L3:
-	.word	pacman
+	.word	player
 	.word	hOff
 	.word	vOff
 	.word	shadowOAM
@@ -83,7 +83,7 @@ initGame:
 	.align	2
 .L7:
 	.word	.LANCHOR0
-	.word	pacman
+	.word	player
 	.size	initGame, .-initGame
 	.align	2
 	.global	initPlayer
@@ -118,7 +118,7 @@ initPlayer:
 .L12:
 	.align	2
 .L11:
-	.word	pacman
+	.word	player
 	.size	initPlayer, .-initPlayer
 	.align	2
 	.global	drawGame
@@ -165,7 +165,7 @@ drawGame:
 .L18:
 	.align	2
 .L17:
-	.word	pacman
+	.word	player
 	.word	shadowOAM
 	.word	waitForVBlank
 	.word	DMANow
@@ -207,7 +207,7 @@ groundCheck:
 .L24:
 	.align	2
 .L23:
-	.word	pacman
+	.word	player
 	.word	.LANCHOR1
 	.word	.LANCHOR0
 	.size	groundCheck, .-groundCheck
@@ -286,7 +286,7 @@ animatePlayer:
 .L39:
 	.align	2
 .L38:
-	.word	pacman
+	.word	player
 	.word	1717986919
 	.word	__aeabi_idivmod
 	.word	67109120
@@ -316,7 +316,7 @@ drawPlayer:
 .L45:
 	.align	2
 .L44:
-	.word	pacman
+	.word	player
 	.word	shadowOAM
 	.size	drawPlayer, .-drawPlayer
 	.align	2
@@ -708,7 +708,7 @@ updatePlayer:
 .L129:
 	.word	oldButtons
 	.word	.LANCHOR1
-	.word	pacman
+	.word	player
 	.word	.LANCHOR0
 	.word	67109120
 	.word	__aeabi_i2d
@@ -774,7 +774,7 @@ updateGame:
 	.global	score
 	.global	collisionMap
 	.comm	pellets,2048,4
-	.comm	pacman,56,4
+	.comm	player,56,4
 	.comm	shadowOAM,1024,4
 	.data
 	.align	2

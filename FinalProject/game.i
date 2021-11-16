@@ -979,9 +979,34 @@ int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, i
 # 1 "mylib.h" 1
 # 2 "game.h" 2
 
+
+
 typedef struct {
+
+    int active;
     int worldRow;
     int worldCol;
+    int width;
+    int height;
+
+    int aniCounter;
+    int aniState;
+    int prevAniState;
+    int curFrame;
+    int numFrames;
+
+    int targetX;
+    int direction;
+    int speed;
+    } ORC;
+
+typedef struct {
+    int screenRow;
+    int screenCol;
+    int worldRow;
+    int worldCol;
+    int rdel;
+    int cdel;
     int width;
     int height;
     int aniCounter;
@@ -990,10 +1015,7 @@ typedef struct {
     int curFrame;
     int numFrames;
     int hide;
-    int targetX;
-    int targetY;
-    int direction;
-    } GHOST;
+} PLAYER;
 
 typedef struct {
     int worldRow;
@@ -1002,11 +1024,11 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 35 "game.h"
+# 57 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
-extern ANISPRITE pacman;
+extern PLAYER player;
 
 extern int lives;
 extern int pauseVar;
@@ -1049,7 +1071,7 @@ extern const unsigned short marioMapCollisionMapPal[256];
 # 9 "game.c" 2
 
 OBJ_ATTR shadowOAM[128];
-ANISPRITE pacman;
+PLAYER player;
 short pellets[1024];
 
 unsigned char* collisionMap = marioMapCollisionMapBitmap;
@@ -1091,19 +1113,19 @@ void initGame() {
 
 
 void initPlayer() {
-    pacman.hide = 0;
-    pacman.width = 8;
-    pacman.height = 8;
-    pacman.rdel = 1;
-    pacman.cdel = 1;
+    player.hide = 0;
+    player.width = 8;
+    player.height = 8;
+    player.rdel = 1;
+    player.cdel = 1;
 
 
-    pacman.worldRow = 20;
-    pacman.worldCol = 20;
-    pacman.aniCounter = 0;
-    pacman.curFrame = 0;
-    pacman.numFrames = 3;
-    pacman.aniState = PACDOWN;
+    player.worldRow = 20;
+    player.worldCol = 20;
+    player.aniCounter = 0;
+    player.curFrame = 0;
+    player.numFrames = 3;
+    player.aniState = PACDOWN;
 }
 
 
@@ -1143,8 +1165,8 @@ void updatePlayer() {
 
 
     if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && grounded
-        && !collisionMap[((pacman.worldRow - 1) * (256) + (pacman.worldCol))]
-        && !collisionMap[((pacman.worldRow - 1) * (256) + (pacman.worldCol + pacman.width)) ]) {
+        && !collisionMap[((player.worldRow - 1) * (256) + (player.worldCol))]
+        && !collisionMap[((player.worldRow - 1) * (256) + (player.worldCol + player.width)) ]) {
 
             yVel = -5;
 
@@ -1184,25 +1206,25 @@ void updatePlayer() {
     }
 
 
-    pacman.worldRow += yVel;
+    player.worldRow += yVel;
 
 
-    if (vOff < 256 && (pacman.worldRow - vOff >= 160 / 2) && (yVel > 0)) {
+    if (vOff < 256 && (player.worldRow - vOff >= 160 / 2) && (yVel > 0)) {
         vOff += yVel;
     }
 
 
-    if (vOff > 0 && (pacman.worldRow - vOff <= 160 / 2) && (yVel < 0)) {
+    if (vOff > 0 && (player.worldRow - vOff <= 160 / 2) && (yVel < 0)) {
         vOff += yVel;
     }
 
 
     if (yVel < 0) {
         for (int i = 0; i > yVel; i--) {
-            if (collisionMap[((pacman.worldRow + pacman.height + i) * (256) + (pacman.worldCol))]
-            && collisionMap[((pacman.worldRow + pacman.height + i) * (256) + (pacman.worldCol + pacman.width))]) {
+            if (collisionMap[((player.worldRow + player.height + i) * (256) + (player.worldCol))]
+            && collisionMap[((player.worldRow + player.height + i) * (256) + (player.worldCol + player.width))]) {
 
-                pacman.worldRow += (i + 1);
+                player.worldRow += (i + 1);
                 vOff += (i + 1);
                 yVel = 0;
                 jumping = 0;
@@ -1214,10 +1236,10 @@ void updatePlayer() {
 
 
     for (int i = yVel; i > 0; i--) {
-        if (collisionMap[((pacman.worldRow + pacman.height + i) * (256) + (pacman.worldCol))]
-        && collisionMap[((pacman.worldRow + pacman.height + i) * (256) + (pacman.worldCol + pacman.width))]) {
+        if (collisionMap[((player.worldRow + player.height + i) * (256) + (player.worldCol))]
+        && collisionMap[((player.worldRow + player.height + i) * (256) + (player.worldCol + player.width))]) {
 
-            pacman.worldRow += (i - 2);
+            player.worldRow += (i - 2);
             vOff += (i - 2);
             yVel = 0;
             break;
@@ -1225,22 +1247,22 @@ void updatePlayer() {
     }
 # 198 "game.c"
     if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 5)))
-        && !collisionMap[((pacman.worldRow) * (256) + (pacman.worldCol - 1))]
-        && !collisionMap[((pacman.worldRow + pacman.height - 1) * (256) + (pacman.worldCol - 1))]) {
-        if (pacman.worldCol >= 0) {
-            pacman.worldCol--;
-            if (hOff >= 0 && (pacman.worldCol - hOff < (240 / 2))) {
+        && !collisionMap[((player.worldRow) * (256) + (player.worldCol - 1))]
+        && !collisionMap[((player.worldRow + player.height - 1) * (256) + (player.worldCol - 1))]) {
+        if (player.worldCol >= 0) {
+            player.worldCol--;
+            if (hOff >= 0 && (player.worldCol - hOff < (240 / 2))) {
 
                 hOff--;
             }
         }
     }
     if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 4)))
-        && !collisionMap[((pacman.worldRow) * (256) + (pacman.worldCol + pacman.width + 1))]
-        && !collisionMap[((pacman.worldRow + pacman.height - 1) * (256) + (pacman.worldCol + pacman.width + 1))]) {
-        if (pacman.worldCol <= 256 + 240 - 30) {
-            pacman.worldCol++;
-            if (hOff <= 240 && (pacman.worldCol - hOff > (240 / 2))) {
+        && !collisionMap[((player.worldRow) * (256) + (player.worldCol + player.width + 1))]
+        && !collisionMap[((player.worldRow + player.height - 1) * (256) + (player.worldCol + player.width + 1))]) {
+        if (player.worldCol <= 256 + 240 - 30) {
+            player.worldCol++;
+            if (hOff <= 240 && (player.worldCol - hOff > (240 / 2))) {
 
                 hOff++;
             }
@@ -1257,8 +1279,8 @@ void updatePlayer() {
 
 int groundCheck() {
 
-    if (collisionMap[((pacman.worldRow + pacman.height + 1) * (256) + (pacman.worldCol))]
-        && collisionMap[((pacman.worldRow + pacman.height + 1) * (256) + (pacman.worldCol + pacman.width))]) {
+    if (collisionMap[((player.worldRow + player.height + 1) * (256) + (player.worldCol))]
+        && collisionMap[((player.worldRow + player.height + 1) * (256) + (player.worldCol + player.width))]) {
             jumpThud = 0;
             return 1;
     }
@@ -1270,43 +1292,43 @@ int groundCheck() {
 void animatePlayer() {
 
 
-    pacman.prevAniState = pacman.aniState;
-    pacman.aniState = PACIDLE;
+    player.prevAniState = player.aniState;
+    player.aniState = PACIDLE;
 
 
-    if(pacman.aniCounter % 10 == 0) {
-        pacman.curFrame = (pacman.curFrame + 1) % pacman.numFrames;
+    if(player.aniCounter % 10 == 0) {
+        player.curFrame = (player.curFrame + 1) % player.numFrames;
     }
 
 
     if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))))
-        pacman.aniState = PACUP;
+        player.aniState = PACUP;
     if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 7))))
-        pacman.aniState = PACDOWN;
+        player.aniState = PACDOWN;
     if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 5))))
-        pacman.aniState = PACLEFT;
+        player.aniState = PACLEFT;
     if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 4))))
-        pacman.aniState = PACRIGHT;
+        player.aniState = PACRIGHT;
 
 
-    if (pacman.aniState == PACIDLE) {
-        pacman.curFrame = 0;
-        pacman.aniCounter = 0;
-        pacman.aniState = pacman.prevAniState;
+    if (player.aniState == PACIDLE) {
+        player.curFrame = 0;
+        player.aniCounter = 0;
+        player.aniState = player.prevAniState;
     } else {
-        pacman.aniCounter++;
+        player.aniCounter++;
     }
 }
 
 
 void drawPlayer() {
-    if (pacman.hide) {
+    if (player.hide) {
         shadowOAM[0].attr0 |= (2 << 8);
     } else {
 
-        shadowOAM[0].attr0 = (0xFF & (pacman.worldRow - vOff)) | (0 << 14);
-        shadowOAM[0].attr1 = (0x1FF & (pacman.worldCol - hOff)) | (0 << 14);
-        if (pacman.aniState == PACDOWN) {
+        shadowOAM[0].attr0 = (0xFF & (player.worldRow - vOff)) | (0 << 14);
+        shadowOAM[0].attr1 = (0x1FF & (player.worldCol - hOff)) | (0 << 14);
+        if (player.aniState == PACDOWN) {
             shadowOAM[0].attr2 = ((0) << 12) | ((0)*32 + (0));
         }
         else

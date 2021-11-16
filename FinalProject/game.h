@@ -1,8 +1,33 @@
 #include "mylib.h"
 
+// the orc will target the player, moving towards their x value. However, they are very stupid and
+// only go towards the X value
 typedef struct {
+    // determines whether to show sprite + compute AI, if it is on camera then yes
+    int active;
     int worldRow;
     int worldCol;
+    int width;
+    int height;
+    // sprite animation stuff
+    int aniCounter;
+    int aniState;
+    int prevAniState;
+    int curFrame;
+    int numFrames;
+    // AI stuff
+    int targetX;
+    int direction;
+    int speed;
+    } ORC;
+
+typedef struct {
+    int screenRow;
+    int screenCol;
+    int worldRow;
+    int worldCol;
+    int rdel;
+    int cdel;
     int width;
     int height;
     int aniCounter;
@@ -11,10 +36,7 @@ typedef struct {
     int curFrame;
     int numFrames;
     int hide;
-    int targetX;
-    int targetY;
-    int direction;
-    } GHOST;
+} PLAYER;
 
 typedef struct {
     int worldRow;
@@ -35,7 +57,7 @@ typedef struct {
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
-extern ANISPRITE pacman;
+extern PLAYER player;
 
 extern int lives;
 extern int pauseVar;

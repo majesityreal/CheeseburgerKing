@@ -1361,7 +1361,7 @@ typedef struct {
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
-extern ANISPRITE pacman;
+extern ANISPRITE player;
 
 extern int lives;
 extern int pauseVar;
