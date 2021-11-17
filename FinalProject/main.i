@@ -1513,6 +1513,28 @@ extern const unsigned short platformerMap[2048];
 extern const unsigned short platformerPal[256];
 # 16 "main.c" 2
 
+
+# 1 "map1.h" 1
+# 22 "map1.h"
+extern const unsigned short map1Tiles[592];
+
+
+extern const unsigned short map1Map[2048];
+
+
+extern const unsigned short map1Pal[256];
+# 19 "main.c" 2
+# 1 "map2.h" 1
+# 22 "map2.h"
+extern const unsigned short map2Tiles[672];
+
+
+extern const unsigned short map2Map[2048];
+
+
+extern const unsigned short map2Pal[256];
+# 20 "main.c" 2
+
 # 1 "parallaxBG.h" 1
 # 22 "parallaxBG.h"
 extern const unsigned short parallaxBGTiles[3904];
@@ -1522,8 +1544,8 @@ extern const unsigned short parallaxBGMap[1024];
 
 
 extern const unsigned short parallaxBGPal[256];
-# 18 "main.c" 2
-# 35 "main.c"
+# 22 "main.c" 2
+# 39 "main.c"
 void initialize();
 
 
@@ -1651,13 +1673,13 @@ void startGame() {
     srand(timer);
 
     waitForVBlank();
-# 170 "main.c"
-    DMANow(3, platformerPal, ((unsigned short *)0x5000000), 32);
-    DMANow(3, platformerTiles, &((charblock *)0x6000000)[0], 544 / 2);
-    DMANow(3, platformerMap, &((screenblock *)0x6000000)[30], 4096 / 2);
+# 174 "main.c"
+    DMANow(3, map1Pal, ((unsigned short *)0x5000000), 32);
+    DMANow(3, map1Tiles, &((charblock *)0x6000000)[0], 1184 / 2);
+    DMANow(3, map1Map, &((screenblock *)0x6000000)[30], 4096 / 2);
 
 
-    DMANow(3, platformerPal, ((unsigned short *)0x5000000), 32);
+
     DMANow(3, parallaxBGTiles, &((charblock *)0x6000000)[2], 7808 / 2);
     DMANow(3, parallaxBGMap, &((screenblock *)0x6000000)[26], 2048 / 2);
 
@@ -1699,7 +1721,7 @@ void game() {
 
 
 }
-# 235 "main.c"
+# 239 "main.c"
 void goToPause() {
     state = PAUSE;
 }

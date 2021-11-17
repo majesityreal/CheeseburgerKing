@@ -1488,7 +1488,7 @@ drawFont:
 	.type	collisionMap, %object
 	.size	collisionMap, 4
 collisionMap:
-	.word	platformerCollisionBitmap
+	.word	map1CollisionBitmap
 	.type	grounded, %object
 	.size	grounded, 4
 grounded:

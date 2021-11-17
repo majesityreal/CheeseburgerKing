@@ -9,6 +9,10 @@
 // this is the new tilemap thing
 #include "platformerCollision.h"
 
+#include "map1Collision.h"
+
+
+
 OBJ_ATTR shadowOAM[128];
 PLAYER player;
 SLASH slash;
@@ -20,7 +24,7 @@ int shadowOAMIndex = 0;
 
 short pellets[1024];
 // gets the collision map set up
-unsigned char* collisionMap = platformerCollisionBitmap;
+unsigned char* collisionMap = map1CollisionBitmap;
 
 int score = 0;
 
@@ -189,7 +193,6 @@ void updatePlayer() {
                 break;
             }
         }
-
 
         // TODO - UNINTENTIONAL ZIPLINE
         // hardcoded upright check

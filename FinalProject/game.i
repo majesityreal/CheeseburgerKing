@@ -1122,6 +1122,16 @@ extern const unsigned short platformerCollisionBitmap[65536];
 extern const unsigned short platformerCollisionPal[256];
 # 11 "game.c" 2
 
+# 1 "map1Collision.h" 1
+# 21 "map1Collision.h"
+extern const unsigned short map1CollisionBitmap[65536];
+
+
+extern const unsigned short map1CollisionPal[256];
+# 13 "game.c" 2
+
+
+
 OBJ_ATTR shadowOAM[128];
 PLAYER player;
 SLASH slash;
@@ -1133,7 +1143,7 @@ int shadowOAMIndex = 0;
 
 short pellets[1024];
 
-unsigned char* collisionMap = platformerCollisionBitmap;
+unsigned char* collisionMap = map1CollisionBitmap;
 
 int score = 0;
 
@@ -1261,6 +1271,7 @@ void drawGame() {
 
     (*(volatile unsigned short *)0x04000014) = hOff;
     (*(volatile unsigned short *)0x04000016) = vOff;
+
     (*(volatile unsigned short *)0x04000018) = (hOff / 3);
 }
 
@@ -1301,7 +1312,6 @@ void updatePlayer() {
                 break;
             }
         }
-
 
 
 
@@ -1488,7 +1498,7 @@ void animatePlayer() {
     }
 
     player.aniCounter++;
-# 388 "game.c"
+# 392 "game.c"
 }
 
 

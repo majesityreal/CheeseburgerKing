@@ -13,6 +13,10 @@
 #include "marioMapCollisionMap.h"
 
 #include "platformer.h"
+
+// maps in order
+#include "map1.h"
+#include "map2.h"
 // parallax background
 #include "parallaxBG.h"
 
@@ -167,12 +171,12 @@ void startGame() {
 //     DMANow(3, testmapMap, &SCREENBLOCK[26], testmapMapLen / 2);
 
     // adding temp mario map
-    DMANow(3, platformerPal, PALETTE, 32);
-    DMANow(3, platformerTiles, &CHARBLOCK[0], platformerTilesLen / 2);
-    DMANow(3, platformerMap, &SCREENBLOCK[30], platformerMapLen / 2);
+    DMANow(3, map1Pal, PALETTE, 32);
+    DMANow(3, map1Tiles, &CHARBLOCK[0], map1TilesLen / 2);
+    DMANow(3, map1Map, &SCREENBLOCK[30], map1MapLen / 2);
 
     // adding parallax
-    DMANow(3, platformerPal, PALETTE, 32);
+    // DMANow(3, platformerPal, PALETTE, 32);
     DMANow(3, parallaxBGTiles, &CHARBLOCK[2], parallaxBGTilesLen / 2);
     DMANow(3, parallaxBGMap, &SCREENBLOCK[26], parallaxBGMapLen / 2);
 

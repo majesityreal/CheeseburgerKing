@@ -89,7 +89,7 @@ startGame:
 	mov	r3, #67108864
 	mov	r2, #5632
 	mov	r0, #24064
-	push	{r4, r5, r6, lr}
+	push	{r4, lr}
 	ldr	r1, .L11
 	strh	r2, [r3]	@ movhi
 	ldr	r2, .L11+4
@@ -103,21 +103,20 @@ startGame:
 	strh	r2, [r3, #20]	@ movhi
 	ldr	r0, [r1]
 	strh	r2, [r3, #24]	@ movhi
-	ldr	r5, .L11+16
+	ldr	r3, .L11+16
+	mov	lr, pc
+	bx	r3
 	ldr	r3, .L11+20
+	ldr	r4, .L11+24
 	mov	lr, pc
 	bx	r3
-	ldr	r3, .L11+24
-	ldr	r4, .L11+28
-	mov	lr, pc
-	bx	r3
-	mov	r1, r5
 	mov	r3, #32
 	mov	r2, #83886080
 	mov	r0, #3
+	ldr	r1, .L11+28
 	mov	lr, pc
 	bx	r4
-	mov	r3, #272
+	mov	r3, #592
 	mov	r2, #100663296
 	mov	r0, #3
 	ldr	r1, .L11+32
@@ -127,12 +126,6 @@ startGame:
 	mov	r0, #3
 	ldr	r2, .L11+36
 	ldr	r1, .L11+40
-	mov	lr, pc
-	bx	r4
-	mov	r1, r5
-	mov	r3, #32
-	mov	r2, #83886080
-	mov	r0, #3
 	mov	lr, pc
 	bx	r4
 	mov	r3, #3904
@@ -173,7 +166,7 @@ startGame:
 	bx	r3
 	mov	r2, #1
 	ldr	r3, .L11+88
-	pop	{r4, r5, r6, lr}
+	pop	{r4, lr}
 	str	r2, [r3]
 	bx	lr
 .L12:
@@ -183,13 +176,13 @@ startGame:
 	.word	vOff
 	.word	hOff
 	.word	.LANCHOR0
-	.word	platformerPal
 	.word	srand
 	.word	waitForVBlank
 	.word	DMANow
-	.word	platformerTiles
+	.word	map1Pal
+	.word	map1Tiles
 	.word	100724736
-	.word	platformerMap
+	.word	map1Map
 	.word	100696064
 	.word	parallaxBGTiles
 	.word	100716544
