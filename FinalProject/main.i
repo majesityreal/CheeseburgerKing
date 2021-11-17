@@ -1348,7 +1348,8 @@ typedef struct {
     int targetX;
     int direction;
     int speed;
-    int targetRange;
+    int xRange;
+    int yRange;
     } GOBLIN;
 
 typedef struct {
@@ -1373,6 +1374,7 @@ typedef struct {
     int direction;
     int attacking;
     int attackTimer;
+    int movementCycle;
 } PLAYER;
 
 typedef struct {
@@ -1403,7 +1405,7 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 89 "game.h"
+# 92 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
@@ -1424,11 +1426,19 @@ void animatePlayer();
 void drawPlayer();
 void drawFont();
 void drawPellets();
-int groundCheck();
+int groundCheck(int col, int row, int width, int height);
+int checkCollision(int col, int row);
 
+void initSlash();
+void drawSlash();
+void animateSlash();
+
+void initEnemies();
 void updateEnemies();
 void drawEnemies();
 void animateEnemies();
+
+float Q_rsqrt(float number);
 # 5 "main.c" 2
 # 1 "text.h" 1
 
@@ -1494,7 +1504,7 @@ extern const unsigned short marioMapCollisionMapPal[256];
 
 # 1 "platformer.h" 1
 # 22 "platformer.h"
-extern const unsigned short platformerTiles[32768];
+extern const unsigned short platformerTiles[272];
 
 
 extern const unsigned short platformerMap[2048];
@@ -1502,7 +1512,18 @@ extern const unsigned short platformerMap[2048];
 
 extern const unsigned short platformerPal[256];
 # 16 "main.c" 2
-# 33 "main.c"
+
+# 1 "parallaxBG.h" 1
+# 22 "parallaxBG.h"
+extern const unsigned short parallaxBGTiles[3904];
+
+
+extern const unsigned short parallaxBGMap[1024];
+
+
+extern const unsigned short parallaxBGPal[256];
+# 18 "main.c" 2
+# 35 "main.c"
 void initialize();
 
 
@@ -1613,22 +1634,32 @@ void titleScreen() {
 
 
 void startGame() {
-    (*(volatile unsigned short *)0x4000000) = 0 | (1 << 12) | (1 << 9);
+
+
+
+    (*(volatile unsigned short *)0x4000000) = 0 | (1 << 12) | (1 << 9) | (1 << 10);
     (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((30) << 8) | (1 << 14) | (0 << 7);
+    (*(volatile unsigned short *)0x400000C) = ((2) << 2) | ((26) << 8) | (0 << 14) | (0 << 7);
 
 
     (*(volatile unsigned short *)0x04000016) = vOff;
     (*(volatile unsigned short *)0x04000014) = hOff;
+    (*(volatile unsigned short *)0x04000018) = hOff;
 
 
 
     srand(timer);
 
     waitForVBlank();
-# 163 "main.c"
-    DMANow(3, platformerPal, ((unsigned short *)0x5000000), 16);
-    DMANow(3, platformerTiles, &((charblock *)0x6000000)[0], 65536 / 2);
+# 170 "main.c"
+    DMANow(3, platformerPal, ((unsigned short *)0x5000000), 32);
+    DMANow(3, platformerTiles, &((charblock *)0x6000000)[0], 544 / 2);
     DMANow(3, platformerMap, &((screenblock *)0x6000000)[30], 4096 / 2);
+
+
+    DMANow(3, platformerPal, ((unsigned short *)0x5000000), 32);
+    DMANow(3, parallaxBGTiles, &((charblock *)0x6000000)[2], 7808 / 2);
+    DMANow(3, parallaxBGMap, &((screenblock *)0x6000000)[26], 2048 / 2);
 
 
 
@@ -1668,7 +1699,7 @@ void game() {
 
 
 }
-# 223 "main.c"
+# 235 "main.c"
 void goToPause() {
     state = PAUSE;
 }

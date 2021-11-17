@@ -87,86 +87,113 @@ startGame:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	mov	r3, #67108864
-	mov	r2, #4608
-	mov	r1, #24064
-	push	{r4, lr}
+	mov	r2, #5632
+	mov	r0, #24064
+	push	{r4, r5, r6, lr}
+	ldr	r1, .L11
 	strh	r2, [r3]	@ movhi
-	ldr	r2, .L11
-	strh	r1, [r3, #10]	@ movhi
-	ldrh	r1, [r2]
 	ldr	r2, .L11+4
-	strh	r1, [r3, #22]	@ movhi
+	strh	r0, [r3, #10]	@ movhi
+	strh	r1, [r3, #12]	@ movhi
 	ldrh	r1, [r2]
 	ldr	r2, .L11+8
-	strh	r1, [r3, #20]	@ movhi
-	ldr	r0, [r2]
-	ldr	r3, .L11+12
+	strh	r1, [r3, #22]	@ movhi
+	ldrh	r2, [r2]
+	ldr	r1, .L11+12
+	strh	r2, [r3, #20]	@ movhi
+	ldr	r0, [r1]
+	strh	r2, [r3, #24]	@ movhi
+	ldr	r5, .L11+16
+	ldr	r3, .L11+20
 	mov	lr, pc
 	bx	r3
-	ldr	r3, .L11+16
-	ldr	r4, .L11+20
+	ldr	r3, .L11+24
+	ldr	r4, .L11+28
 	mov	lr, pc
 	bx	r3
-	mov	r3, #16
+	mov	r1, r5
+	mov	r3, #32
 	mov	r2, #83886080
 	mov	r0, #3
-	ldr	r1, .L11+24
 	mov	lr, pc
 	bx	r4
-	mov	r3, #32768
+	mov	r3, #272
 	mov	r2, #100663296
 	mov	r0, #3
-	ldr	r1, .L11+28
+	ldr	r1, .L11+32
 	mov	lr, pc
 	bx	r4
 	mov	r3, #2048
 	mov	r0, #3
-	ldr	r2, .L11+32
-	ldr	r1, .L11+36
+	ldr	r2, .L11+36
+	ldr	r1, .L11+40
+	mov	lr, pc
+	bx	r4
+	mov	r1, r5
+	mov	r3, #32
+	mov	r2, #83886080
+	mov	r0, #3
+	mov	lr, pc
+	bx	r4
+	mov	r3, #3904
+	mov	r0, #3
+	ldr	r2, .L11+44
+	ldr	r1, .L11+48
+	mov	lr, pc
+	bx	r4
+	mov	r3, #1024
+	mov	r0, #3
+	ldr	r2, .L11+52
+	ldr	r1, .L11+56
 	mov	lr, pc
 	bx	r4
 	mov	r3, #256
 	mov	r0, #3
-	ldr	r2, .L11+40
-	ldr	r1, .L11+44
+	ldr	r2, .L11+60
+	ldr	r1, .L11+64
 	mov	lr, pc
 	bx	r4
 	mov	r0, #3
-	ldr	r2, .L11+48
-	ldr	r1, .L11+52
+	ldr	r2, .L11+68
+	ldr	r1, .L11+72
 	mov	r3, #16384
 	mov	lr, pc
 	bx	r4
-	ldr	r3, .L11+56
+	ldr	r3, .L11+76
 	mov	lr, pc
 	bx	r3
 	mov	r2, #117440512
 	mov	r3, #512
 	mov	r0, #3
-	ldr	r1, .L11+60
+	ldr	r1, .L11+80
 	mov	lr, pc
 	bx	r4
-	ldr	r3, .L11+64
+	ldr	r3, .L11+84
 	mov	lr, pc
 	bx	r3
 	mov	r2, #1
-	ldr	r3, .L11+68
-	pop	{r4, lr}
+	ldr	r3, .L11+88
+	pop	{r4, r5, r6, lr}
 	str	r2, [r3]
 	bx	lr
 .L12:
 	.align	2
 .L11:
+	.word	6664
 	.word	vOff
 	.word	hOff
 	.word	.LANCHOR0
+	.word	platformerPal
 	.word	srand
 	.word	waitForVBlank
 	.word	DMANow
-	.word	platformerPal
 	.word	platformerTiles
 	.word	100724736
 	.word	platformerMap
+	.word	100696064
+	.word	parallaxBGTiles
+	.word	100716544
+	.word	parallaxBGMap
 	.word	83886592
 	.word	spritesheetPal
 	.word	100728832

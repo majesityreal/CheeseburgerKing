@@ -19,7 +19,8 @@ typedef struct {
     int targetX;
     int direction;
     int speed;
-    int targetRange;
+    int xRange;
+    int yRange;
     } GOBLIN;
 
 typedef struct {
@@ -44,6 +45,7 @@ typedef struct {
     int direction;
     int attacking;
     int attackTimer;
+    int movementCycle;
 } PLAYER;
 
 typedef struct {
@@ -81,8 +83,9 @@ typedef struct {
 #define GRAVITY 1
 #define JUMPVEL -5
 
-#define ATTACK_DURATION 30
-#define ATTACK_SPEED 8
+// number of frames the attack is
+#define ATTACK_DURATION 20
+#define ATTACK_SPEED 10
 
 
 // Variables
@@ -106,8 +109,16 @@ void animatePlayer();
 void drawPlayer();
 void drawFont();
 void drawPellets();
-int groundCheck();
+int groundCheck(int col, int row, int width, int height);
+int checkCollision(int col, int row);
+// slash
+void initSlash();
+void drawSlash();
+void animateSlash();
 // enemies
+void initEnemies();
 void updateEnemies();
 void drawEnemies();
 void animateEnemies();
+// special square root function :)
+float Q_rsqrt(float number);
