@@ -6,16 +6,21 @@
 
 // this is the mario map collision map
 #include "marioMapCollisionMap.h"
+// this is the new tilemap thing
+#include "platformerCollision.h"
 
 OBJ_ATTR shadowOAM[128];
 PLAYER player;
+SLASH slash;
 
 // temp placeholder for the first goblin for testing
 GOBLIN goblin1;
 
+int shadowOAMIndex = 0;
+
 short pellets[1024];
 // gets the collision map set up
-unsigned char* collisionMap = marioMapCollisionMapBitmap;
+unsigned char* collisionMap = platformerCollisionBitmap;
 
 int score = 0;
 
@@ -43,20 +48,22 @@ int framesInAir = 0;
 int gTimer = 0;
 
 // Pacman animation states for aniState
-enum {IDLE, RUNNING, PACRIGHT, PACLEFT, PACIDLE};
+enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK};
 
 // Initialize the game
 // #region init
 void initGame() {
     initPlayer();
+    initSlash();
     gTimer = 0;
+    shadowOAMIndex = 0;
 }
 
 // Initialize the player
 void initPlayer() {
     player.hide = 0;
-    player.width = 16;
-    player.height = 20;
+    player.width = 13;
+    player.height = 16;
     player.rdel = 1;
     player.cdel = 1;
 
@@ -65,8 +72,33 @@ void initPlayer() {
     player.worldCol = 20;
     player.aniCounter = 0;
     player.curFrame = 0;
-    player.numFrames = 4;
+    player.numFrames = 6;
     player.aniState = IDLE;
+    // util
+    player.direction = 0;
+    player.attacking = 0;
+    player.attackTimer = 0;
+}
+
+void initSlash() {
+    // hides by default
+    slash.hide = 1;
+    slash.width = 14;
+    slash.height = 12;
+    // FIXME configure this TODO
+    slash.rdel = 0;
+    slash.cdel = 15;
+
+    // 0,0 by default
+    slash.worldRow = 0;
+    slash.worldCol = 0;
+    slash.aniCounter = 0;
+    slash.curFrame = 0;
+    slash.numFrames = 4;
+    // util
+    slash.direction = 0;
+    slash.attacking = 0;
+    slash.attackTimer = 0;
 }
 
 // #endregion
@@ -83,8 +115,9 @@ void updateGame() {
 
 // Draws the game each frame
 void drawGame() {
-
+    shadowOAMIndex = 0;
     drawPlayer();
+    drawSlash();
     drawEnemies();
 
     waitForVBlank();
@@ -145,42 +178,42 @@ void updatePlayer() {
                     jumpThud = 1;
                     break;
                 }
+            }   
         }
-        }
-
-    // loops through pixels below player to check ground, if they are falling (yVel > 0)
-    for (int i = 0; i < yVel; i++) {
-        if (collisionMap[OFFSET(player.worldCol, player.worldRow + player.height + i, MAPWIDTH)]
-        || collisionMap[OFFSET(player.worldCol + player.width, player.worldRow + player.height + i, MAPWIDTH)]) {
-            // snaps player to ground and resets yVel
-            player.worldRow += (i - 2);
-            vOff += (i - 2);
-            yVel = 0;
-            break;
-        }
-    }
 
     // moves down if in air, handles gravity
     if (!grounded) {
-            if (BUTTON_HELD(BUTTON_UP) && jumping && !jumpThud) {
-                yVel = JUMPVEL + (GRAVITY * framesInAir);
+        // loops through pixels below player to check ground, if they are falling (yVel > 0)
+        for (int i = 0; i < yVel; i++) {
+            if (collisionMap[OFFSET(player.worldCol, player.worldRow + player.height + i, MAPWIDTH)]
+            || collisionMap[OFFSET(player.worldCol + player.width, player.worldRow + player.height + i, MAPWIDTH)]) {
+                // snaps player to ground and resets yVel
+                player.worldRow += (i - 1);
+                vOff += (i - 1);
+                yVel = 0;
+                grounded = 1;
+                break;
+            }
+        }
+        if (BUTTON_HELD(BUTTON_UP) && jumping && !jumpThud) {
+            yVel = JUMPVEL + (GRAVITY * framesInAir);
+        }
+        else {
+            if (jumpThud || !BUTTON_PRESSED(BUTTON_UP)) {
+                yVel = (GRAVITY * framesInAir);
             }
             else {
-                if (jumpThud || !BUTTON_PRESSED(BUTTON_UP)) {
-                    yVel = (GRAVITY * framesInAir);
-                }
-                else {
-                    yVel = ((JUMPVEL * 3) / 4) + (GRAVITY * framesInAir);
-                }
-                // this prevents pressing jump again midair
-                jumping = 0;
+                yVel = ((JUMPVEL * 3) / 4) + (GRAVITY * framesInAir);
             }
-            // makes sure gravity never gets too insane
-            yVel = fmin(3, yVel);
-            // smooths out air frames
-            if (gTimer % 4 == 0) {
+            // this prevents pressing jump again midair
+            jumping = 0;
+        }
+        // makes sure gravity never gets too insane
+        yVel = fmin(3, yVel);
+        // smooths out air frames
+        if (gTimer % 4 == 0) {
             framesInAir++;
-            }
+        }
         // this adds in button holding to affect jump height. (&& jumping) is to prevent quick release and press again
 
     }
@@ -207,6 +240,7 @@ void updatePlayer() {
 
     // #endregion
 
+    // left movement
     if(BUTTON_HELD(BUTTON_LEFT)
         && !collisionMap[OFFSET(player.worldCol - 1, player.worldRow, MAPWIDTH)]
         && !collisionMap[OFFSET(player.worldCol - 1, player.worldRow + player.height - 1, MAPWIDTH)]) {
@@ -218,6 +252,7 @@ void updatePlayer() {
             }
         }
     }
+    // right movement
     if(BUTTON_HELD(BUTTON_RIGHT) 
         && !collisionMap[OFFSET(player.worldCol + player.width + 1, player.worldRow, MAPWIDTH)]
         && !collisionMap[OFFSET(player.worldCol + player.width + 1, player.worldRow + player.height - 1, MAPWIDTH)]) {
@@ -230,7 +265,28 @@ void updatePlayer() {
         }
     }
 
-    // TODO add in combat
+    slash.worldCol = player.worldCol + (slash.cdel * ((player.direction * -2) + 1));
+    slash.worldRow = player.worldRow;
+    animateSlash();
+    if (player.attackTimer > 0) {
+        // we are displacing slash by its cdel off from the main player
+        // ((player.direction * -2) + 1) <- this is making it either 1 or -1 to change the direction of cdel
+        player.attackTimer--;
+    }
+    else {
+        player.attacking = 0;
+        slash.hide = 1;
+    }
+
+    // FIXME FOR SOME REASON WHEN I USE BUTTON_A, JUMPING ACTIVATES THE ATTACK??? WHAAAAA
+    if (BUTTON_PRESSED(BUTTON_B) && !player.attacking) {
+        player.attacking = 1;
+        player.attackTimer = ATTACK_SPEED * (slash.numFrames - 1);
+        player.curFrame = 0;
+        slash.hide = 0;
+        slash.curFrame = 0;
+        // TODO - add in extra stuff, movement restirction?
+    }
 
     // update the gravity check timer, so gravity is more smooth
     gTimer++;
@@ -242,12 +298,19 @@ void updatePlayer() {
 int groundCheck() {
     // this is when player is standing on ground
     if (collisionMap[OFFSET(player.worldCol, player.worldRow + player.height + 1, MAPWIDTH)]
-        && collisionMap[OFFSET(player.worldCol + player.width, player.worldRow + player.height + 1, MAPWIDTH)]) {
+        || collisionMap[OFFSET(player.worldCol + player.width, player.worldRow + player.height + 1, MAPWIDTH)]) {
             // need to reset this before anything else
             jumpThud = 0;
             return 1;
     }
     return 0;
+}
+
+void animateSlash() {
+    if (slash.aniCounter % ATTACK_SPEED == 0) {
+        slash.curFrame = (slash.curFrame + 1) % slash.numFrames;
+    }
+    slash.aniCounter++;
 }
 
 // TODO - fix up for player animation states (attack, move left/right, jump)
@@ -258,16 +321,7 @@ void animatePlayer() {
     player.prevAniState = player.aniState;
     player.aniState = IDLE;
 
-    // Change the animation frame every 10 frames of gameplay
-    if(player.aniCounter % 10 == 0) {
-        player.curFrame = (player.curFrame + 1) % player.numFrames;
-    }
-
     // Control movement and change animation state
-    // if(BUTTON_HELD(BUTTON_UP))
-    //     player.aniState = PACUP;
-    // if(BUTTON_HELD(BUTTON_DOWN))
-    //     player.aniState = PACDOWN;
     if(BUTTON_HELD(BUTTON_LEFT)) {
         player.aniState = RUNNING;
         player.direction = 1;
@@ -276,12 +330,32 @@ void animatePlayer() {
         player.aniState = RUNNING;
         player.direction = 0;
     }
+    if (yVel > 0) {
+        player.aniState = JUMPDOWN;
+    }
+    if (yVel < 0) {
+        player.aniState = JUMPUP;
+    }
+    if (player.attacking) {
+        player.aniState = ATTACK;
+    }
 
-        player.aniCounter++;
+    // Change the animation frame every X frames of gameplay for different states
+    if(player.aniCounter % ATTACK_SPEED == 0 && player.aniState == ATTACK) {
+        player.curFrame = (player.curFrame + 1) % player.numFrames;
+    }
+    else if (player.aniCounter % 5 == 0 && player.aniState == RUNNING) {
+        player.curFrame = (player.curFrame + 1) % player.numFrames;
+    }
+    else if (player.aniCounter % 10 == 0) {
+        player.curFrame = (player.curFrame + 1) % player.numFrames;
+    }
+
+    player.aniCounter++;
 
     // TODO - fix this part up, for not it is commented out
     // If the pacman aniState is idle, frame is pacman standing
-    // if (player.aniState == PACIDLE) {
+    // if (player.aniState == ATTACK) {
     //     player.curFrame = 0;
     //     player.aniCounter = 0;
     //     player.aniState = player.prevAniState;
@@ -293,22 +367,38 @@ void animatePlayer() {
 // Draw the player
 void drawPlayer() {
     if (player.hide) {
-        shadowOAM[0].attr0 |= ATTR0_HIDE;
+        shadowOAM[shadowOAMIndex].attr0 |= ATTR0_HIDE;
     } else {
         // the reason vOff and hOff are included in here is to keep them according to the camera
-        shadowOAM[0].attr0 = (ROWMASK & (player.worldRow - vOff)) | ATTR0_TALL;
-        shadowOAM[0].attr1 = (COLMASK & (player.worldCol - hOff)) | ATTR1_MEDIUM;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (player.worldRow - vOff)) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (player.worldCol - hOff)) | ATTR1_SMALL;
         // if player is facing left, flip sprite to left
         if (player.direction) {
-            shadowOAM[0].attr1 |= ATTR1_HFLIP;
+            shadowOAM[shadowOAMIndex].attr1 |= ATTR1_HFLIP;
         }
-        if (player.aniState == IDLE) {
-            shadowOAM[0].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(0, (player.curFrame * 4));
+        switch (player.aniState) {
+            // do not ask why sometimes I percent inside, others outside... its just the way it works, otherwise glitchy
+            case IDLE:
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame * 2) % 4, player.aniState) * 2;
+            break;
+            case JUMPUP:
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame % 3 * 2), player.aniState * 2);
+            break;
+            case JUMPDOWN:
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame % 3 * 2), player.aniState * 2);
+            break;
+            case ATTACK:
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame % 4 * 2), player.aniState * 2);
+            break;
+            case RUNNING:
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame * 2), player.aniState * 2);
+            break;
+            default:
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame * 2), player.aniState * 2);
+            break;
         }
-        // TODO, change based on the animation row state thingy
-        else
-            shadowOAM[0].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(player.aniState * 2, (player.curFrame * 4));
     }
+    shadowOAMIndex++;
 }
 
 void updateEnemies() {
@@ -326,6 +416,23 @@ void animateEnemies() {
 
 void drawEnemies() {
 
+}
+
+void drawSlash() {
+    if (slash.hide) {
+        shadowOAM[shadowOAMIndex].attr0 |= ATTR0_HIDE;
+    } else {
+        // the reason vOff and hOff are included in here is to keep them according to the camera
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (slash.worldRow - vOff)) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (slash.worldCol - hOff)) | ATTR1_SMALL;
+        // if player is facing left, flip slash to left
+        if (player.direction) {
+            shadowOAM[shadowOAMIndex].attr1 |= ATTR1_HFLIP;
+        }
+        // on spritesheet, slash is starting at tile (8,8) in 8x coordinates, which equates to + 3, 4
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((slash.curFrame + 4), 4) * 2;
+    }
+    shadowOAMIndex++;
 }
 
 void drawFont() {

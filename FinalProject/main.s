@@ -88,7 +88,7 @@ startGame:
 	@ frame_needed = 0, uses_anonymous_args = 0
 	mov	r3, #67108864
 	mov	r2, #4608
-	mov	r1, #7680
+	mov	r1, #24064
 	push	{r4, lr}
 	strh	r2, [r3]	@ movhi
 	ldr	r2, .L11
@@ -113,13 +113,13 @@ startGame:
 	ldr	r1, .L11+24
 	mov	lr, pc
 	bx	r4
-	mov	r3, #16384
+	mov	r3, #32768
 	mov	r2, #100663296
 	mov	r0, #3
 	ldr	r1, .L11+28
 	mov	lr, pc
 	bx	r4
-	mov	r3, #1024
+	mov	r3, #2048
 	mov	r0, #3
 	ldr	r2, .L11+32
 	ldr	r1, .L11+36
@@ -163,10 +163,10 @@ startGame:
 	.word	srand
 	.word	waitForVBlank
 	.word	DMANow
-	.word	marioMapPal
-	.word	marioMapTiles
+	.word	platformerPal
+	.word	platformerTiles
 	.word	100724736
-	.word	marioMapMap
+	.word	platformerMap
 	.word	83886592
 	.word	spritesheetPal
 	.word	100728832

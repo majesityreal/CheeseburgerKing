@@ -42,7 +42,30 @@ typedef struct {
     int hide;
     // extra util stuff
     int direction;
+    int attacking;
+    int attackTimer;
 } PLAYER;
+
+typedef struct {
+    // screen stuff
+    int worldRow;
+    int worldCol;
+    // we are using rdel and cdel to determine offset from player
+    int rdel;
+    int cdel;
+    int width;
+    int height;
+    // animation stuff
+    int aniCounter;
+    int curFrame;
+    int numFrames;
+    // whether or not to hide
+    int hide;
+    // extra util stuff
+    int direction;
+    int attacking;
+    int attackTimer;
+} SLASH;
 
 typedef struct {
     int worldRow;
@@ -54,9 +77,12 @@ typedef struct {
 
 // Constants
 #define MAPHEIGHT 256
-#define MAPWIDTH 256
+#define MAPWIDTH 512
 #define GRAVITY 1
 #define JUMPVEL -5
+
+#define ATTACK_DURATION 30
+#define ATTACK_SPEED 8
 
 
 // Variables
@@ -64,6 +90,7 @@ extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
 extern PLAYER player;
+extern SLASH slash;
 
 extern int lives;
 extern int pauseVar;

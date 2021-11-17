@@ -1348,9 +1348,11 @@ typedef struct {
     int targetX;
     int direction;
     int speed;
-    } ORC;
+    int targetRange;
+    } GOBLIN;
 
 typedef struct {
+
     int screenRow;
     int screenCol;
     int worldRow;
@@ -1359,13 +1361,40 @@ typedef struct {
     int cdel;
     int width;
     int height;
+
     int aniCounter;
     int aniState;
     int prevAniState;
     int curFrame;
     int numFrames;
+
     int hide;
+
+    int direction;
+    int attacking;
+    int attackTimer;
 } PLAYER;
+
+typedef struct {
+
+    int worldRow;
+    int worldCol;
+
+    int rdel;
+    int cdel;
+    int width;
+    int height;
+
+    int aniCounter;
+    int curFrame;
+    int numFrames;
+
+    int hide;
+
+    int direction;
+    int attacking;
+    int attackTimer;
+} SLASH;
 
 typedef struct {
     int worldRow;
@@ -1374,11 +1403,12 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 57 "game.h"
+# 89 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
 extern PLAYER player;
+extern SLASH slash;
 
 extern int lives;
 extern int pauseVar;
@@ -1395,6 +1425,10 @@ void drawPlayer();
 void drawFont();
 void drawPellets();
 int groundCheck();
+
+void updateEnemies();
+void drawEnemies();
+void animateEnemies();
 # 5 "main.c" 2
 # 1 "text.h" 1
 
@@ -1457,7 +1491,18 @@ extern const unsigned short marioMapCollisionMapBitmap[32768];
 
 extern const unsigned short marioMapCollisionMapPal[256];
 # 14 "main.c" 2
-# 31 "main.c"
+
+# 1 "platformer.h" 1
+# 22 "platformer.h"
+extern const unsigned short platformerTiles[32768];
+
+
+extern const unsigned short platformerMap[2048];
+
+
+extern const unsigned short platformerPal[256];
+# 16 "main.c" 2
+# 33 "main.c"
 void initialize();
 
 
@@ -1569,7 +1614,7 @@ void titleScreen() {
 
 void startGame() {
     (*(volatile unsigned short *)0x4000000) = 0 | (1 << 12) | (1 << 9);
-    (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((30) << 8) | (0 << 14) | (0 << 7);
+    (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((30) << 8) | (1 << 14) | (0 << 7);
 
 
     (*(volatile unsigned short *)0x04000016) = vOff;
@@ -1580,10 +1625,10 @@ void startGame() {
     srand(timer);
 
     waitForVBlank();
-# 161 "main.c"
-    DMANow(3, marioMapPal, ((unsigned short *)0x5000000), 16);
-    DMANow(3, marioMapTiles, &((charblock *)0x6000000)[0], 32768 / 2);
-    DMANow(3, marioMapMap, &((screenblock *)0x6000000)[30], 2048 / 2);
+# 163 "main.c"
+    DMANow(3, platformerPal, ((unsigned short *)0x5000000), 16);
+    DMANow(3, platformerTiles, &((charblock *)0x6000000)[0], 65536 / 2);
+    DMANow(3, platformerMap, &((screenblock *)0x6000000)[30], 4096 / 2);
 
 
 
@@ -1623,7 +1668,7 @@ void game() {
 
 
 }
-# 221 "main.c"
+# 223 "main.c"
 void goToPause() {
     state = PAUSE;
 }

@@ -12,6 +12,8 @@
 #include "marioMap.h"
 #include "marioMapCollisionMap.h"
 
+#include "platformer.h"
+
 
 
 /*
@@ -139,7 +141,7 @@ void titleScreen() {
 // sets up the game into mode 0 and all the required setups
 void startGame() {
     REG_DISPCTL = MODE0 | SPRITE_ENABLE | BG1_ENABLE;
-    REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(30) | BG_SIZE_SMALL | BG_4BPP;
+    REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(30) | BG_SIZE_WIDE | BG_4BPP;
 
     // sets up the background offset
     REG_BG1VOFF = vOff;
@@ -158,9 +160,9 @@ void startGame() {
 //     DMANow(3, testmapMap, &SCREENBLOCK[26], testmapMapLen / 2);
 
     // adding temp mario map
-    DMANow(3, marioMapPal, PALETTE, 16);
-    DMANow(3, marioMapTiles, &CHARBLOCK[0], marioMapTilesLen / 2);
-    DMANow(3, marioMapMap, &SCREENBLOCK[30], marioMapMapLen / 2);
+    DMANow(3, platformerPal, PALETTE, 16);
+    DMANow(3, platformerTiles, &CHARBLOCK[0], platformerTilesLen / 2);
+    DMANow(3, platformerMap, &SCREENBLOCK[30], platformerMapLen / 2);
 
     // old aadding maop
     // DMANow(3, GameBackgroundPal, PALETTE, 16);

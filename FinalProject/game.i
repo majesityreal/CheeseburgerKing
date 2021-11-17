@@ -1021,7 +1021,30 @@ typedef struct {
     int hide;
 
     int direction;
+    int attacking;
+    int attackTimer;
 } PLAYER;
+
+typedef struct {
+
+    int worldRow;
+    int worldCol;
+
+    int rdel;
+    int cdel;
+    int width;
+    int height;
+
+    int aniCounter;
+    int curFrame;
+    int numFrames;
+
+    int hide;
+
+    int direction;
+    int attacking;
+    int attackTimer;
+} SLASH;
 
 typedef struct {
     int worldRow;
@@ -1030,11 +1053,12 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 63 "game.h"
+# 89 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
 extern PLAYER player;
+extern SLASH slash;
 
 extern int lives;
 extern int pauseVar;
@@ -1080,15 +1104,26 @@ extern const unsigned short marioMapCollisionMapBitmap[32768];
 extern const unsigned short marioMapCollisionMapPal[256];
 # 9 "game.c" 2
 
+# 1 "platformerCollision.h" 1
+# 21 "platformerCollision.h"
+extern const unsigned short platformerCollisionBitmap[65536];
+
+
+extern const unsigned short platformerCollisionPal[256];
+# 11 "game.c" 2
+
 OBJ_ATTR shadowOAM[128];
 PLAYER player;
+SLASH slash;
 
 
 GOBLIN goblin1;
 
+int shadowOAMIndex = 0;
+
 short pellets[1024];
 
-unsigned char* collisionMap = marioMapCollisionMapBitmap;
+unsigned char* collisionMap = platformerCollisionBitmap;
 
 int score = 0;
 
@@ -1116,20 +1151,22 @@ int framesInAir = 0;
 int gTimer = 0;
 
 
-enum {IDLE, RUNNING, PACRIGHT, PACLEFT, PACIDLE};
+enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK};
 
 
 
 void initGame() {
     initPlayer();
+    initSlash();
     gTimer = 0;
+    shadowOAMIndex = 0;
 }
 
 
 void initPlayer() {
     player.hide = 0;
-    player.width = 16;
-    player.height = 20;
+    player.width = 13;
+    player.height = 16;
     player.rdel = 1;
     player.cdel = 1;
 
@@ -1138,8 +1175,33 @@ void initPlayer() {
     player.worldCol = 20;
     player.aniCounter = 0;
     player.curFrame = 0;
-    player.numFrames = 4;
+    player.numFrames = 6;
     player.aniState = IDLE;
+
+    player.direction = 0;
+    player.attacking = 0;
+    player.attackTimer = 0;
+}
+
+void initSlash() {
+
+    slash.hide = 1;
+    slash.width = 14;
+    slash.height = 12;
+
+    slash.rdel = 0;
+    slash.cdel = 15;
+
+
+    slash.worldRow = 0;
+    slash.worldCol = 0;
+    slash.aniCounter = 0;
+    slash.curFrame = 0;
+    slash.numFrames = 4;
+
+    slash.direction = 0;
+    slash.attacking = 0;
+    slash.attackTimer = 0;
 }
 
 
@@ -1156,8 +1218,9 @@ void updateGame() {
 
 
 void drawGame() {
-
+    shadowOAMIndex = 0;
     drawPlayer();
+    drawSlash();
     drawEnemies();
 
     waitForVBlank();
@@ -1179,9 +1242,9 @@ void updatePlayer() {
     grounded = groundCheck();
 
 
-    if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))) && grounded
-        && !collisionMap[((player.worldRow - 1) * (256) + (player.worldCol))]
-        && !collisionMap[((player.worldRow - 1) * (256) + (player.worldCol + player.width)) ]) {
+    if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && grounded
+        && !collisionMap[((player.worldRow - 1) * (512) + (player.worldCol))]
+        && !collisionMap[((player.worldRow - 1) * (512) + (player.worldCol + player.width)) ]) {
 
             yVel = -5;
 
@@ -1191,8 +1254,8 @@ void updatePlayer() {
 
 
         for (int i = 0; i > yVel; i--) {
-            if (collisionMap[((player.worldRow + i) * (256) + (player.worldCol))]
-            || collisionMap[((player.worldRow + i) * (256) + (player.worldCol + player.width))]) {
+            if (collisionMap[((player.worldRow + i) * (512) + (player.worldCol))]
+            || collisionMap[((player.worldRow + i) * (512) + (player.worldCol + player.width))]) {
 
                 player.worldRow += (i + 1);
                 vOff += (i + 1);
@@ -1210,50 +1273,50 @@ void updatePlayer() {
 
         if ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))) && (~((*(volatile unsigned short *)0x04000130)) & ((1 << 4))) && yVel > 0) {
             for (int i = 0; i > -2; i--) {
-                if (collisionMap[((player.worldRow + i) * (256) + (player.worldCol - i))]
-                || collisionMap[((player.worldRow + i) * (256) + (player.worldCol + player.width - i))]) {
+                if (collisionMap[((player.worldRow + i) * (512) + (player.worldCol - i))]
+                || collisionMap[((player.worldRow + i) * (512) + (player.worldCol + player.width - i))]) {
 
                     yVel = 0;
                     jumping = 0;
                     jumpThud = 1;
                     break;
                 }
+            }
         }
-        }
-
-
-    for (int i = 0; i < yVel; i++) {
-        if (collisionMap[((player.worldRow + player.height + i) * (256) + (player.worldCol))]
-        || collisionMap[((player.worldRow + player.height + i) * (256) + (player.worldCol + player.width))]) {
-
-            player.worldRow += (i - 2);
-            vOff += (i - 2);
-            yVel = 0;
-            break;
-        }
-    }
 
 
     if (!grounded) {
-            if ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))) && jumping && !jumpThud) {
-                yVel = -5 + (1 * framesInAir);
+
+        for (int i = 0; i < yVel; i++) {
+            if (collisionMap[((player.worldRow + player.height + i) * (512) + (player.worldCol))]
+            || collisionMap[((player.worldRow + player.height + i) * (512) + (player.worldCol + player.width))]) {
+
+                player.worldRow += (i - 1);
+                vOff += (i - 1);
+                yVel = 0;
+                grounded = 1;
+                break;
+            }
+        }
+        if ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))) && jumping && !jumpThud) {
+            yVel = -5 + (1 * framesInAir);
+        }
+        else {
+            if (jumpThud || !(!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6))))) {
+                yVel = (1 * framesInAir);
             }
             else {
-                if (jumpThud || !(!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6))))) {
-                    yVel = (1 * framesInAir);
-                }
-                else {
-                    yVel = ((-5 * 3) / 4) + (1 * framesInAir);
-                }
-
-                jumping = 0;
+                yVel = ((-5 * 3) / 4) + (1 * framesInAir);
             }
 
-            yVel = fmin(3, yVel);
+            jumping = 0;
+        }
 
-            if (gTimer % 4 == 0) {
+        yVel = fmin(3, yVel);
+
+        if (gTimer % 4 == 0) {
             framesInAir++;
-            }
+        }
 
 
     }
@@ -1277,10 +1340,13 @@ void updatePlayer() {
     if (vOff > 0 && (player.worldRow - vOff <= 160 / 2) && (yVel < 0)) {
         vOff += yVel;
     }
-# 220 "game.c"
+
+
+
+
     if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 5)))
-        && !collisionMap[((player.worldRow) * (256) + (player.worldCol - 1))]
-        && !collisionMap[((player.worldRow + player.height - 1) * (256) + (player.worldCol - 1))]) {
+        && !collisionMap[((player.worldRow) * (512) + (player.worldCol - 1))]
+        && !collisionMap[((player.worldRow + player.height - 1) * (512) + (player.worldCol - 1))]) {
         if (player.worldCol >= 0) {
             player.worldCol--;
             if (hOff >= 0 && (player.worldCol - hOff < (240 / 2))) {
@@ -1289,10 +1355,11 @@ void updatePlayer() {
             }
         }
     }
+
     if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 4)))
-        && !collisionMap[((player.worldRow) * (256) + (player.worldCol + player.width + 1))]
-        && !collisionMap[((player.worldRow + player.height - 1) * (256) + (player.worldCol + player.width + 1))]) {
-        if (player.worldCol <= 256 + 240 - 30) {
+        && !collisionMap[((player.worldRow) * (512) + (player.worldCol + player.width + 1))]
+        && !collisionMap[((player.worldRow + player.height - 1) * (512) + (player.worldCol + player.width + 1))]) {
+        if (player.worldCol <= 512 + 240 - 30) {
             player.worldCol++;
             if (hOff <= 240 && (player.worldCol - hOff > (240 / 2))) {
 
@@ -1301,9 +1368,31 @@ void updatePlayer() {
         }
     }
 
+    slash.worldCol = player.worldCol + (slash.cdel * ((player.direction * -2) + 1));
+    slash.worldRow = player.worldRow;
+    animateSlash();
+    if (player.attackTimer > 0) {
+
+
+        player.attackTimer--;
+    }
+    else {
+        player.attacking = 0;
+        slash.hide = 1;
+    }
+
+
+    if ((!(~(oldButtons) & ((1 << 1))) && (~buttons & ((1 << 1)))) && !player.attacking) {
+        player.attacking = 1;
+        player.attackTimer = 8 * (slash.numFrames - 1);
+        player.curFrame = 0;
+        slash.hide = 0;
+        slash.curFrame = 0;
+
+    }
+
 
     gTimer++;
-
 
     animatePlayer();
 }
@@ -1311,13 +1400,20 @@ void updatePlayer() {
 
 int groundCheck() {
 
-    if (collisionMap[((player.worldRow + player.height + 1) * (256) + (player.worldCol))]
-        && collisionMap[((player.worldRow + player.height + 1) * (256) + (player.worldCol + player.width))]) {
+    if (collisionMap[((player.worldRow + player.height + 1) * (512) + (player.worldCol))]
+        || collisionMap[((player.worldRow + player.height + 1) * (512) + (player.worldCol + player.width))]) {
 
             jumpThud = 0;
             return 1;
     }
     return 0;
+}
+
+void animateSlash() {
+    if (slash.aniCounter % 8 == 0) {
+        slash.curFrame = (slash.curFrame + 1) % slash.numFrames;
+    }
+    slash.aniCounter++;
 }
 
 
@@ -1329,15 +1425,6 @@ void animatePlayer() {
     player.aniState = IDLE;
 
 
-    if(player.aniCounter % 10 == 0) {
-        player.curFrame = (player.curFrame + 1) % player.numFrames;
-    }
-
-
-
-
-
-
     if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 5)))) {
         player.aniState = RUNNING;
         player.direction = 1;
@@ -1346,30 +1433,66 @@ void animatePlayer() {
         player.aniState = RUNNING;
         player.direction = 0;
     }
+    if (yVel > 0) {
+        player.aniState = JUMPDOWN;
+    }
+    if (yVel < 0) {
+        player.aniState = JUMPUP;
+    }
+    if (player.attacking) {
+        player.aniState = ATTACK;
+    }
 
-        player.aniCounter++;
-# 300 "game.c"
+
+    if(player.aniCounter % 8 == 0 && player.aniState == ATTACK) {
+        player.curFrame = (player.curFrame + 1) % player.numFrames;
+    }
+    else if (player.aniCounter % 5 == 0 && player.aniState == RUNNING) {
+        player.curFrame = (player.curFrame + 1) % player.numFrames;
+    }
+    else if (player.aniCounter % 10 == 0) {
+        player.curFrame = (player.curFrame + 1) % player.numFrames;
+    }
+
+    player.aniCounter++;
+# 365 "game.c"
 }
 
 
 void drawPlayer() {
     if (player.hide) {
-        shadowOAM[0].attr0 |= (2 << 8);
+        shadowOAM[shadowOAMIndex].attr0 |= (2 << 8);
     } else {
 
-        shadowOAM[0].attr0 = (0xFF & (player.worldRow - vOff)) | (2 << 14);
-        shadowOAM[0].attr1 = (0x1FF & (player.worldCol - hOff)) | (2 << 14);
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (player.worldRow - vOff)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (player.worldCol - hOff)) | (1 << 14);
 
         if (player.direction) {
-            shadowOAM[0].attr1 |= (1 << 12);
+            shadowOAM[shadowOAMIndex].attr1 |= (1 << 12);
         }
-        if (player.aniState == IDLE) {
-            shadowOAM[0].attr2 = ((0) << 12) | (((player.curFrame * 4))*32 + (0));
-        }
+        switch (player.aniState) {
 
-        else
-            shadowOAM[0].attr2 = ((0) << 12) | (((player.curFrame * 4))*32 + (player.aniState * 2));
+            case IDLE:
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((player.aniState)*32 + ((player.curFrame * 2) % 4)) * 2;
+            break;
+            case JUMPUP:
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((player.aniState * 2)*32 + ((player.curFrame % 3 * 2)));
+            break;
+            case JUMPDOWN:
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((player.aniState * 2)*32 + ((player.curFrame % 3 * 2)));
+            break;
+            case ATTACK:
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((player.aniState * 2)*32 + ((player.curFrame % 4 * 2)));
+            break;
+            case RUNNING:
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((player.aniState * 2)*32 + ((player.curFrame * 2)));
+            break;
+            default:
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((player.aniState * 2)*32 + ((player.curFrame * 2)));
+            break;
+        }
     }
+    shadowOAMIndex++;
 }
 
 void updateEnemies() {
@@ -1387,6 +1510,23 @@ void animateEnemies() {
 
 void drawEnemies() {
 
+}
+
+void drawSlash() {
+    if (slash.hide) {
+        shadowOAM[shadowOAMIndex].attr0 |= (2 << 8);
+    } else {
+
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (slash.worldRow - vOff)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (slash.worldCol - hOff)) | (1 << 14);
+
+        if (player.direction) {
+            shadowOAM[shadowOAMIndex].attr1 |= (1 << 12);
+        }
+
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((4)*32 + ((slash.curFrame + 4))) * 2;
+    }
+    shadowOAMIndex++;
 }
 
 void drawFont() {
