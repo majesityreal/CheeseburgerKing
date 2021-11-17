@@ -10,6 +10,7 @@
 #include "platformerCollision.h"
 
 #include "map1Collision.h"
+#include "map2Collision.h"
 
 
 
@@ -24,7 +25,7 @@ int shadowOAMIndex = 0;
 
 short pellets[1024];
 // gets the collision map set up
-unsigned char* collisionMap = map1CollisionBitmap;
+unsigned char* collisionMap = map2CollisionBitmap;
 
 int score = 0;
 
@@ -40,8 +41,10 @@ int grounded = 1;
 
 // whether or not player is holding jump button
 int jumping = 0;
+// check for player double jump
+int doubleJumping = 0;
 
-// detects if player hits something above while jumping
+// now being used as measure to prevent 'rejump' in air from holding up. Check around line 230 for context
 int jumpThud = 0;
 
 // velocity in the y axis
@@ -51,8 +54,8 @@ int framesInAir = 0;
 // gravity timer, for falling velocity
 int gTimer = 0;
 
-// Pacman animation states for aniState
-enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK};
+// Player animation states for aniState
+enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DOUBLEJUMP};
 
 // Initialize the game
 // #region init
@@ -124,6 +127,8 @@ void initEnemies() {
     goblin1.xRange = 128;
     goblin1.yRange = 96;
     goblin1.speed = 1;
+    goblin1.lives = 2;
+    goblin1.damaged = 0;
 }
 
 // #endregion
@@ -165,9 +170,26 @@ void updatePlayer() {
     // #region yVel + jumping
     grounded = groundCheck(player.worldCol, player.worldRow, player.width, player.height);
     // this ensures no jumpThud glitches
-    if (grounded) jumpThud = 0;
+    if (grounded)  {
+        jumpThud = 0;
+        doubleJumping = 0;
+    }
 
-    // the check for jumping
+    // the check for double jumping - must go before regular jumping to prevent double counting
+    // checks for whether the player jumped, or whether they are just falling
+    if(BUTTON_PRESSED(BUTTON_UP) && !doubleJumping && ((jumping || !grounded))) {
+        doubleJumping = 1;
+        yVel = (JUMPVEL * 2) / 4;
+        framesInAir = 0;
+        // this resets so you can continue holding the dJ
+        jumpThud = 0;
+        // this is for the case where you fall of ledge without jumping
+        if (!jumping) {
+            jumping = 1;
+        }
+    }
+
+    // the check for jumping - the double collision check ensures both bottoms are on ground, no coyote jumping! Should this be changed to be more merciful to players?
     if(BUTTON_PRESSED(BUTTON_UP) && grounded
         && !checkCollision(player.worldCol, player.worldRow - 1)
         && !checkCollision(player.worldCol + player.width, player.worldRow - 1)) {
@@ -223,18 +245,21 @@ void updatePlayer() {
                 break;
             }
         }
+        // first jump, holding up gets higher velocity
         if (BUTTON_HELD(BUTTON_UP) && jumping && !jumpThud) {
             yVel = JUMPVEL + (GRAVITY * framesInAir);
         }
         else {
-            if (jumpThud || !BUTTON_PRESSED(BUTTON_UP)) {
+            // case where you let go of jump midair, but are still jumping
+            if (jumping) {
+                yVel = ((JUMPVEL * 5) / 8) + (GRAVITY * framesInAir);
+                // this is what stops you from holding jump again to get the boost
+                jumpThud = 1;
+            }
+            // case where you are falling without ever having jumped, or you hit head on ceiling
+            else {
                 yVel = (GRAVITY * framesInAir);
             }
-            else {
-                yVel = ((JUMPVEL * 3) / 4) + (GRAVITY * framesInAir);
-            }
-            // this prevents pressing jump again midair
-            jumping = 0;
         }
         // makes sure gravity never gets too insane
         yVel = fmin(3, yVel);
@@ -298,10 +323,21 @@ void updatePlayer() {
     slash.worldCol = player.worldCol + (slash.cdel * ((player.direction * -2) + 1));
     slash.worldRow = player.worldRow;
     animateSlash();
+    // ATTACKING - this handles damaging enemies while doing the slash TODO - maybe make it into its own separate method
     if (player.attackTimer > 0) {
         // TODO - go through all the enemies
         if (collision(slash.worldCol, slash.worldRow, slash.width, slash.height, goblin1.worldCol, goblin1.worldRow, goblin1.width, goblin1.height)) {
-            goblin1.active = 0;
+            // mark it as damaged to prevent multiple hits per frame
+            if (!goblin1.damaged) {
+                goblin1.damaged = 1;
+                goblin1.lives--;
+                // TODO - add in death animation
+                if (goblin1.lives < 0) {
+                    // TODO FIXME - potential future issue with loading in sprite. make it 'dead' and not just inactive
+                    // maybe make it so goblins are instantiated when camera crosses certain set of positions?
+                    goblin1.active = 0;
+                }
+            }
         }
         // we are displacing slash by its cdel off from the main player
         // ((player.direction * -2) + 1) <- this is making it either 1 or -1 to change the direction of cdel
@@ -363,6 +399,9 @@ void animatePlayer() {
     if (yVel < 0) {
         player.aniState = JUMPUP;
     }
+    if (doubleJumping) {
+        player.aniState = DOUBLEJUMP;
+    }
     if (player.attacking) {
         player.aniState = ATTACK;
     }
@@ -372,6 +411,9 @@ void animatePlayer() {
         player.curFrame = (player.curFrame + 1) % player.numFrames;
     }
     else if (player.aniCounter % 5 == 0 && player.aniState == RUNNING) {
+        player.curFrame = (player.curFrame + 1) % player.numFrames;
+    }
+    else if (player.aniCounter % 5 == 0 && player.aniState == DOUBLEJUMP) {
         player.curFrame = (player.curFrame + 1) % player.numFrames;
     }
     else if (player.aniCounter % 10 == 0) {
@@ -420,6 +462,10 @@ void drawPlayer() {
             case RUNNING:
             shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame * 2), player.aniState * 2);
             break;
+            case DOUBLEJUMP:
+            //                                                          This + 1 is bc of the way the spritesheet is oriented
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame % 3 * 2), (player.aniState + 2) * 2);
+            break;
             default:
             shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame * 2), player.aniState * 2);
             break;
@@ -429,6 +475,15 @@ void drawPlayer() {
 }
 
 void updateEnemies() {
+
+    // wait until the player is done attacking to apply damage
+    if (goblin1.damaged && !player.attacking) {
+        goblin1.damaged = 0;
+            // TODO FIXME - potential future issue with loading in sprite. make it 'dead' and not just inactive
+            // maybe make it so goblins are instantiated when camera crosses certain set of positions?
+    }
+
+
     int xDif = player.worldCol - goblin1.worldCol;
     int yDif = player.worldRow - goblin1.worldRow;
 

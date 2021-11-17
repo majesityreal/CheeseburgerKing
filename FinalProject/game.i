@@ -995,6 +995,9 @@ typedef struct {
     int curFrame;
     int numFrames;
 
+
+    int damaged;
+    int lives;
     int targetX;
     int direction;
     int speed;
@@ -1055,7 +1058,7 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 92 "game.h"
+# 95 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
@@ -1129,6 +1132,13 @@ extern const unsigned short map1CollisionBitmap[65536];
 
 extern const unsigned short map1CollisionPal[256];
 # 13 "game.c" 2
+# 1 "map2Collision.h" 1
+# 21 "map2Collision.h"
+extern const unsigned short map2CollisionBitmap[65536];
+
+
+extern const unsigned short map2CollisionPal[256];
+# 14 "game.c" 2
 
 
 
@@ -1143,7 +1153,7 @@ int shadowOAMIndex = 0;
 
 short pellets[1024];
 
-unsigned char* collisionMap = map1CollisionBitmap;
+unsigned char* collisionMap = map2CollisionBitmap;
 
 int score = 0;
 
@@ -1160,6 +1170,8 @@ int grounded = 1;
 
 int jumping = 0;
 
+int doubleJumping = 0;
+
 
 int jumpThud = 0;
 
@@ -1171,7 +1183,7 @@ int framesInAir = 0;
 int gTimer = 0;
 
 
-enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK};
+enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DOUBLEJUMP};
 
 
 
@@ -1243,6 +1255,8 @@ void initEnemies() {
     goblin1.xRange = 128;
     goblin1.yRange = 96;
     goblin1.speed = 1;
+    goblin1.lives = 2;
+    goblin1.damaged = 0;
 }
 
 
@@ -1284,7 +1298,24 @@ void updatePlayer() {
 
     grounded = groundCheck(player.worldCol, player.worldRow, player.width, player.height);
 
-    if (grounded) jumpThud = 0;
+    if (grounded) {
+        jumpThud = 0;
+        doubleJumping = 0;
+    }
+
+
+
+    if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && !doubleJumping && ((jumping || !grounded))) {
+        doubleJumping = 1;
+        yVel = (-5 * 2) / 4;
+        framesInAir = 0;
+
+        jumpThud = 0;
+
+        if (!jumping) {
+            jumping = 1;
+        }
+    }
 
 
     if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && grounded
@@ -1342,18 +1373,21 @@ void updatePlayer() {
                 break;
             }
         }
+
         if ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))) && jumping && !jumpThud) {
             yVel = -5 + (1 * framesInAir);
         }
         else {
-            if (jumpThud || !(!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6))))) {
-                yVel = (1 * framesInAir);
-            }
-            else {
-                yVel = ((-5 * 3) / 4) + (1 * framesInAir);
+
+            if (jumping) {
+                yVel = ((-5 * 5) / 8) + (1 * framesInAir);
+
+                jumpThud = 1;
             }
 
-            jumping = 0;
+            else {
+                yVel = (1 * framesInAir);
+            }
         }
 
         yVel = fmin(3, yVel);
@@ -1417,10 +1451,21 @@ void updatePlayer() {
     slash.worldCol = player.worldCol + (slash.cdel * ((player.direction * -2) + 1));
     slash.worldRow = player.worldRow;
     animateSlash();
+
     if (player.attackTimer > 0) {
 
         if (collision(slash.worldCol, slash.worldRow, slash.width, slash.height, goblin1.worldCol, goblin1.worldRow, goblin1.width, goblin1.height)) {
-            goblin1.active = 0;
+
+            if (!goblin1.damaged) {
+                goblin1.damaged = 1;
+                goblin1.lives--;
+
+                if (goblin1.lives < 0) {
+
+
+                    goblin1.active = 0;
+                }
+            }
         }
 
 
@@ -1482,6 +1527,9 @@ void animatePlayer() {
     if (yVel < 0) {
         player.aniState = JUMPUP;
     }
+    if (doubleJumping) {
+        player.aniState = DOUBLEJUMP;
+    }
     if (player.attacking) {
         player.aniState = ATTACK;
     }
@@ -1493,12 +1541,15 @@ void animatePlayer() {
     else if (player.aniCounter % 5 == 0 && player.aniState == RUNNING) {
         player.curFrame = (player.curFrame + 1) % player.numFrames;
     }
+    else if (player.aniCounter % 5 == 0 && player.aniState == DOUBLEJUMP) {
+        player.curFrame = (player.curFrame + 1) % player.numFrames;
+    }
     else if (player.aniCounter % 10 == 0) {
         player.curFrame = (player.curFrame + 1) % player.numFrames;
     }
 
     player.aniCounter++;
-# 392 "game.c"
+# 434 "game.c"
 }
 
 
@@ -1530,6 +1581,10 @@ void drawPlayer() {
             case RUNNING:
             shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((player.aniState * 2)*32 + ((player.curFrame * 2)));
             break;
+            case DOUBLEJUMP:
+
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((player.aniState + 2) * 2)*32 + ((player.curFrame % 3 * 2)));
+            break;
             default:
             shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((player.aniState * 2)*32 + ((player.curFrame * 2)));
             break;
@@ -1539,6 +1594,15 @@ void drawPlayer() {
 }
 
 void updateEnemies() {
+
+
+    if (goblin1.damaged && !player.attacking) {
+        goblin1.damaged = 0;
+
+
+    }
+
+
     int xDif = player.worldCol - goblin1.worldCol;
     int yDif = player.worldRow - goblin1.worldRow;
 
