@@ -1,18 +1,12 @@
 #include <math.h>
 #include "myLib.h"
 #include "game.h"
-#include "testmapcollisionmap.h"
-#include "collisionmap.h"
-
-// this is the mario map collision map
-#include "marioMapCollisionMap.h"
-// this is the new tilemap thing
-#include "platformerCollision.h"
 
 #include "map1Collision.h"
 #include "map2Collision.h"
 
-
+#include "map1.h"
+#include "map2.h"
 
 OBJ_ATTR shadowOAM[128];
 PLAYER player;
@@ -23,7 +17,6 @@ GOBLIN goblin1;
 
 int shadowOAMIndex = 0;
 
-short pellets[1024];
 // gets the collision map set up
 unsigned char* collisionMap = map2CollisionBitmap;
 
@@ -54,8 +47,16 @@ int framesInAir = 0;
 // gravity timer, for falling velocity
 int gTimer = 0;
 
+// counts the total amount of times that the hScreen has been changed (256x256 maps)
+int hScreenCounter = 0;
+
+int bg0hOff = 0;
+int bg1hOff = 0;
+
+MAP maps[2];
+
 // Player animation states for aniState
-enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DOUBLEJUMP};
+enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP };
 
 // Initialize the game
 // #region init
@@ -63,6 +64,7 @@ void initGame() {
     initPlayer();
     initSlash();
     initEnemies();
+    initMaps();
     gTimer = 0;
     shadowOAMIndex = 0;
 }
@@ -87,6 +89,9 @@ void initPlayer() {
     player.direction = 0;
     player.attacking = 0;
     player.attackTimer = 0;
+    player.hearts = 3;
+    player.damaged = 0;
+    player.damageCounter = 0;
 }
 
 void initSlash() {
@@ -117,7 +122,7 @@ void initEnemies() {
 
     // Place in the middle of the screen in the world location chosen earlier
     goblin1.worldRow = 96;
-    goblin1.worldCol = 60;
+    goblin1.worldCol = 120;
     goblin1.aniCounter = 0;
     goblin1.curFrame = 0;
     goblin1.numFrames = 4;
@@ -131,6 +136,14 @@ void initEnemies() {
     goblin1.damaged = 0;
 }
 
+void initMaps() {
+    maps[0].collisionMap = map2CollisionBitmap;
+    maps[0].map = map2Map;
+
+    maps[1].collisionMap = map1CollisionBitmap;
+    maps[1].map = map1Map;
+}
+
 // #endregion
 
 // Updates the game each frame
@@ -139,6 +152,7 @@ void updateGame() {
     if (BUTTON_PRESSED(BUTTON_START) | BUTTON_PRESSED(BUTTON_SELECT)) {
         pauseVar = 1;
     }
+
 	updatePlayer();
     // ^^ update slash is a part of update player, since it is so minor
     updateEnemies();
@@ -147,16 +161,75 @@ void updateGame() {
 // Draws the game each frame
 void drawGame() {
     shadowOAMIndex = 0;
+    drawHUD();
+
+        // first case is loading in the next map to display for remaining 240 pixels
+    if (hOff + SCREENWIDTH >= 512) {
+        // load next map into background 0 (NEXT MAP currently = map1Map !to be changed!)
+        DMANow(3, maps[hScreenCounter + 1].map, &SCREENBLOCK[30], map1MapLen / 2);
+        // set background to be offset by the magic number
+        bg0hOff = -512;
+
+
+
+    }
+
+    // then we handle collision map change
+    if (player.worldCol + player.width >= 512) {
+        // change collision map to the next one
+    }
+
+        // this is handling screen block changing FIXME may cause errors with the greater equal
+    if (hOff >= 512) {
+        // keeps it to switching between backgrounds
+        hScreenCounter++;
+        // I do this to get rid of movement past 256
+        hOff = 0;
+        player.worldCol = 120;
+
+        // of / 2 for that matter, load whatever your current state is into the first screenblock
+        if (hScreenCounter == 1) {
+            REG_DISPCTL = 0;
+            REG_DISPCTL = MODE0 | SPRITE_ENABLE | BG0_ENABLE | BG2_ENABLE;
+            REG_BG0CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_SIZE_WIDE | BG_4BPP;
+            REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(30) | BG_SIZE_WIDE | BG_4BPP;
+            // load current map into screenblock 28
+            // load the next map into the screenblock 30
+            waitForVBlank();
+            DMANow(3, maps[1].map, &SCREENBLOCK[28], map1MapLen / 2);
+            hideSprites();
+            DMANow(3, shadowOAM, OAM, 128 * 4);
+            // !!! SET THE BACKGROUND 0 OFFSET TO JUST 256
+        }
+    }
+
     drawPlayer();
     drawSlash();
     drawEnemies();
+    drawFont();
 
     waitForVBlank();
 
+
+
     DMANow(3, shadowOAM, OAM, 128 * 4);
 
-    REG_BG1HOFF = hOff;
+    REG_BG1HOFF = hOff + bg1hOff;
     REG_BG1VOFF = vOff;
+    REG_BG0HOFF = hOff + bg0hOff;
+    REG_BG0VOFF = vOff;
+
+    // TODO - add the parralax stuff here
+    // if (hScreenCounter == 0) {
+    //     REG_BG1HOFF = hOff;
+    //     REG_BG1VOFF = vOff;
+    // }
+    // if (hScreenCounter == 1) {
+    //     REG_BG0HOFF = hOff;
+    //     REG_BG0VOFF = vOff;
+    // }
+
+
     // parallax motion babbyyy :)
     REG_BG2HOFF = (hOff / 3);
 }
@@ -310,13 +383,11 @@ void updatePlayer() {
         if(BUTTON_HELD(BUTTON_RIGHT) 
             && !checkCollision(player.worldCol + player.width + player.cdel, player.worldRow)
             && !checkCollision(player.worldCol + player.width + player.cdel, player.worldRow + player.height - 1)) {
-            if (player.worldCol <= MAPWIDTH + SCREENWIDTH - 30) {
+            // if (player.worldCol <= MAPWIDTH + SCREENWIDTH - 30) {
                 player.worldCol += player.cdel;
-                if (hOff <= 240 && (player.worldCol - hOff > (SCREENWIDTH / 2))) {
-                    // Update background offset variable if the above is true
+                if (hOff <= 512 && (player.worldCol - hOff > (SCREENWIDTH / 2))) {
                     hOff += player.cdel;
                 }
-            }
         }
     }
 
@@ -376,6 +447,15 @@ int groundCheck(int col, int row, int width, int height) {
     return 0;
 }
 
+// Only difference from regular is that it &&, so not standing over ledge. returns 1 if on ground, 0 if not
+int goblinGroundCheck(int col, int row, int width, int height) {
+    // this is when entity is standing on ground
+    if (checkCollision(col, row + height + 1)
+        && checkCollision(col + width, row + height + 1)) {
+            return 1;
+    }
+    return 0;
+}
 // TODO - fix up for player animation states (attack, move left/right, jump)
 // Handle player animation states
 void animatePlayer() {
@@ -405,6 +485,9 @@ void animatePlayer() {
     if (player.attacking) {
         player.aniState = ATTACK;
     }
+    if (player.damaged) {
+        player.aniState = DAMAGED;
+    }
 
     // Change the animation frame every X frames of gameplay for different states
     if(player.aniCounter % ATTACK_SPEED == 0 && player.aniState == ATTACK) {
@@ -415,6 +498,14 @@ void animatePlayer() {
     }
     else if (player.aniCounter % 5 == 0 && player.aniState == DOUBLEJUMP) {
         player.curFrame = (player.curFrame + 1) % player.numFrames;
+    }
+    else if (player.aniCounter % 5 == 0 && player.aniState == DAMAGED) {
+        player.curFrame = (player.curFrame + 1) % player.numFrames;
+        player.damageCounter++;
+        if (player.damageCounter > 8) {
+            player.damaged = 0;
+            player.damageCounter = 0;
+        }
     }
     else if (player.aniCounter % 10 == 0) {
         player.curFrame = (player.curFrame + 1) % player.numFrames;
@@ -463,8 +554,10 @@ void drawPlayer() {
             shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame * 2), player.aniState * 2);
             break;
             case DOUBLEJUMP:
-            //                                                          This + 1 is bc of the way the spritesheet is oriented
-            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame % 3 * 2), (player.aniState + 2) * 2);
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame % 3 * 2), (player.aniState + 1) * 2);
+            break;
+            case DAMAGED:
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame % 3 * 2), (player.aniState + 1) * 2);
             break;
             default:
             shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame * 2), player.aniState * 2);
@@ -483,6 +576,14 @@ void updateEnemies() {
             // maybe make it so goblins are instantiated when camera crosses certain set of positions?
     }
 
+    if (collision(goblin1.worldCol, goblin1.worldRow, goblin1.width, goblin1.height, player.worldCol, player.worldRow, player.width, player.height) && !player.damaged) {
+        player.damaged = 1;
+        player.hearts--;
+        if (player.hearts < 1) {
+            gameOver();
+        }
+    }
+
 
     int xDif = player.worldCol - goblin1.worldCol;
     int yDif = player.worldRow - goblin1.worldRow;
@@ -491,15 +592,26 @@ void updateEnemies() {
     if (abs(xDif) < goblin1.xRange && abs(yDif) < goblin1.yRange) {
         // this is effectively 'halfing' the move speed, moving every other frame
         if (gTimer % 2 == 0) {
+            // if the player is above, dont go into pit to fall
             if (xDif < 0) {
-                if (!checkCollision((goblin1.worldCol - goblin1.speed), goblin1.worldRow) && !checkCollision((goblin1.worldCol - goblin1.speed), goblin1.worldRow + goblin1.height)) {
-                    goblin1.worldCol -= goblin1.speed;
+                if (!checkCollision((goblin1.worldCol - goblin1.speed), goblin1.worldRow) 
+                && !checkCollision((goblin1.worldCol - goblin1.speed), goblin1.worldRow + goblin1.height)) {
+                    if (goblinGroundCheck((goblin1.worldCol - goblin1.speed), goblin1.worldRow, goblin1.width, goblin1.height)) {
+                        goblin1.worldCol -= goblin1.speed;
+                    }
+
                 }
             }
-            else {
+            else if (xDif > 0) {
                 if (!checkCollision((goblin1.worldCol + goblin1.speed + goblin1.width), goblin1.worldRow)
                 && !checkCollision((goblin1.worldCol + goblin1.speed + goblin1.width), goblin1.worldRow + goblin1.height)) {
-                    goblin1.worldCol += goblin1.speed;
+                    // if on ground, then move. otherwise dont
+                    if (goblinGroundCheck((goblin1.worldCol + goblin1.speed), goblin1.worldRow, goblin1.width, goblin1.height)) {
+                        goblin1.worldCol += goblin1.speed;
+                    }
+                    else {
+
+                    }
                 }
             }        
         }
@@ -591,34 +703,85 @@ void drawSlash() {
 
 // returns 1 if it collides with any other color, besides the base 0x0000 one
 int checkCollision(int col, int row) {
-    if (collisionMap[OFFSET(col, row, MAPWIDTH)]) {
-        return 1;
-    }
+    // this is for when in the middle of two collision maps, i.e. player is between two screenmaps
+        if (collisionMap[OFFSET(col, row, MAPWIDTH)]) {
+            return 1;
+        }
     return 0;
 }
 
 // TODO - add a specific color collision check
 
+// i am using this for debugging
 void drawFont() {
     // this draws the 'score' text
-    for (int i = 0; i < 5; i++) {
-        shadowOAM[2 + i].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-        shadowOAM[2 + i].attr1 = (COLMASK & ((i * 8))) | ATTR1_TINY;
-        shadowOAM[2 + i].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((10 + i), 1);
-    }
-    // this draws the actual score
-    int d3 = yVel / 100;
-    int d2 = (yVel % 100) / 10;
-    int d1 = abs(yVel);
-        shadowOAM[7].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-        shadowOAM[7].attr1 = (COLMASK & (40)) | ATTR1_TINY;
-        shadowOAM[7].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((10 + d3), 0);
+    // for (int i = 0; i < 5; i++) {
+    //     shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+    //     shadowOAM[shadowOAMIndex].attr1 = (COLMASK & ((i * 8))) | ATTR1_TINY;
+    //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((10 + i), 1);
+    // }
+    // this draws the actual score:
+    int d3 = hOff / 100;
+    int d2 = (hOff % 100) / 10;
+    int d1 = abs(hOff) % 10;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (48)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + d3), 3);
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (56)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + d2), 3);
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (64)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + d1), 3);
+        shadowOAMIndex++;
+}
 
-        shadowOAM[8].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-        shadowOAM[8].attr1 = (COLMASK & (48)) | ATTR1_TINY;
-        shadowOAM[8].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((10 + d2), 0);
+void drawHUD() {
+    // hearts
+        if (player.hearts >= 1) {
+            shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+            shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (0)) | ATTR1_SMALL;
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(6, 6);
+            shadowOAMIndex++;
+        }
+        if (player.hearts >= 2) {
+            shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+            shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (16)) | ATTR1_SMALL;
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(6, 6);
+            shadowOAMIndex++;
+        }
+        if (player.hearts >= 3) {
+            shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+            shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (32)) | ATTR1_SMALL;
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(6, 6);
+            shadowOAMIndex++;
+        }
+    // score
+        int d3 = score / 100;
+        int d2 = (score % 100) / 10;
+        int d1 = score % 10;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (200)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + d3), 3);
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (208)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + d2), 3);
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (216)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + d1), 3);
+        shadowOAMIndex++;
+    // cheeseburger icon
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (224)) | ATTR1_SMALL;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(2) | ATTR2_TILEID(6, 4);
+        shadowOAMIndex++;
+        }
 
-        shadowOAM[9].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-        shadowOAM[9].attr1 = (COLMASK & (56)) | ATTR1_TINY;
-        shadowOAM[9].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((10 + d1), 0);
+// this handles when player loses all lives / hearts
+void gameOver() {
+
 }

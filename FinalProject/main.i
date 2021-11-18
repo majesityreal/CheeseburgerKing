@@ -1326,8 +1326,16 @@ void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned 
 int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB);
 # 4 "main.c" 2
 # 1 "game.h" 1
+
+
 # 1 "mylib.h" 1
-# 2 "game.h" 2
+# 4 "game.h" 2
+
+typedef struct {
+    int index;
+    unsigned char* collisionMap;
+    unsigned char* map;
+} MAP;
 
 
 
@@ -1345,6 +1353,9 @@ typedef struct {
     int curFrame;
     int numFrames;
 
+
+    int damaged;
+    int lives;
     int targetX;
     int direction;
     int speed;
@@ -1375,6 +1386,9 @@ typedef struct {
     int attacking;
     int attackTimer;
     int movementCycle;
+    int hearts;
+    int damaged;
+    int damageCounter;
 } PLAYER;
 
 typedef struct {
@@ -1405,14 +1419,13 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 92 "game.h"
+# 106 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
 extern PLAYER player;
 extern SLASH slash;
 
-extern int lives;
 extern int pauseVar;
 extern int level;
 
@@ -1426,6 +1439,7 @@ void animatePlayer();
 void drawPlayer();
 void drawFont();
 void drawPellets();
+int goblinGroundCheck(int col, int row, int width, int height);
 int groundCheck(int col, int row, int width, int height);
 int checkCollision(int col, int row);
 
@@ -1438,7 +1452,13 @@ void updateEnemies();
 void drawEnemies();
 void animateEnemies();
 
+void initMaps();
+
 float Q_rsqrt(float number);
+
+void drawHUD();
+
+void gameOver();
 # 5 "main.c" 2
 # 1 "text.h" 1
 
@@ -1446,33 +1466,13 @@ void drawChar(int col, int row, char ch, unsigned short color);
 void drawString(int col, int row, char *str, unsigned short color);
 # 6 "main.c" 2
 
-# 1 "testmap.h" 1
-# 22 "testmap.h"
-extern const unsigned short testmapTiles[65536];
-
-
-extern const unsigned short testmapMap[4096];
-
-
-extern const unsigned short testmapPal[256];
-# 8 "main.c" 2
 # 1 "titlescreen.h" 1
 # 21 "titlescreen.h"
 extern const unsigned short TitleScreenBitmap[19200];
 
 
 extern const unsigned short TitleScreenPal[256];
-# 9 "main.c" 2
-# 1 "gamebackground.h" 1
-# 22 "gamebackground.h"
-extern const unsigned short GameBackgroundTiles[16384];
-
-
-extern const unsigned short GameBackgroundMap[1024];
-
-
-extern const unsigned short GameBackgroundPal[256];
-# 10 "main.c" 2
+# 8 "main.c" 2
 # 1 "spritesheet.h" 1
 # 22 "spritesheet.h"
 extern const unsigned short spritesheetTiles[16384];
@@ -1482,36 +1482,7 @@ extern const unsigned short spritesheetMap[1024];
 
 
 extern const unsigned short spritesheetPal[256];
-# 11 "main.c" 2
-
-# 1 "marioMap.h" 1
-# 22 "marioMap.h"
-extern const unsigned short marioMapTiles[16384];
-
-
-extern const unsigned short marioMapMap[1024];
-
-
-extern const unsigned short marioMapPal[16];
-# 13 "main.c" 2
-# 1 "marioMapCollisionMap.h" 1
-# 21 "marioMapCollisionMap.h"
-extern const unsigned short marioMapCollisionMapBitmap[32768];
-
-
-extern const unsigned short marioMapCollisionMapPal[256];
-# 14 "main.c" 2
-
-# 1 "platformer.h" 1
-# 22 "platformer.h"
-extern const unsigned short platformerTiles[272];
-
-
-extern const unsigned short platformerMap[2048];
-
-
-extern const unsigned short platformerPal[256];
-# 16 "main.c" 2
+# 9 "main.c" 2
 
 
 # 1 "map1.h" 1
@@ -1522,8 +1493,8 @@ extern const unsigned short map1Tiles[592];
 extern const unsigned short map1Map[2048];
 
 
-extern const unsigned short map1Pal[256];
-# 19 "main.c" 2
+extern const unsigned short map1Pal[32];
+# 12 "main.c" 2
 # 1 "map2.h" 1
 # 22 "map2.h"
 extern const unsigned short map2Tiles[672];
@@ -1532,8 +1503,8 @@ extern const unsigned short map2Tiles[672];
 extern const unsigned short map2Map[2048];
 
 
-extern const unsigned short map2Pal[256];
-# 20 "main.c" 2
+extern const unsigned short map2Pal[32];
+# 13 "main.c" 2
 
 # 1 "parallaxBG.h" 1
 # 22 "parallaxBG.h"
@@ -1544,8 +1515,8 @@ extern const unsigned short parallaxBGMap[1024];
 
 
 extern const unsigned short parallaxBGPal[256];
-# 22 "main.c" 2
-# 39 "main.c"
+# 15 "main.c" 2
+# 30 "main.c"
 void initialize();
 
 
@@ -1627,15 +1598,6 @@ int main()
 }
 
 
-void initialize()
-{
-    (*(volatile unsigned short *)0x4000000) = 0 | (1 << 12) | (1 << 8) | (1 << 9);
-
-    (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((30) << 8) | (0 << 14);
-    (*(volatile unsigned short *)0x4000008) = ((2) << 2) | ((26) << 8) | (0 << 14) | (0 << 7);
-}
-
-
 void setupTitleScreen() {
     (*(volatile unsigned short *)0x4000000) = 4 | (1 << 10);
     (*(volatile unsigned short *)0x400000C) = (0 << 7);
@@ -1659,8 +1621,9 @@ void startGame() {
 
 
 
-    (*(volatile unsigned short *)0x4000000) = 0 | (1 << 12) | (1 << 9) | (1 << 10);
-    (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((30) << 8) | (1 << 14) | (0 << 7);
+    (*(volatile unsigned short *)0x4000000) = 0 | (1 << 12) | (1 << 9) | (1 << 10) | (1 << 8);
+    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | ((30) << 8) | (1 << 14) | (0 << 7);
+    (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((28) << 8) | (1 << 14) | (0 << 7);
     (*(volatile unsigned short *)0x400000C) = ((2) << 2) | ((26) << 8) | (0 << 14) | (0 << 7);
 
 
@@ -1673,10 +1636,14 @@ void startGame() {
     srand(timer);
 
     waitForVBlank();
-# 174 "main.c"
-    DMANow(3, map1Pal, ((unsigned short *)0x5000000), 32);
-    DMANow(3, map2Tiles, &((charblock *)0x6000000)[0], 1184 / 2);
-    DMANow(3, map2Map, &((screenblock *)0x6000000)[30], 4096 / 2);
+# 157 "main.c"
+    DMANow(3, map2Pal, ((unsigned short *)0x5000000), 32);
+    DMANow(3, map2Tiles, &((charblock *)0x6000000)[0], 1344 / 2);
+    DMANow(3, map2Map, &((screenblock *)0x6000000)[28], 4096 / 2);
+
+
+
+
 
 
 
@@ -1721,7 +1688,7 @@ void game() {
 
 
 }
-# 239 "main.c"
+# 226 "main.c"
 void goToPause() {
     state = PAUSE;
 }

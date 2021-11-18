@@ -1,4 +1,12 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include "mylib.h"
+
+typedef struct {
+    int index;
+    unsigned char* collisionMap;
+    unsigned char* map;
+} MAP;
 
 // the orc will target the player, moving towards their x value. However, they are very stupid and
 // only go towards the X value
@@ -49,6 +57,9 @@ typedef struct {
     int attacking;
     int attackTimer;
     int movementCycle;
+    int hearts;
+    int damaged;
+    int damageCounter;
 } PLAYER;
 
 typedef struct {
@@ -98,7 +109,6 @@ extern OBJ_ATTR shadowOAM[128];
 extern PLAYER player;
 extern SLASH slash;
 
-extern int lives;
 extern int pauseVar;
 extern int level;
 
@@ -112,6 +122,7 @@ void animatePlayer();
 void drawPlayer();
 void drawFont();
 void drawPellets();
+int goblinGroundCheck(int col, int row, int width, int height);
 int groundCheck(int col, int row, int width, int height);
 int checkCollision(int col, int row);
 // slash
@@ -123,5 +134,11 @@ void initEnemies();
 void updateEnemies();
 void drawEnemies();
 void animateEnemies();
+
+void initMaps();
 // special square root function :)
 float Q_rsqrt(float number);
+
+void drawHUD();
+
+void gameOver();

@@ -2,6 +2,8 @@
     "C_Cpp.errorSquiggles": "Enabled",
     "files.associations": {
         "pacmanspritesheet.h": "c",
-        "collisionimage.h": "c"
+        "collisionimage.h": "c",
+        "map1collision.h": "c",
+        "spritesheet.h": "c"
     }
 }

@@ -976,8 +976,614 @@ void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned 
 int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB);
 # 3 "game.c" 2
 # 1 "game.h" 1
-# 1 "mylib.h" 1
+# 1 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdio.h" 1 3
+# 36 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdio.h" 3
+# 1 "/opt/devkitpro/devkitARM/lib/gcc/arm-none-eabi/9.1.0/include/stddef.h" 1 3 4
+# 37 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdio.h" 2 3
+
+
+
+# 1 "/opt/devkitpro/devkitARM/lib/gcc/arm-none-eabi/9.1.0/include/stdarg.h" 1 3 4
+# 40 "/opt/devkitpro/devkitARM/lib/gcc/arm-none-eabi/9.1.0/include/stdarg.h" 3 4
+
+# 40 "/opt/devkitpro/devkitARM/lib/gcc/arm-none-eabi/9.1.0/include/stdarg.h" 3 4
+typedef __builtin_va_list __gnuc_va_list;
+# 41 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdio.h" 2 3
+# 61 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdio.h" 3
+# 1 "/opt/devkitpro/devkitARM/arm-none-eabi/include/sys/types.h" 1 3
+# 28 "/opt/devkitpro/devkitARM/arm-none-eabi/include/sys/types.h" 3
+typedef __uint8_t u_int8_t;
+
+
+typedef __uint16_t u_int16_t;
+
+
+typedef __uint32_t u_int32_t;
+
+
+typedef __uint64_t u_int64_t;
+
+typedef int register_t;
+# 62 "/opt/devkitpro/devkitARM/arm-none-eabi/include/sys/types.h" 3
+# 1 "/opt/devkitpro/devkitARM/lib/gcc/arm-none-eabi/9.1.0/include/stddef.h" 1 3 4
+# 63 "/opt/devkitpro/devkitARM/arm-none-eabi/include/sys/types.h" 2 3
+# 113 "/opt/devkitpro/devkitARM/arm-none-eabi/include/sys/types.h" 3
+typedef __blkcnt_t blkcnt_t;
+
+
+
+
+typedef __blksize_t blksize_t;
+
+
+
+
+typedef unsigned long clock_t;
+
+
+
+
+
+typedef __int_least64_t time_t;
+
+
+
+
+
+typedef long daddr_t;
+
+
+
+typedef char * caddr_t;
+
+
+
+
+typedef __fsblkcnt_t fsblkcnt_t;
+typedef __fsfilcnt_t fsfilcnt_t;
+
+
+
+
+typedef __id_t id_t;
+
+
+
+
+typedef __ino_t ino_t;
+# 173 "/opt/devkitpro/devkitARM/arm-none-eabi/include/sys/types.h" 3
+typedef __off_t off_t;
+
+
+
+typedef __dev_t dev_t;
+
+
+
+typedef __uid_t uid_t;
+
+
+
+typedef __gid_t gid_t;
+
+
+
+
+typedef __pid_t pid_t;
+
+
+
+
+typedef __key_t key_t;
+
+
+
+
+typedef _ssize_t ssize_t;
+
+
+
+
+typedef __mode_t mode_t;
+
+
+
+
+typedef __nlink_t nlink_t;
+
+
+
+
+typedef __clockid_t clockid_t;
+
+
+
+
+
+typedef __timer_t timer_t;
+
+
+
+
+
+typedef __useconds_t useconds_t;
+
+
+
+
+typedef __suseconds_t suseconds_t;
+
+
+
+typedef __int64_t sbintime_t;
+
+
+# 1 "/opt/devkitpro/devkitARM/arm-none-eabi/include/sys/_pthreadtypes.h" 1 3
+# 240 "/opt/devkitpro/devkitARM/arm-none-eabi/include/sys/types.h" 2 3
+# 1 "/opt/devkitpro/devkitARM/arm-none-eabi/include/machine/types.h" 1 3
+# 241 "/opt/devkitpro/devkitARM/arm-none-eabi/include/sys/types.h" 2 3
+# 62 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdio.h" 2 3
+
+
+
+
+typedef __FILE FILE;
+
+
+
+
+
+
+typedef _fpos_t fpos_t;
+
+
+
+
+
+# 1 "/opt/devkitpro/devkitARM/arm-none-eabi/include/sys/stdio.h" 1 3
+# 80 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdio.h" 2 3
+# 186 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdio.h" 3
+FILE * tmpfile (void);
+char * tmpnam (char *);
+
+
+
+int fclose (FILE *);
+int fflush (FILE *);
+FILE * freopen (const char *restrict, const char *restrict, FILE *restrict);
+void setbuf (FILE *restrict, char *restrict);
+int setvbuf (FILE *restrict, char *restrict, int, size_t);
+int fprintf (FILE *restrict, const char *restrict, ...)
+               __attribute__ ((__format__ (__printf__, 2, 3)));
+int fscanf (FILE *restrict, const char *restrict, ...)
+               __attribute__ ((__format__ (__scanf__, 2, 3)));
+int printf (const char *restrict, ...)
+               __attribute__ ((__format__ (__printf__, 1, 2)));
+int scanf (const char *restrict, ...)
+               __attribute__ ((__format__ (__scanf__, 1, 2)));
+int sscanf (const char *restrict, const char *restrict, ...)
+               __attribute__ ((__format__ (__scanf__, 2, 3)));
+int vfprintf (FILE *restrict, const char *restrict, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 2, 0)));
+int vprintf (const char *, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 1, 0)));
+int vsprintf (char *restrict, const char *restrict, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 2, 0)));
+int fgetc (FILE *);
+char * fgets (char *restrict, int, FILE *restrict);
+int fputc (int, FILE *);
+int fputs (const char *restrict, FILE *restrict);
+int getc (FILE *);
+int getchar (void);
+char * gets (char *);
+int putc (int, FILE *);
+int putchar (int);
+int puts (const char *);
+int ungetc (int, FILE *);
+size_t fread (void *restrict, size_t _size, size_t _n, FILE *restrict);
+size_t fwrite (const void *restrict , size_t _size, size_t _n, FILE *);
+
+
+
+int fgetpos (FILE *restrict, fpos_t *restrict);
+
+int fseek (FILE *, long, int);
+
+
+
+int fsetpos (FILE *, const fpos_t *);
+
+long ftell ( FILE *);
+void rewind (FILE *);
+void clearerr (FILE *);
+int feof (FILE *);
+int ferror (FILE *);
+void perror (const char *);
+
+FILE * fopen (const char *restrict _name, const char *restrict _type);
+int sprintf (char *restrict, const char *restrict, ...)
+               __attribute__ ((__format__ (__printf__, 2, 3)));
+int remove (const char *);
+int rename (const char *, const char *);
+# 266 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdio.h" 3
+int snprintf (char *restrict, size_t, const char *restrict, ...)
+               __attribute__ ((__format__ (__printf__, 3, 4)));
+int vsnprintf (char *restrict, size_t, const char *restrict, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 3, 0)));
+int vfscanf (FILE *restrict, const char *restrict, __gnuc_va_list)
+               __attribute__ ((__format__ (__scanf__, 2, 0)));
+int vscanf (const char *, __gnuc_va_list)
+               __attribute__ ((__format__ (__scanf__, 1, 0)));
+int vsscanf (const char *restrict, const char *restrict, __gnuc_va_list)
+               __attribute__ ((__format__ (__scanf__, 2, 0)));
+# 396 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdio.h" 3
+int _asiprintf_r (struct _reent *, char **, const char *, ...)
+               __attribute__ ((__format__ (__printf__, 3, 4)));
+char * _asniprintf_r (struct _reent *, char *, size_t *, const char *, ...)
+               __attribute__ ((__format__ (__printf__, 4, 5)));
+char * _asnprintf_r (struct _reent *, char *restrict, size_t *restrict, const char *restrict, ...)
+               __attribute__ ((__format__ (__printf__, 4, 5)));
+int _asprintf_r (struct _reent *, char **restrict, const char *restrict, ...)
+               __attribute__ ((__format__ (__printf__, 3, 4)));
+int _diprintf_r (struct _reent *, int, const char *, ...)
+               __attribute__ ((__format__ (__printf__, 3, 4)));
+int _dprintf_r (struct _reent *, int, const char *restrict, ...)
+               __attribute__ ((__format__ (__printf__, 3, 4)));
+int _fclose_r (struct _reent *, FILE *);
+int _fcloseall_r (struct _reent *);
+FILE * _fdopen_r (struct _reent *, int, const char *);
+int _fflush_r (struct _reent *, FILE *);
+int _fgetc_r (struct _reent *, FILE *);
+int _fgetc_unlocked_r (struct _reent *, FILE *);
+char * _fgets_r (struct _reent *, char *restrict, int, FILE *restrict);
+char * _fgets_unlocked_r (struct _reent *, char *restrict, int, FILE *restrict);
+
+
+
+
+int _fgetpos_r (struct _reent *, FILE *, fpos_t *);
+int _fsetpos_r (struct _reent *, FILE *, const fpos_t *);
+
+int _fiprintf_r (struct _reent *, FILE *, const char *, ...)
+               __attribute__ ((__format__ (__printf__, 3, 4)));
+int _fiscanf_r (struct _reent *, FILE *, const char *, ...)
+               __attribute__ ((__format__ (__scanf__, 3, 4)));
+FILE * _fmemopen_r (struct _reent *, void *restrict, size_t, const char *restrict);
+FILE * _fopen_r (struct _reent *, const char *restrict, const char *restrict);
+FILE * _freopen_r (struct _reent *, const char *restrict, const char *restrict, FILE *restrict);
+int _fprintf_r (struct _reent *, FILE *restrict, const char *restrict, ...)
+               __attribute__ ((__format__ (__printf__, 3, 4)));
+int _fpurge_r (struct _reent *, FILE *);
+int _fputc_r (struct _reent *, int, FILE *);
+int _fputc_unlocked_r (struct _reent *, int, FILE *);
+int _fputs_r (struct _reent *, const char *restrict, FILE *restrict);
+int _fputs_unlocked_r (struct _reent *, const char *restrict, FILE *restrict);
+size_t _fread_r (struct _reent *, void *restrict, size_t _size, size_t _n, FILE *restrict);
+size_t _fread_unlocked_r (struct _reent *, void *restrict, size_t _size, size_t _n, FILE *restrict);
+int _fscanf_r (struct _reent *, FILE *restrict, const char *restrict, ...)
+               __attribute__ ((__format__ (__scanf__, 3, 4)));
+int _fseek_r (struct _reent *, FILE *, long, int);
+int _fseeko_r (struct _reent *, FILE *, _off_t, int);
+long _ftell_r (struct _reent *, FILE *);
+_off_t _ftello_r (struct _reent *, FILE *);
+void _rewind_r (struct _reent *, FILE *);
+size_t _fwrite_r (struct _reent *, const void *restrict, size_t _size, size_t _n, FILE *restrict);
+size_t _fwrite_unlocked_r (struct _reent *, const void *restrict, size_t _size, size_t _n, FILE *restrict);
+int _getc_r (struct _reent *, FILE *);
+int _getc_unlocked_r (struct _reent *, FILE *);
+int _getchar_r (struct _reent *);
+int _getchar_unlocked_r (struct _reent *);
+char * _gets_r (struct _reent *, char *);
+int _iprintf_r (struct _reent *, const char *, ...)
+               __attribute__ ((__format__ (__printf__, 2, 3)));
+int _iscanf_r (struct _reent *, const char *, ...)
+               __attribute__ ((__format__ (__scanf__, 2, 3)));
+FILE * _open_memstream_r (struct _reent *, char **, size_t *);
+void _perror_r (struct _reent *, const char *);
+int _printf_r (struct _reent *, const char *restrict, ...)
+               __attribute__ ((__format__ (__printf__, 2, 3)));
+int _putc_r (struct _reent *, int, FILE *);
+int _putc_unlocked_r (struct _reent *, int, FILE *);
+int _putchar_unlocked_r (struct _reent *, int);
+int _putchar_r (struct _reent *, int);
+int _puts_r (struct _reent *, const char *);
+int _remove_r (struct _reent *, const char *);
+int _rename_r (struct _reent *,
+      const char *_old, const char *_new);
+int _scanf_r (struct _reent *, const char *restrict, ...)
+               __attribute__ ((__format__ (__scanf__, 2, 3)));
+int _siprintf_r (struct _reent *, char *, const char *, ...)
+               __attribute__ ((__format__ (__printf__, 3, 4)));
+int _siscanf_r (struct _reent *, const char *, const char *, ...)
+               __attribute__ ((__format__ (__scanf__, 3, 4)));
+int _sniprintf_r (struct _reent *, char *, size_t, const char *, ...)
+               __attribute__ ((__format__ (__printf__, 4, 5)));
+int _snprintf_r (struct _reent *, char *restrict, size_t, const char *restrict, ...)
+               __attribute__ ((__format__ (__printf__, 4, 5)));
+int _sprintf_r (struct _reent *, char *restrict, const char *restrict, ...)
+               __attribute__ ((__format__ (__printf__, 3, 4)));
+int _sscanf_r (struct _reent *, const char *restrict, const char *restrict, ...)
+               __attribute__ ((__format__ (__scanf__, 3, 4)));
+char * _tempnam_r (struct _reent *, const char *, const char *);
+FILE * _tmpfile_r (struct _reent *);
+char * _tmpnam_r (struct _reent *, char *);
+int _ungetc_r (struct _reent *, int, FILE *);
+int _vasiprintf_r (struct _reent *, char **, const char *, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 3, 0)));
+char * _vasniprintf_r (struct _reent*, char *, size_t *, const char *, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 4, 0)));
+char * _vasnprintf_r (struct _reent*, char *, size_t *, const char *, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 4, 0)));
+int _vasprintf_r (struct _reent *, char **, const char *, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 3, 0)));
+int _vdiprintf_r (struct _reent *, int, const char *, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 3, 0)));
+int _vdprintf_r (struct _reent *, int, const char *restrict, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 3, 0)));
+int _vfiprintf_r (struct _reent *, FILE *, const char *, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 3, 0)));
+int _vfiscanf_r (struct _reent *, FILE *, const char *, __gnuc_va_list)
+               __attribute__ ((__format__ (__scanf__, 3, 0)));
+int _vfprintf_r (struct _reent *, FILE *restrict, const char *restrict, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 3, 0)));
+int _vfscanf_r (struct _reent *, FILE *restrict, const char *restrict, __gnuc_va_list)
+               __attribute__ ((__format__ (__scanf__, 3, 0)));
+int _viprintf_r (struct _reent *, const char *, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 2, 0)));
+int _viscanf_r (struct _reent *, const char *, __gnuc_va_list)
+               __attribute__ ((__format__ (__scanf__, 2, 0)));
+int _vprintf_r (struct _reent *, const char *restrict, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 2, 0)));
+int _vscanf_r (struct _reent *, const char *restrict, __gnuc_va_list)
+               __attribute__ ((__format__ (__scanf__, 2, 0)));
+int _vsiprintf_r (struct _reent *, char *, const char *, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 3, 0)));
+int _vsiscanf_r (struct _reent *, const char *, const char *, __gnuc_va_list)
+               __attribute__ ((__format__ (__scanf__, 3, 0)));
+int _vsniprintf_r (struct _reent *, char *, size_t, const char *, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 4, 0)));
+int _vsnprintf_r (struct _reent *, char *restrict, size_t, const char *restrict, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 4, 0)));
+int _vsprintf_r (struct _reent *, char *restrict, const char *restrict, __gnuc_va_list)
+               __attribute__ ((__format__ (__printf__, 3, 0)));
+int _vsscanf_r (struct _reent *, const char *restrict, const char *restrict, __gnuc_va_list)
+               __attribute__ ((__format__ (__scanf__, 3, 0)));
+
+
+
+int fpurge (FILE *);
+ssize_t __getdelim (char **, size_t *, int, FILE *);
+ssize_t __getline (char **, size_t *, FILE *);
+# 577 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdio.h" 3
+int __srget_r (struct _reent *, FILE *);
+int __swbuf_r (struct _reent *, int, FILE *);
+# 687 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdio.h" 3
+static __inline__ int __sputc_r(struct _reent *_ptr, int _c, FILE *_p) {
+
+
+
+
+ if (--_p->_w >= 0 || (_p->_w >= _p->_lbfsize && (char)_c != '\n'))
+  return (*_p->_p++ = _c);
+ else
+  return (__swbuf_r(_ptr, _c, _p));
+}
+# 741 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdio.h" 3
+static __inline int
+_getchar_unlocked(void)
+{
+ struct _reent *_ptr;
+
+ _ptr = (__getreent());
+ return ((--(((_ptr)->_stdin))->_r < 0 ? __srget_r(_ptr, ((_ptr)->_stdin)) : (int)(*(((_ptr)->_stdin))->_p++)));
+}
+
+static __inline int
+_putchar_unlocked(int _c)
+{
+ struct _reent *_ptr;
+
+ _ptr = (__getreent());
+ return (__sputc_r(_ptr, _c, ((_ptr)->_stdout)));
+}
+# 797 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdio.h" 3
+
 # 2 "game.h" 2
+# 1 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 1 3
+# 10 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 3
+# 1 "/opt/devkitpro/devkitARM/arm-none-eabi/include/machine/ieeefp.h" 1 3
+# 11 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 2 3
+
+
+
+
+
+# 1 "/opt/devkitpro/devkitARM/lib/gcc/arm-none-eabi/9.1.0/include/stddef.h" 1 3 4
+# 17 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 2 3
+
+
+
+# 1 "/opt/devkitpro/devkitARM/arm-none-eabi/include/machine/stdlib.h" 1 3
+# 21 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 2 3
+# 33 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 3
+
+
+typedef struct
+{
+  int quot;
+  int rem;
+} div_t;
+
+typedef struct
+{
+  long quot;
+  long rem;
+} ldiv_t;
+
+
+typedef struct
+{
+  long long int quot;
+  long long int rem;
+} lldiv_t;
+
+
+
+
+typedef int (*__compar_fn_t) (const void *, const void *);
+
+
+
+
+
+
+
+int __locale_mb_cur_max (void);
+
+
+
+void abort (void) __attribute__ ((__noreturn__));
+int abs (int);
+
+
+
+
+
+int atexit (void (*__func)(void));
+double atof (const char *__nptr);
+
+
+
+int atoi (const char *__nptr);
+int _atoi_r (struct _reent *, const char *__nptr);
+long atol (const char *__nptr);
+long _atol_r (struct _reent *, const char *__nptr);
+void * bsearch (const void *__key,
+         const void *__base,
+         size_t __nmemb,
+         size_t __size,
+         __compar_fn_t _compar);
+void *calloc(size_t, size_t) __attribute__((__malloc__)) __attribute__((__warn_unused_result__))
+      __attribute__((__alloc_size__(1, 2))) ;
+div_t div (int __numer, int __denom);
+void exit (int __status) __attribute__ ((__noreturn__));
+void free (void *) ;
+char * getenv (const char *__string);
+char * _getenv_r (struct _reent *, const char *__string);
+char * _findenv (const char *, int *);
+char * _findenv_r (struct _reent *, const char *, int *);
+
+
+
+
+long labs (long);
+ldiv_t ldiv (long __numer, long __denom);
+void *malloc(size_t) __attribute__((__malloc__)) __attribute__((__warn_unused_result__)) __attribute__((__alloc_size__(1))) ;
+int mblen (const char *, size_t);
+int _mblen_r (struct _reent *, const char *, size_t, _mbstate_t *);
+int mbtowc (wchar_t *restrict, const char *restrict, size_t);
+int _mbtowc_r (struct _reent *, wchar_t *restrict, const char *restrict, size_t, _mbstate_t *);
+int wctomb (char *, wchar_t);
+int _wctomb_r (struct _reent *, char *, wchar_t, _mbstate_t *);
+size_t mbstowcs (wchar_t *restrict, const char *restrict, size_t);
+size_t _mbstowcs_r (struct _reent *, wchar_t *restrict, const char *restrict, size_t, _mbstate_t *);
+size_t wcstombs (char *restrict, const wchar_t *restrict, size_t);
+size_t _wcstombs_r (struct _reent *, char *restrict, const wchar_t *restrict, size_t, _mbstate_t *);
+# 134 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 3
+char * _mkdtemp_r (struct _reent *, char *);
+int _mkostemp_r (struct _reent *, char *, int);
+int _mkostemps_r (struct _reent *, char *, int, int);
+int _mkstemp_r (struct _reent *, char *);
+int _mkstemps_r (struct _reent *, char *, int);
+char * _mktemp_r (struct _reent *, char *) __attribute__ ((__deprecated__("the use of `mktemp' is dangerous; use `mkstemp' instead")));
+void qsort (void *__base, size_t __nmemb, size_t __size, __compar_fn_t _compar);
+int rand (void);
+void *realloc(void *, size_t) __attribute__((__warn_unused_result__)) __attribute__((__alloc_size__(2))) ;
+# 156 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 3
+void srand (unsigned __seed);
+double strtod (const char *restrict __n, char **restrict __end_PTR);
+double _strtod_r (struct _reent *,const char *restrict __n, char **restrict __end_PTR);
+
+float strtof (const char *restrict __n, char **restrict __end_PTR);
+
+
+
+
+
+
+
+long strtol (const char *restrict __n, char **restrict __end_PTR, int __base);
+long _strtol_r (struct _reent *,const char *restrict __n, char **restrict __end_PTR, int __base);
+unsigned long strtoul (const char *restrict __n, char **restrict __end_PTR, int __base);
+unsigned long _strtoul_r (struct _reent *,const char *restrict __n, char **restrict __end_PTR, int __base);
+# 188 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 3
+int system (const char *__string);
+# 199 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 3
+void _Exit (int __status) __attribute__ ((__noreturn__));
+
+
+
+
+int _putenv_r (struct _reent *, char *__string);
+void * _reallocf_r (struct _reent *, void *, size_t);
+
+
+
+int _setenv_r (struct _reent *, const char *__string, const char *__value, int __overwrite);
+# 221 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 3
+char * __itoa (int, char *, int);
+char * __utoa (unsigned, char *, int);
+# 260 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 3
+long long atoll (const char *__nptr);
+
+long long _atoll_r (struct _reent *, const char *__nptr);
+
+long long llabs (long long);
+lldiv_t lldiv (long long __numer, long long __denom);
+long long strtoll (const char *restrict __n, char **restrict __end_PTR, int __base);
+
+long long _strtoll_r (struct _reent *, const char *restrict __n, char **restrict __end_PTR, int __base);
+
+unsigned long long strtoull (const char *restrict __n, char **restrict __end_PTR, int __base);
+
+unsigned long long _strtoull_r (struct _reent *, const char *restrict __n, char **restrict __end_PTR, int __base);
+# 281 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 3
+int _unsetenv_r (struct _reent *, const char *__string);
+
+
+
+
+
+
+
+char * _dtoa_r (struct _reent *, double, int, int, int *, int*, char**);
+
+void * _malloc_r (struct _reent *, size_t) ;
+void * _calloc_r (struct _reent *, size_t, size_t) ;
+void _free_r (struct _reent *, void *) ;
+void * _realloc_r (struct _reent *, void *, size_t) ;
+void _mstats_r (struct _reent *, char *);
+
+int _system_r (struct _reent *, const char *);
+
+void __eprintf (const char *, const char *, unsigned int, const char *);
+# 319 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 3
+extern long double _strtold_r (struct _reent *, const char *restrict, char **restrict);
+
+extern long double strtold (const char *restrict, char **restrict);
+# 336 "/opt/devkitpro/devkitARM/arm-none-eabi/include/stdlib.h" 3
+
+# 3 "game.h" 2
+# 1 "mylib.h" 1
+# 4 "game.h" 2
+
+
+# 5 "game.h"
+typedef struct {
+    int index;
+    unsigned char* collisionMap;
+    unsigned char* map;
+} MAP;
 
 
 
@@ -1028,6 +1634,9 @@ typedef struct {
     int attacking;
     int attackTimer;
     int movementCycle;
+    int hearts;
+    int damaged;
+    int damageCounter;
 } PLAYER;
 
 typedef struct {
@@ -1058,14 +1667,13 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 95 "game.h"
+# 106 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
 extern PLAYER player;
 extern SLASH slash;
 
-extern int lives;
 extern int pauseVar;
 extern int level;
 
@@ -1079,6 +1687,7 @@ void animatePlayer();
 void drawPlayer();
 void drawFont();
 void drawPellets();
+int goblinGroundCheck(int col, int row, int width, int height);
 int groundCheck(int col, int row, int width, int height);
 int checkCollision(int col, int row);
 
@@ -1091,39 +1700,14 @@ void updateEnemies();
 void drawEnemies();
 void animateEnemies();
 
+void initMaps();
+
 float Q_rsqrt(float number);
+
+void drawHUD();
+
+void gameOver();
 # 4 "game.c" 2
-# 1 "testmapcollisionmap.h" 1
-# 21 "testmapcollisionmap.h"
-extern const unsigned short testmapcollisionmapBitmap[131072];
-
-
-extern const unsigned short testmapcollisionmapPal[256];
-# 5 "game.c" 2
-# 1 "collisionmap.h" 1
-# 21 "collisionmap.h"
-extern const unsigned short collisionMapBitmap[32768];
-
-
-extern const unsigned short collisionMapPal[256];
-# 6 "game.c" 2
-
-
-# 1 "marioMapCollisionMap.h" 1
-# 21 "marioMapCollisionMap.h"
-extern const unsigned short marioMapCollisionMapBitmap[32768];
-
-
-extern const unsigned short marioMapCollisionMapPal[256];
-# 9 "game.c" 2
-
-# 1 "platformerCollision.h" 1
-# 21 "platformerCollision.h"
-extern const unsigned short platformerCollisionBitmap[65536];
-
-
-extern const unsigned short platformerCollisionPal[256];
-# 11 "game.c" 2
 
 # 1 "map1Collision.h" 1
 # 21 "map1Collision.h"
@@ -1131,16 +1715,35 @@ extern const unsigned short map1CollisionBitmap[65536];
 
 
 extern const unsigned short map1CollisionPal[256];
-# 13 "game.c" 2
+# 6 "game.c" 2
 # 1 "map2Collision.h" 1
 # 21 "map2Collision.h"
 extern const unsigned short map2CollisionBitmap[65536];
 
 
 extern const unsigned short map2CollisionPal[256];
-# 14 "game.c" 2
+# 7 "game.c" 2
+
+# 1 "map1.h" 1
+# 22 "map1.h"
+extern const unsigned short map1Tiles[592];
 
 
+extern const unsigned short map1Map[2048];
+
+
+extern const unsigned short map1Pal[32];
+# 9 "game.c" 2
+# 1 "map2.h" 1
+# 22 "map2.h"
+extern const unsigned short map2Tiles[672];
+
+
+extern const unsigned short map2Map[2048];
+
+
+extern const unsigned short map2Pal[32];
+# 10 "game.c" 2
 
 OBJ_ATTR shadowOAM[128];
 PLAYER player;
@@ -1151,7 +1754,6 @@ GOBLIN goblin1;
 
 int shadowOAMIndex = 0;
 
-short pellets[1024];
 
 unsigned char* collisionMap = map2CollisionBitmap;
 
@@ -1183,7 +1785,15 @@ int framesInAir = 0;
 int gTimer = 0;
 
 
-enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DOUBLEJUMP};
+int hScreenCounter = 0;
+
+int bg0hOff = 0;
+int bg1hOff = 0;
+
+MAP maps[2];
+
+
+enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP };
 
 
 
@@ -1191,6 +1801,7 @@ void initGame() {
     initPlayer();
     initSlash();
     initEnemies();
+    initMaps();
     gTimer = 0;
     shadowOAMIndex = 0;
 }
@@ -1215,6 +1826,9 @@ void initPlayer() {
     player.direction = 0;
     player.attacking = 0;
     player.attackTimer = 0;
+    player.hearts = 3;
+    player.damaged = 0;
+    player.damageCounter = 0;
 }
 
 void initSlash() {
@@ -1245,7 +1859,7 @@ void initEnemies() {
 
 
     goblin1.worldRow = 96;
-    goblin1.worldCol = 60;
+    goblin1.worldCol = 120;
     goblin1.aniCounter = 0;
     goblin1.curFrame = 0;
     goblin1.numFrames = 4;
@@ -1259,6 +1873,14 @@ void initEnemies() {
     goblin1.damaged = 0;
 }
 
+void initMaps() {
+    maps[0].collisionMap = map2CollisionBitmap;
+    maps[0].map = map2Map;
+
+    maps[1].collisionMap = map1CollisionBitmap;
+    maps[1].map = map1Map;
+}
+
 
 
 
@@ -1267,6 +1889,7 @@ void updateGame() {
     if ((!(~(oldButtons) & ((1 << 3))) && (~buttons & ((1 << 3)))) | (!(~(oldButtons) & ((1 << 2))) && (~buttons & ((1 << 2))))) {
         pauseVar = 1;
     }
+
  updatePlayer();
 
     updateEnemies();
@@ -1275,17 +1898,64 @@ void updateGame() {
 
 void drawGame() {
     shadowOAMIndex = 0;
+    drawHUD();
+
+
+    if (hOff + 240 >= 512) {
+
+        DMANow(3, maps[hScreenCounter + 1].map, &((screenblock *)0x6000000)[30], 4096 / 2);
+
+        bg0hOff = -512;
+
+
+
+    }
+
+
+    if (player.worldCol + player.width >= 512) {
+
+    }
+
+
+    if (hOff >= 512) {
+
+        hScreenCounter++;
+
+        hOff = 0;
+        player.worldCol = 120;
+
+
+        if (hScreenCounter == 1) {
+            (*(volatile unsigned short *)0x4000000) = 0;
+            (*(volatile unsigned short *)0x4000000) = 0 | (1 << 12) | (1 << 8) | (1 << 10);
+            (*(volatile unsigned short *)0x4000008) = ((0) << 2) | ((28) << 8) | (1 << 14) | (0 << 7);
+            (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((30) << 8) | (1 << 14) | (0 << 7);
+
+
+            waitForVBlank();
+            DMANow(3, maps[1].map, &((screenblock *)0x6000000)[28], 4096 / 2);
+            hideSprites();
+            DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
+
+        }
+    }
+
     drawPlayer();
     drawSlash();
     drawEnemies();
+    drawFont();
 
     waitForVBlank();
 
+
+
     DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
 
-    (*(volatile unsigned short *)0x04000014) = hOff;
+    (*(volatile unsigned short *)0x04000014) = hOff + bg1hOff;
     (*(volatile unsigned short *)0x04000016) = vOff;
-
+    (*(volatile unsigned short *)0x04000010) = hOff + bg0hOff;
+    (*(volatile unsigned short *)0x04000012) = vOff;
+# 234 "game.c"
     (*(volatile unsigned short *)0x04000018) = (hOff / 3);
 }
 
@@ -1438,13 +2108,11 @@ void updatePlayer() {
         if((~((*(volatile unsigned short *)0x04000130)) & ((1 << 4)))
             && !checkCollision(player.worldCol + player.width + player.cdel, player.worldRow)
             && !checkCollision(player.worldCol + player.width + player.cdel, player.worldRow + player.height - 1)) {
-            if (player.worldCol <= 512 + 240 - 30) {
-                player.worldCol += player.cdel;
-                if (hOff <= 240 && (player.worldCol - hOff > (240 / 2))) {
 
+                player.worldCol += player.cdel;
+                if (hOff <= 512 && (player.worldCol - hOff > (240 / 2))) {
                     hOff += player.cdel;
                 }
-            }
         }
     }
 
@@ -1505,6 +2173,15 @@ int groundCheck(int col, int row, int width, int height) {
 }
 
 
+int goblinGroundCheck(int col, int row, int width, int height) {
+
+    if (checkCollision(col, row + height + 1)
+        && checkCollision(col + width, row + height + 1)) {
+            return 1;
+    }
+    return 0;
+}
+
 
 void animatePlayer() {
 
@@ -1533,6 +2210,9 @@ void animatePlayer() {
     if (player.attacking) {
         player.aniState = ATTACK;
     }
+    if (player.damaged) {
+        player.aniState = DAMAGED;
+    }
 
 
     if(player.aniCounter % 10 == 0 && player.aniState == ATTACK) {
@@ -1544,12 +2224,20 @@ void animatePlayer() {
     else if (player.aniCounter % 5 == 0 && player.aniState == DOUBLEJUMP) {
         player.curFrame = (player.curFrame + 1) % player.numFrames;
     }
+    else if (player.aniCounter % 5 == 0 && player.aniState == DAMAGED) {
+        player.curFrame = (player.curFrame + 1) % player.numFrames;
+        player.damageCounter++;
+        if (player.damageCounter > 8) {
+            player.damaged = 0;
+            player.damageCounter = 0;
+        }
+    }
     else if (player.aniCounter % 10 == 0) {
         player.curFrame = (player.curFrame + 1) % player.numFrames;
     }
 
     player.aniCounter++;
-# 434 "game.c"
+# 525 "game.c"
 }
 
 
@@ -1582,8 +2270,10 @@ void drawPlayer() {
             shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((player.aniState * 2)*32 + ((player.curFrame * 2)));
             break;
             case DOUBLEJUMP:
-
-            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((player.aniState + 2) * 2)*32 + ((player.curFrame % 3 * 2)));
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((player.aniState + 1) * 2)*32 + ((player.curFrame % 3 * 2)));
+            break;
+            case DAMAGED:
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((player.aniState + 1) * 2)*32 + ((player.curFrame % 3 * 2)));
             break;
             default:
             shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((player.aniState * 2)*32 + ((player.curFrame * 2)));
@@ -1602,6 +2292,14 @@ void updateEnemies() {
 
     }
 
+    if (collision(goblin1.worldCol, goblin1.worldRow, goblin1.width, goblin1.height, player.worldCol, player.worldRow, player.width, player.height) && !player.damaged) {
+        player.damaged = 1;
+        player.hearts--;
+        if (player.hearts < 1) {
+            gameOver();
+        }
+    }
+
 
     int xDif = player.worldCol - goblin1.worldCol;
     int yDif = player.worldRow - goblin1.worldRow;
@@ -1610,15 +2308,26 @@ void updateEnemies() {
     if (abs(xDif) < goblin1.xRange && abs(yDif) < goblin1.yRange) {
 
         if (gTimer % 2 == 0) {
+
             if (xDif < 0) {
-                if (!checkCollision((goblin1.worldCol - goblin1.speed), goblin1.worldRow) && !checkCollision((goblin1.worldCol - goblin1.speed), goblin1.worldRow + goblin1.height)) {
-                    goblin1.worldCol -= goblin1.speed;
+                if (!checkCollision((goblin1.worldCol - goblin1.speed), goblin1.worldRow)
+                && !checkCollision((goblin1.worldCol - goblin1.speed), goblin1.worldRow + goblin1.height)) {
+                    if (goblinGroundCheck((goblin1.worldCol - goblin1.speed), goblin1.worldRow, goblin1.width, goblin1.height)) {
+                        goblin1.worldCol -= goblin1.speed;
+                    }
+
                 }
             }
-            else {
+            else if (xDif > 0) {
                 if (!checkCollision((goblin1.worldCol + goblin1.speed + goblin1.width), goblin1.worldRow)
                 && !checkCollision((goblin1.worldCol + goblin1.speed + goblin1.width), goblin1.worldRow + goblin1.height)) {
-                    goblin1.worldCol += goblin1.speed;
+
+                    if (goblinGroundCheck((goblin1.worldCol + goblin1.speed), goblin1.worldRow, goblin1.width, goblin1.height)) {
+                        goblin1.worldCol += goblin1.speed;
+                    }
+                    else {
+
+                    }
                 }
             }
         }
@@ -1710,34 +2419,85 @@ void drawSlash() {
 
 
 int checkCollision(int col, int row) {
-    if (collisionMap[((row) * (512) + (col))]) {
-        return 1;
-    }
+
+        if (collisionMap[((row) * (512) + (col))]) {
+            return 1;
+        }
     return 0;
 }
 
 
 
+
 void drawFont() {
 
-    for (int i = 0; i < 5; i++) {
-        shadowOAM[2 + i].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[2 + i].attr1 = (0x1FF & ((i * 8))) | (0 << 14);
-        shadowOAM[2 + i].attr2 = ((0) << 12) | ((1)*32 + ((10 + i)));
-    }
 
-    int d3 = yVel / 100;
-    int d2 = (yVel % 100) / 10;
-    int d1 = abs(yVel);
-        shadowOAM[7].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[7].attr1 = (0x1FF & (40)) | (0 << 14);
-        shadowOAM[7].attr2 = ((0) << 12) | ((0)*32 + ((10 + d3)));
 
-        shadowOAM[8].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[8].attr1 = (0x1FF & (48)) | (0 << 14);
-        shadowOAM[8].attr2 = ((0) << 12) | ((0)*32 + ((10 + d2)));
 
-        shadowOAM[9].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[9].attr1 = (0x1FF & (56)) | (0 << 14);
-        shadowOAM[9].attr2 = ((0) << 12) | ((0)*32 + ((10 + d1)));
+
+
+
+    int d3 = hOff / 100;
+    int d2 = (hOff % 100) / 10;
+    int d1 = abs(hOff) % 10;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (48)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + d3)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (56)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + d2)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (64)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + d1)));
+        shadowOAMIndex++;
+}
+
+void drawHUD() {
+
+        if (player.hearts >= 1) {
+            shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (0)) | (1 << 14);
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((6)*32 + (6));
+            shadowOAMIndex++;
+        }
+        if (player.hearts >= 2) {
+            shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (16)) | (1 << 14);
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((6)*32 + (6));
+            shadowOAMIndex++;
+        }
+        if (player.hearts >= 3) {
+            shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (32)) | (1 << 14);
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((6)*32 + (6));
+            shadowOAMIndex++;
+        }
+
+        int d3 = score / 100;
+        int d2 = (score % 100) / 10;
+        int d1 = score % 10;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (200)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + d3)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (208)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + d2)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (216)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + d1)));
+        shadowOAMIndex++;
+
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (224)) | (1 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((2) << 12) | ((4)*32 + (6));
+        shadowOAMIndex++;
+        }
+
+
+void gameOver() {
+
 }
