@@ -133,7 +133,7 @@ void startGame() {
 
     REG_DISPCTL = MODE0 | SPRITE_ENABLE | BG1_ENABLE | BG2_ENABLE; // TODO add BG0_ENABLE
     REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_SIZE_WIDE | BG_4BPP;
-    REG_BG2CNT = BG_CHARBLOCK(2) | BG_SCREENBLOCK(26) | BG_SIZE_SMALL | BG_4BPP;
+    REG_BG2CNT = BG_CHARBLOCK(2) | BG_SCREENBLOCK(24) | BG_SIZE_SMALL | BG_4BPP;
 
     // sets up the background offset
     REG_BG1VOFF = vOff;
@@ -154,7 +154,7 @@ void startGame() {
 
     // adding temp mario map
     DMANow(3, map1Pal, PALETTE, 32);
-    DMANow(3, map1Tiles, &CHARBLOCK[0], map2TilesLen / 2);
+    DMANow(3, map2Tiles, &CHARBLOCK[0], map2TilesLen / 2);
     DMANow(3, map2Map, &SCREENBLOCK[28], map2MapLen / 2);
     // mario map 2 (since it is wide, it is using two consective screen blocks)
     // we do not need this if they use the same tiles, else we do
@@ -165,7 +165,7 @@ void startGame() {
     // adding parallax
     // DMANow(3, platformerPal, PALETTE, 32);
     DMANow(3, parallaxBGTiles, &CHARBLOCK[2], parallaxBGTilesLen / 2);
-    DMANow(3, parallaxBGMap, &SCREENBLOCK[26], parallaxBGMapLen / 2);
+    DMANow(3, parallaxBGMap, &SCREENBLOCK[24], parallaxBGMapLen / 2);
 
     // old aadding maop
     // DMANow(3, GameBackgroundPal, PALETTE, 16);

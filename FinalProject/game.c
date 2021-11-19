@@ -159,9 +159,23 @@ void updateGame() {
         pauseVar = 1;
     }
 
+
+
 	updatePlayer();
     // ^^ update slash is a part of update player, since it is so minor
     updateEnemies();
+
+    // then we handle collision map change
+    if (player.worldCol <= 256 && offSet && BUTTON_HELD(BUTTON_LEFT)) {
+        // load in the collision map of the next level
+        collisionMap = maps[hScreenCounter].collisionMap;
+    }
+
+        // then we handle collision map change TODO - might need to add buttno_held????
+    if (player.worldCol >= 256 && offSet && hOff > 20 && BUTTON_HELD(BUTTON_RIGHT)) {
+        // load in the collision map of the next level
+        collisionMap = maps[hScreenCounter + 1].collisionMap;
+    }
 }
 
 // Draws the game each frame
@@ -169,44 +183,45 @@ void drawGame() {
     shadowOAMIndex = 0;
     drawHUD();
 
+    // general rule of thumb, the checkers with offSet must go first, as they prevent twice function calling
 
-    // gotta add in left check. hScreenCounter is to ensure the first level doesn't go back
-    if (hScreenCounter != 0) {
+    // this is to ensure you can only go left if it is not the first map
+    if (hScreenCounter != 0 || offSet == 1) {
+
         // need some sort out the left side
-    if (hOff < 0 && offSet) {
+    if (hOff < 0 && !offSet && BUTTON_HELD(BUTTON_LEFT)) {
         // keeps it to switching between backgrounds
         hScreenCounter--;
         // I do this to get rid of movement past 256
 
         // set current to SB28
-        REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_SIZE_WIDE | BG_4BPP;
+        REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(27) | BG_SIZE_WIDE | BG_4BPP;
         // put the screenblock we just entered into 28
         waitForVBlank();
         DMANow(3, maps[hScreenCounter].map, &SCREENBLOCK[26], map1MapLen / 2);
         // put next next (one after the one we entered) screenblock into next slot
         DMANow(3, maps[hScreenCounter + 1].map, &SCREENBLOCK[28], map1MapLen / 2);
 
+
+
         // FIXME hOff may be an issue
         hOff = 256;
-        offSet = 0;
-        player.worldCol = 120;
+        offSet = 1;
+        player.worldCol = 120 + hOff;
     } 
 
-        if (hOff < 0) {
+            // the left is flipped direction, offset must be flipped
+        if (hOff < 0 && (BUTTON_HELD(BUTTON_LEFT))) {
         // load next map into background 0 (NEXT MAP currently = map1Map !to be changed!)
         // DMANow(3, maps[hScreenCounter + 1].map, &SCREENBLOCK[30], map1MapLen / 2);
-            REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(27) | BG_SIZE_WIDE | BG_4BPP;
+            REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_SIZE_WIDE | BG_4BPP;
             hOff = 256;
-            player.worldCol -= 256;
-            offSet = 1;
-
+            player.worldCol = 256 + 120;
+            offSet = 0;
         }
     
-            // then we handle collision map change
-        if (player.worldCol <= 0 && offSet && hOff > 20) {
-            // load in the collision map of the next level
-            collisionMap = maps[hScreenCounter + 1].collisionMap;
-        }
+
+
 
 
     }
@@ -214,7 +229,7 @@ void drawGame() {
 
 
         // this is handling screen block changing FIXME may cause errors with the greater equal
-    if (hOff >= 256 && offSet) {
+    if (hOff >= 256 && offSet && BUTTON_HELD(BUTTON_RIGHT)) {
         // keeps it to switching between backgrounds
         hScreenCounter++;
         // I do this to get rid of movement past 256
@@ -235,7 +250,7 @@ void drawGame() {
 
     // first case is loading in the next screen block
     // this one is after because of offSet var
-    if (hOff >= 256) {
+    if (hOff >= 256 && BUTTON_HELD(BUTTON_RIGHT)) {
         // load next map into background 0 (NEXT MAP currently = map1Map !to be changed!)
         // DMANow(3, maps[hScreenCounter + 1].map, &SCREENBLOCK[30], map1MapLen / 2);
         REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(29) | BG_SIZE_WIDE | BG_4BPP;
@@ -245,11 +260,7 @@ void drawGame() {
 
     }
 
-    // then we handle collision map change
-    if (player.worldCol >= 256 && offSet && hOff > 20) {
-        // load in the collision map of the next level
-        collisionMap = maps[hScreenCounter + 1].collisionMap;
-    }
+
 
     drawPlayer();
     drawSlash();
@@ -781,6 +792,22 @@ void drawFont() {
         shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
         shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (64)) | ATTR1_TINY;
         shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + d1), 3);
+        shadowOAMIndex++;
+
+    int c3 = player.worldCol / 100;
+    int c2 = (player.worldCol % 100) / 10;
+    int c1 = player.worldCol % 10;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (148)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c3), 3);
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (156)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c2), 3);
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (164)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c1), 3);
         shadowOAMIndex++;
 }
 
