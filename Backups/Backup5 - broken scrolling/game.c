@@ -50,10 +50,10 @@ int gTimer = 0;
 // counts the total amount of times that the hScreen has been changed (256x256 maps)
 int hScreenCounter = 0;
 
-// offset counter for 256 / 512 conversions mid map
-int offSet = 0;
+int bg0hOff = 0;
+int bg1hOff = 0;
 
-MAP maps[4];
+MAP maps[2];
 
 // Player animation states for aniState
 enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP };
@@ -142,12 +142,6 @@ void initMaps() {
 
     maps[1].collisionMap = map1CollisionBitmap;
     maps[1].map = map1Map;
-
-    maps[2].collisionMap = map2CollisionBitmap;
-    maps[2].map = map2Map;
-
-    maps[3].collisionMap = map1CollisionBitmap;
-    maps[3].map = map1Map;
 }
 
 // #endregion
@@ -169,59 +163,45 @@ void drawGame() {
     shadowOAMIndex = 0;
     drawHUD();
 
+        // first case is loading in the next map to display for remaining 240 pixels
+    if (hOff + SCREENWIDTH >= 512) {
+        // load next map into background 0 (NEXT MAP currently = map1Map !to be changed!)
+        DMANow(3, maps[hScreenCounter + 1].map, &SCREENBLOCK[30], map1MapLen / 2);
+        // set background to be offset by the magic number
+        bg0hOff = -384;
 
+
+
+    }
+
+    // then we handle collision map change
+    if (player.worldCol + player.width >= 512) {
+        collisionMap = maps[1].collisionMap;
+        // change collision map to the next one
+    }
 
         // this is handling screen block changing FIXME may cause errors with the greater equal
-    if (hOff >= 256 && offSet) {
+    if (hOff >= 512) {
         // keeps it to switching between backgrounds
         hScreenCounter++;
         // I do this to get rid of movement past 256
-
-        // set current to SB28
-        REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_SIZE_WIDE | BG_4BPP;
-        // put the screenblock we just entered into 28
-        waitForVBlank();
-        DMANow(3, maps[hScreenCounter].map, &SCREENBLOCK[28], map1MapLen / 2);
-        // put next next (one after the one we entered) screenblock into next slot
-        DMANow(3, maps[hScreenCounter + 1].map, &SCREENBLOCK[30], map1MapLen / 2);
-
         hOff = 0;
-        offSet = 0;
         player.worldCol = 120;
 
-        // // of / 2 for that matter, load whatever your current state is into the first screenblock
-        // if (hScreenCounter == 1) {
-        //     // load current map into screenblock 28
-        //     // load the next map into the screenblock 30
-        //     waitForVBlank();
-        //     DMANow(3, maps[1].map, &SCREENBLOCK[28], map1MapLen / 2);
-        //     hideSprites();
-        //     DMANow(3, shadowOAM, OAM, 128 * 4);
-        //     // !!! SET THE BACKGROUND 0 OFFSET TO JUST 256
-        // }
-    }
-
-    // first case is loading in the next screen block
-    // this one is after because of offSet var
-    if (hOff >= 256) {
-        // load next map into background 0 (NEXT MAP currently = map1Map !to be changed!)
-        // DMANow(3, maps[hScreenCounter + 1].map, &SCREENBLOCK[30], map1MapLen / 2);
-        REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(29) | BG_SIZE_WIDE | BG_4BPP;
-        hOff = 0;
-        player.worldCol -= 256;
-        offSet = 1;
-
-        // set background to be offset by the magic number
-        // bg0hOff = -384;
-
-
-
-    }
-
-                        // then we handle collision map change
-    if (player.worldCol >= 256 && offSet && hOff > 20) {
-        // load in the collision map of the next level
-        collisionMap = maps[hScreenCounter + 1].collisionMap;
+        // of / 2 for that matter, load whatever your current state is into the first screenblock
+        if (hScreenCounter == 1) {
+            REG_DISPCTL = 0;
+            REG_DISPCTL = MODE0 | SPRITE_ENABLE | BG0_ENABLE | BG2_ENABLE;
+            REG_BG0CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_SIZE_WIDE | BG_4BPP;
+            REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(30) | BG_SIZE_WIDE | BG_4BPP;
+            // load current map into screenblock 28
+            // load the next map into the screenblock 30
+            waitForVBlank();
+            DMANow(3, maps[1].map, &SCREENBLOCK[28], map1MapLen / 2);
+            hideSprites();
+            DMANow(3, shadowOAM, OAM, 128 * 4);
+            // !!! SET THE BACKGROUND 0 OFFSET TO JUST 256
+        }
     }
 
     drawPlayer();
@@ -235,13 +215,24 @@ void drawGame() {
 
     DMANow(3, shadowOAM, OAM, 128 * 4);
 
-    REG_BG1HOFF = hOff;
+    REG_BG1HOFF = hOff + bg1hOff;
     REG_BG1VOFF = vOff;
+    REG_BG0HOFF = hOff + bg0hOff;
+    REG_BG0VOFF = vOff;
+
+    // TODO - add the parralax stuff here
+    // if (hScreenCounter == 0) {
+    //     REG_BG1HOFF = hOff;
+    //     REG_BG1VOFF = vOff;
+    // }
+    // if (hScreenCounter == 1) {
+    //     REG_BG0HOFF = hOff;
+    //     REG_BG0VOFF = vOff;
+    // }
+
 
     // parallax motion babbyyy :)
-    // TODO - make parallax fix on changes
     REG_BG2HOFF = (hOff / 3);
-
 }
 
 // Handle every-frame actions of the player
@@ -714,15 +705,6 @@ void drawSlash() {
 // returns 1 if it collides with any other color, besides the base 0x0000 one
 int checkCollision(int col, int row) {
     // this is for when in the middle of two collision maps, i.e. player is between two screenmaps
-
-    // jank solution for weird thing going on with offset
-    if (offSet) {
-        if (collisionMap[OFFSET(col + 256, row, MAPWIDTH)]) {
-            return 1;
-        }
-        return 0;    
-    }
-    // normal collision function
         if (collisionMap[OFFSET(col, row, MAPWIDTH)]) {
             return 1;
         }
@@ -740,9 +722,9 @@ void drawFont() {
     //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((10 + i), 1);
     // }
     // this draws the actual score:
-    int d3 = player.worldCol / 100;
-    int d2 = (player.worldCol % 100) / 10;
-    int d1 = abs(player.worldCol) % 10;
+    int d3 = hOff / 100;
+    int d2 = (hOff % 100) / 10;
+    int d1 = abs(hOff) % 10;
         shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
         shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (48)) | ATTR1_TINY;
         shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + d3), 3);

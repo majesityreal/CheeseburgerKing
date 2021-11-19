@@ -131,7 +131,8 @@ void startGame() {
 
     // BG 2 is the parallax background, BG 1 is the actual tiles
 
-    REG_DISPCTL = MODE0 | SPRITE_ENABLE | BG1_ENABLE | BG2_ENABLE; // TODO add BG0_ENABLE
+    REG_DISPCTL = MODE0 | SPRITE_ENABLE | BG1_ENABLE | BG2_ENABLE | BG0_ENABLE; // TODO add BG0_ENABLE
+    REG_BG0CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(30) | BG_SIZE_WIDE | BG_4BPP;
     REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_SIZE_WIDE | BG_4BPP;
     REG_BG2CNT = BG_CHARBLOCK(2) | BG_SCREENBLOCK(26) | BG_SIZE_SMALL | BG_4BPP;
 
@@ -153,13 +154,13 @@ void startGame() {
 //     DMANow(3, testmapMap, &SCREENBLOCK[26], testmapMapLen / 2);
 
     // adding temp mario map
-    DMANow(3, map1Pal, PALETTE, 32);
-    DMANow(3, map1Tiles, &CHARBLOCK[0], map2TilesLen / 2);
+    DMANow(3, map2Pal, PALETTE, 32);
+    DMANow(3, map2Tiles, &CHARBLOCK[0], map2TilesLen / 2);
     DMANow(3, map2Map, &SCREENBLOCK[28], map2MapLen / 2);
     // mario map 2 (since it is wide, it is using two consective screen blocks)
     // we do not need this if they use the same tiles, else we do
     // DMANow(3, map1Tiles, &CHARBLOCK[0], map1TilesLen / 2);
-    DMANow(3, map1Map, &SCREENBLOCK[30], map1MapLen / 2);
+    // DMANow(3, map1Map, &SCREENBLOCK[30], map1MapLen / 2);
 
     // adding parallax
     // DMANow(3, platformerPal, PALETTE, 32);

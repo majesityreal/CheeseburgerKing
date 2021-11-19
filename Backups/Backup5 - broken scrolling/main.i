@@ -1621,7 +1621,8 @@ void startGame() {
 
 
 
-    (*(volatile unsigned short *)0x4000000) = 0 | (1 << 12) | (1 << 9) | (1 << 10);
+    (*(volatile unsigned short *)0x4000000) = 0 | (1 << 12) | (1 << 9) | (1 << 10) | (1 << 8);
+    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | ((30) << 8) | (1 << 14) | (0 << 7);
     (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((28) << 8) | (1 << 14) | (0 << 7);
     (*(volatile unsigned short *)0x400000C) = ((2) << 2) | ((26) << 8) | (0 << 14) | (0 << 7);
 
@@ -1635,14 +1636,14 @@ void startGame() {
     srand(timer);
 
     waitForVBlank();
-# 156 "main.c"
-    DMANow(3, map1Pal, ((unsigned short *)0x5000000), 32);
-    DMANow(3, map1Tiles, &((charblock *)0x6000000)[0], 1344 / 2);
+# 157 "main.c"
+    DMANow(3, map2Pal, ((unsigned short *)0x5000000), 32);
+    DMANow(3, map2Tiles, &((charblock *)0x6000000)[0], 1344 / 2);
     DMANow(3, map2Map, &((screenblock *)0x6000000)[28], 4096 / 2);
 
 
 
-    DMANow(3, map1Map, &((screenblock *)0x6000000)[30], 4096 / 2);
+
 
 
 
@@ -1687,7 +1688,7 @@ void game() {
 
 
 }
-# 225 "main.c"
+# 226 "main.c"
 void goToPause() {
     state = PAUSE;
 }
