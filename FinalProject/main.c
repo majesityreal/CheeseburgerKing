@@ -160,6 +160,7 @@ void startGame() {
     // we do not need this if they use the same tiles, else we do
     // DMANow(3, map1Tiles, &CHARBLOCK[0], map1TilesLen / 2);
     DMANow(3, map1Map, &SCREENBLOCK[30], map1MapLen / 2);
+    DMANow(3, map1Map, &SCREENBLOCK[26], map1MapLen / 2);
 
     // adding parallax
     // DMANow(3, platformerPal, PALETTE, 32);
