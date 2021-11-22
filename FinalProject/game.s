@@ -1946,18 +1946,24 @@ drawGame:
 .L320:
 	ldr	r3, .L337+28
 	ldrh	r3, [r3, #48]
-	ands	r3, r3, #16
+	ands	r2, r3, #16
 	bne	.L323
-	mov	ip, #67108864
-	mov	lr, #23808
 	mov	r0, #1
-	ldr	r1, .L337+32
-	ldr	r2, [r1, #12]
-	sub	r2, r2, #256
-	str	r2, [r1, #12]
-	strh	lr, [ip, #10]	@ movhi
+	mov	lr, #67108864
+	ldr	ip, .L337+32
+	ldr	r3, [ip, #8]
+	add	r3, r3, r0
+	str	r3, [ip, #8]
+	lsl	r3, r3, #24
+	ldr	r1, .L337+36
+	orr	r3, r3, #1073741824
+	lsr	r3, r3, #16
+	strh	r3, [lr, #10]	@ movhi
+	ldr	r3, [r1, #12]
+	sub	r3, r3, #256
+	str	r2, [r5]
+	str	r3, [r1, #12]
 	str	r0, [r4, #16]
-	str	r3, [r5]
 	b	.L323
 .L334:
 	ldr	r3, [r4, #16]
@@ -1970,18 +1976,25 @@ drawGame:
 .L318:
 	ldr	r3, .L337+28
 	ldrh	r3, [r3, #48]
-	ands	r3, r3, #32
+	ands	r2, r3, #32
 	bne	.L332
-	mov	r0, #67108864
-	mov	ip, #23552
-	mov	r1, #256
-	mov	r2, #376
-	str	r3, [r4, #16]
-	ldr	r3, .L337+32
-	strh	ip, [r0, #10]	@ movhi
+	mov	ip, #256
+	mov	lr, #67108864
+	ldr	r0, .L337+32
+	ldr	r3, [r0, #8]
+	ldr	r1, .L337+36
+	sub	r3, r3, #1
+	str	r2, [r4, #16]
+	str	r3, [r0, #8]
+	ldr	r2, [r1, #12]
+	lsl	r3, r3, #24
+	orr	r3, r3, #1073741824
+	lsr	r3, r3, #16
+	add	r2, r2, ip
+	strh	r3, [lr, #10]	@ movhi
 	ldr	r7, .L337+8
-	str	r1, [r5]
-	str	r2, [r3, #12]
+	str	r2, [r1, #12]
+	str	ip, [r5]
 	ldr	r6, .L337+12
 	b	.L320
 .L313:
@@ -1996,22 +2009,25 @@ drawGame:
 	ble	.L332
 	b	.L328
 .L335:
-	mov	r2, #67108864
-	mov	r1, #23552
+	mov	ip, #23552
+	mov	r0, #67108864
+	mov	r1, #28
 	ldr	r3, [r4, #36]
-	strh	r1, [r2, #10]	@ movhi
+	ldr	r2, .L337+32
+	strh	ip, [r0, #10]	@ movhi
 	add	r3, r3, #1
+	str	r1, [r2, #8]
 	str	r3, [r4, #36]
 	mov	lr, pc
 	bx	r7
 	ldr	r3, [r4, #36]
-	ldr	r9, .L337+36
+	ldr	r9, .L337+40
 	add	r3, r3, r3, lsl #1
 	add	r3, r9, r3, lsl #2
 	ldr	r1, [r3, #8]
 	mov	r0, #3
 	mov	r3, #2048
-	ldr	r2, .L337+40
+	ldr	r2, .L337+44
 	mov	lr, pc
 	bx	r6
 	ldr	r3, [r4, #36]
@@ -2019,34 +2035,37 @@ drawGame:
 	add	r3, r3, r3, lsl #1
 	add	r3, r9, r3, lsl #2
 	ldr	r1, [r3, #8]
-	ldr	r2, .L337+44
+	ldr	r2, .L337+48
 	mov	r3, #2048
 	mov	r0, #3
 	mov	lr, pc
 	bx	r6
 	mov	r2, #120
-	ldr	r3, .L337+32
+	ldr	r3, .L337+36
 	str	r8, [r5]
 	str	r8, [r4, #16]
 	str	r2, [r3, #12]
 	b	.L323
 .L336:
-	mov	r3, #67108864
-	mov	r1, #23296
+	mov	ip, #23296
+	mov	r0, #67108864
+	mov	r1, #27
+	ldr	r3, .L337+32
+	strh	ip, [r0, #10]	@ movhi
 	sub	r2, r2, #1
-	strh	r1, [r3, #10]	@ movhi
 	ldr	r7, .L337+8
+	str	r1, [r3, #8]
 	str	r2, [r4, #36]
 	mov	lr, pc
 	bx	r7
 	ldr	r3, [r4, #36]
-	ldr	r8, .L337+36
+	ldr	r8, .L337+40
 	add	r3, r3, r3, lsl #1
 	add	r3, r8, r3, lsl #2
 	ldr	r1, [r3, #8]
 	mov	r0, #3
 	mov	r3, #2048
-	ldr	r2, .L337+48
+	ldr	r2, .L337+52
 	ldr	r6, .L337+12
 	mov	lr, pc
 	bx	r6
@@ -2057,13 +2076,13 @@ drawGame:
 	ldr	r1, [r3, #8]
 	mov	r0, #3
 	mov	r3, #2048
-	ldr	r2, .L337+40
+	ldr	r2, .L337+44
 	mov	lr, pc
 	bx	r6
 	mov	r0, #256
 	mov	r1, #1
 	mov	r2, #376
-	ldr	r3, .L337+32
+	ldr	r3, .L337+36
 	str	r0, [r5]
 	str	r1, [r4, #16]
 	str	r2, [r3, #12]
@@ -2079,6 +2098,7 @@ drawGame:
 	.word	1431655766
 	.word	vOff
 	.word	67109120
+	.word	.LANCHOR1
 	.word	player
 	.word	maps
 	.word	100720640
@@ -2100,6 +2120,7 @@ gameOver:
 	.size	gameOver, .-gameOver
 	.comm	maps,48,4
 	.global	offSet
+	.global	currentScreenblock
 	.global	hScreenCounter
 	.global	gTimer
 	.global	framesInAir
@@ -2129,6 +2150,10 @@ collisionMap:
 	.size	grounded, 4
 grounded:
 	.word	1
+	.type	currentScreenblock, %object
+	.size	currentScreenblock, 4
+currentScreenblock:
+	.word	28
 	.bss
 	.align	2
 	.set	.LANCHOR0,. + 0

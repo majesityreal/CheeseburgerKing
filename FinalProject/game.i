@@ -1786,6 +1786,7 @@ int gTimer = 0;
 
 
 int hScreenCounter = 0;
+int currentScreenblock = 28;
 
 
 int offSet = 0;
@@ -1929,7 +1930,7 @@ void drawGame() {
     if (hOff < 0 && !offSet && (~((*(volatile unsigned short *)0x04000130)) & ((1 << 5)))) {
 
         hScreenCounter--;
-
+        currentScreenblock = 27;
 
 
         (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((27) << 8) | (1 << 14) | (0 << 7);
@@ -1951,10 +1952,15 @@ void drawGame() {
         if (hOff < 0 && ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 5))))) {
 
 
-            (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((28) << 8) | (1 << 14) | (0 << 7);
+
+
+            (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((currentScreenblock - 1) << 8) | (1 << 14) | (0 << 7);
             hOff = 256;
-            player.worldCol = 256 + 120;
+            player.worldCol += 256;
             offSet = 0;
+
+            currentScreenblock--;
+
         }
 
 
@@ -1969,7 +1975,7 @@ void drawGame() {
     if (hOff >= 256 && offSet && (~((*(volatile unsigned short *)0x04000130)) & ((1 << 4)))) {
 
         hScreenCounter++;
-
+        currentScreenblock = 28;
 
 
         (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((28) << 8) | (1 << 14) | (0 << 7);
@@ -1989,11 +1995,12 @@ void drawGame() {
 
     if (hOff >= 256 && (~((*(volatile unsigned short *)0x04000130)) & ((1 << 4)))) {
 
-
-        (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((29) << 8) | (1 << 14) | (0 << 7);
+        (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((currentScreenblock + 1) << 8) | (1 << 14) | (0 << 7);
         hOff = 0;
         player.worldCol -= 256;
         offSet = 1;
+
+        currentScreenblock++;
 
     }
 
@@ -2297,7 +2304,7 @@ void animatePlayer() {
     }
 
     player.aniCounter++;
-# 573 "game.c"
+# 580 "game.c"
 }
 
 

@@ -49,6 +49,7 @@ int gTimer = 0;
 
 // counts the total amount of times that the hScreen has been changed (256x256 maps)
 int hScreenCounter = 0;
+int currentScreenblock = 28;
 
 // offset counter for 256 / 512 conversions mid map
 int offSet = 0;
@@ -192,8 +193,8 @@ void drawGame() {
     if (hOff < 0 && !offSet && BUTTON_HELD(BUTTON_LEFT)) {
         // keeps it to switching between backgrounds
         hScreenCounter--;
+        currentScreenblock = 27;
         // I do this to get rid of movement past 256
-
         // set current to SB28
         REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(27) | BG_SIZE_WIDE | BG_4BPP;
         // put the screenblock we just entered into 28
@@ -214,10 +215,15 @@ void drawGame() {
         if (hOff < 0 && (BUTTON_HELD(BUTTON_LEFT))) {
         // load next map into background 0 (NEXT MAP currently = map1Map !to be changed!)
         // DMANow(3, maps[hScreenCounter + 1].map, &SCREENBLOCK[30], map1MapLen / 2);
-            REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_SIZE_WIDE | BG_4BPP;
+        // this is if we have gone right without changing map
+
+            REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(currentScreenblock - 1) | BG_SIZE_WIDE | BG_4BPP;
             hOff = 256;
-            player.worldCol = 256 + 120;
+            player.worldCol += 256;
             offSet = 0;
+
+            currentScreenblock--;
+
         }
     
 
@@ -232,8 +238,8 @@ void drawGame() {
     if (hOff >= 256 && offSet && BUTTON_HELD(BUTTON_RIGHT)) {
         // keeps it to switching between backgrounds
         hScreenCounter++;
-        // I do this to get rid of movement past 256
-
+        currentScreenblock = 28;
+        // should go down to 28
         // set current to SB28
         REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_SIZE_WIDE | BG_4BPP;
         // put the screenblock we just entered into 28
@@ -252,11 +258,12 @@ void drawGame() {
     // this one is after because of offSet var
     if (hOff >= 256 && BUTTON_HELD(BUTTON_RIGHT)) {
         // load next map into background 0 (NEXT MAP currently = map1Map !to be changed!)
-        // DMANow(3, maps[hScreenCounter + 1].map, &SCREENBLOCK[30], map1MapLen / 2);
-        REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(29) | BG_SIZE_WIDE | BG_4BPP;
+        REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(currentScreenblock + 1) | BG_SIZE_WIDE | BG_4BPP;
         hOff = 0;
         player.worldCol -= 256;
         offSet = 1;
+
+        currentScreenblock++;
 
     }
 
