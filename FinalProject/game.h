@@ -96,6 +96,7 @@ typedef struct {
 #define MAPWIDTH 512
 #define GRAVITY 1
 #define JUMPVEL -5
+#define PARALLAXFACTOR 3
 
 // number of frames the attack is
 #define ATTACK_DURATION 20

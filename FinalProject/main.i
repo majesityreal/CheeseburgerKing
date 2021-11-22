@@ -1419,7 +1419,7 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 106 "game.h"
+# 107 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];

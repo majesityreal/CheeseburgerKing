@@ -1667,7 +1667,7 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 106 "game.h"
+# 107 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
@@ -1924,6 +1924,7 @@ void drawGame() {
 
 
 
+
     if (hScreenCounter != 0 || offSet == 1) {
 
 
@@ -1933,9 +1934,11 @@ void drawGame() {
         currentScreenblock = 27;
 
 
-        (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((27) << 8) | (1 << 14) | (0 << 7);
 
         waitForVBlank();
+
+        (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((27) << 8) | (1 << 14) | (0 << 7);
+
         DMANow(3, maps[hScreenCounter].map, &((screenblock *)0x6000000)[26], 4096 / 2);
 
         DMANow(3, maps[hScreenCounter + 1].map, &((screenblock *)0x6000000)[28], 4096 / 2);
@@ -1953,7 +1956,7 @@ void drawGame() {
 
 
 
-
+            waitForVBlank();
             (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((currentScreenblock - 1) << 8) | (1 << 14) | (0 << 7);
             hOff = 256;
             player.worldCol += 256;
@@ -1962,9 +1965,6 @@ void drawGame() {
             currentScreenblock--;
 
         }
-
-
-
 
 
     }
@@ -1978,9 +1978,9 @@ void drawGame() {
         currentScreenblock = 28;
 
 
+        waitForVBlank();
         (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((28) << 8) | (1 << 14) | (0 << 7);
 
-        waitForVBlank();
         DMANow(3, maps[hScreenCounter].map, &((screenblock *)0x6000000)[28], 4096 / 2);
 
         DMANow(3, maps[hScreenCounter + 1].map, &((screenblock *)0x6000000)[30], 4096 / 2);
@@ -1995,6 +1995,7 @@ void drawGame() {
 
     if (hOff >= 256 && (~((*(volatile unsigned short *)0x04000130)) & ((1 << 4)))) {
 
+        waitForVBlank();
         (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((currentScreenblock + 1) << 8) | (1 << 14) | (0 << 7);
         hOff = 0;
         player.worldCol -= 256;
@@ -2021,8 +2022,15 @@ void drawGame() {
     (*(volatile unsigned short *)0x04000016) = vOff;
 
 
-
-    (*(volatile unsigned short *)0x04000018) = (hOff / 3);
+    if (offSet) {
+      (*(volatile unsigned short *)0x04000018) = ((hOff + 256) / 3);
+    }
+    else if (hScreenCounter % 2 == 1) {
+        (*(volatile unsigned short *)0x04000018) = ((hOff + 512) / 3);
+    }
+    else {
+        (*(volatile unsigned short *)0x04000018) = (hOff / 3);
+    }
 
 }
 
@@ -2304,7 +2312,7 @@ void animatePlayer() {
     }
 
     player.aniCounter++;
-# 580 "game.c"
+# 588 "game.c"
 }
 
 

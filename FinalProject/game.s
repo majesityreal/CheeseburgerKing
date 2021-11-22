@@ -1887,188 +1887,207 @@ drawGame:
 	@ frame_needed = 0, uses_anonymous_args = 0
 	mov	r3, #0
 	push	{r4, r5, r6, r7, r8, r9, r10, lr}
-	ldr	r4, .L337
+	ldr	r4, .L339
 	str	r3, [r4, #4]
 	bl	drawHUD
 	ldr	r2, [r4, #36]
 	cmp	r2, #0
 	beq	.L313
-	ldr	r5, .L337+4
+	ldr	r5, .L339+4
 	ldr	r3, [r5]
 	cmp	r3, #0
-	blt	.L334
+	blt	.L336
 .L317:
 	cmp	r3, #255
-	bgt	.L328
-.L332:
-	ldr	r7, .L337+8
-	ldr	r6, .L337+12
-.L323:
+	ble	.L334
+.L331:
+	ldr	r3, [r4, #16]
+	cmp	r3, #0
+	ldr	r6, .L339+8
+	ldr	r7, .L339+12
+	beq	.L320
+.L319:
+	ldr	r3, .L339+16
+	ldrh	r3, [r3, #48]
+	ands	r8, r3, #16
+	beq	.L337
+.L320:
+	ldr	r3, .L339+16
+	ldrh	r3, [r3, #48]
+	ands	r8, r3, #16
+	bne	.L326
+	mov	lr, pc
+	bx	r6
+	mov	r1, #1
+	mov	ip, #67108864
+	ldr	r0, .L339+20
+	ldr	r3, [r0, #8]
+	add	r3, r3, r1
+	str	r3, [r0, #8]
+	lsl	r3, r3, #24
+	ldr	r2, .L339+24
+	orr	r3, r3, #1073741824
+	lsr	r3, r3, #16
+	strh	r3, [ip, #10]	@ movhi
+	ldr	r3, [r2, #12]
+	sub	r3, r3, #256
+	str	r8, [r5]
+	str	r3, [r2, #12]
+	str	r1, [r4, #16]
+	b	.L326
+.L336:
+	ldr	r3, [r4, #16]
+	cmp	r3, #0
+	bne	.L318
+	ldr	r3, .L339+16
+	ldrh	r3, [r3, #48]
+	tst	r3, #32
+	beq	.L338
+.L318:
+	ldr	r3, .L339+16
+	ldrh	r3, [r3, #48]
+	ands	r7, r3, #32
+	beq	.L327
+.L334:
+	ldr	r6, .L339+8
+	ldr	r7, .L339+12
+.L326:
 	bl	drawPlayer
 	bl	drawSlash
 	bl	drawEnemies
 	bl	drawFont
 	mov	lr, pc
-	bx	r7
-	mov	r0, #3
+	bx	r6
 	mov	r3, #512
 	mov	r2, #117440512
-	ldr	r1, .L337+16
+	mov	r0, #3
+	ldr	r1, .L339+28
 	mov	lr, pc
-	bx	r6
-	mov	r2, #67108864
-	ldr	r1, [r5]
-	ldr	r3, .L337+20
-	smull	r0, r3, r1, r3
-	lsl	r0, r1, #16
-	lsr	r0, r0, #16
-	strh	r0, [r2, #20]	@ movhi
-	ldr	r0, .L337+24
-	sub	r3, r3, r1, asr #31
+	bx	r7
+	mov	r1, #67108864
+	ldr	r3, [r5]
+	lsl	r2, r3, #16
+	lsr	r2, r2, #16
+	strh	r2, [r1, #20]	@ movhi
+	ldr	r2, .L339+32
+	ldr	r0, [r4, #16]
+	ldrh	r2, [r2]
+	cmp	r0, #0
+	strh	r2, [r1, #22]	@ movhi
+	beq	.L322
+	ldr	r2, .L339+36
+	add	r3, r3, #256
+.L324:
+	smull	r0, r2, r3, r2
+	sub	r3, r2, r3, asr #31
 	lsl	r3, r3, #16
-	ldrh	r1, [r0]
 	lsr	r3, r3, #16
-	strh	r1, [r2, #22]	@ movhi
+	strh	r3, [r1, #24]	@ movhi
 	pop	{r4, r5, r6, r7, r8, r9, r10, lr}
-	strh	r3, [r2, #24]	@ movhi
 	bx	lr
-.L328:
-	ldr	r3, [r4, #16]
-	cmp	r3, #0
-	ldr	r7, .L337+8
-	ldr	r6, .L337+12
-	beq	.L320
-.L319:
-	ldr	r3, .L337+28
-	ldrh	r3, [r3, #48]
-	ands	r8, r3, #16
-	beq	.L335
-.L320:
-	ldr	r3, .L337+28
-	ldrh	r3, [r3, #48]
-	ands	r2, r3, #16
-	bne	.L323
-	mov	r0, #1
-	mov	lr, #67108864
-	ldr	ip, .L337+32
-	ldr	r3, [ip, #8]
-	add	r3, r3, r0
-	str	r3, [ip, #8]
-	lsl	r3, r3, #24
-	ldr	r1, .L337+36
-	orr	r3, r3, #1073741824
-	lsr	r3, r3, #16
-	strh	r3, [lr, #10]	@ movhi
-	ldr	r3, [r1, #12]
-	sub	r3, r3, #256
-	str	r2, [r5]
-	str	r3, [r1, #12]
-	str	r0, [r4, #16]
-	b	.L323
-.L334:
-	ldr	r3, [r4, #16]
-	cmp	r3, #0
-	bne	.L318
-	ldr	r3, .L337+28
-	ldrh	r3, [r3, #48]
-	tst	r3, #32
-	beq	.L336
-.L318:
-	ldr	r3, .L337+28
-	ldrh	r3, [r3, #48]
-	ands	r2, r3, #32
-	bne	.L332
-	mov	ip, #256
-	mov	lr, #67108864
-	ldr	r0, .L337+32
-	ldr	r3, [r0, #8]
-	ldr	r1, .L337+36
-	sub	r3, r3, #1
-	str	r2, [r4, #16]
-	str	r3, [r0, #8]
-	ldr	r2, [r1, #12]
-	lsl	r3, r3, #24
-	orr	r3, r3, #1073741824
-	lsr	r3, r3, #16
-	add	r2, r2, ip
-	strh	r3, [lr, #10]	@ movhi
-	ldr	r7, .L337+8
-	str	r2, [r1, #12]
-	str	ip, [r5]
-	ldr	r6, .L337+12
-	b	.L320
+.L322:
+	ldr	r2, [r4, #36]
+	cmp	r2, #0
+	and	r2, r2, #1
+	rsblt	r2, r2, #0
+	cmp	r2, #1
+	addeq	r3, r3, #512
+	ldr	r2, .L339+36
+	b	.L324
 .L313:
 	ldr	r3, [r4, #16]
-	ldr	r5, .L337+4
+	ldr	r5, .L339+4
 	cmp	r3, #1
 	ldr	r3, [r5]
 	bne	.L317
 	cmp	r3, #0
 	blt	.L318
 	cmp	r3, #255
-	ble	.L332
-	b	.L328
-.L335:
-	mov	ip, #23552
-	mov	r0, #67108864
+	bgt	.L331
+	b	.L334
+.L327:
+	ldr	r6, .L339+8
+	mov	lr, pc
+	bx	r6
+	mov	ip, #67108864
+	mov	r0, #256
+	ldr	r1, .L339+20
+	ldr	r3, [r1, #8]
+	sub	r3, r3, #1
+	str	r3, [r1, #8]
+	lsl	r3, r3, #24
+	ldr	r2, .L339+24
+	orr	r3, r3, #1073741824
+	lsr	r3, r3, #16
+	str	r7, [r4, #16]
+	strh	r3, [ip, #10]	@ movhi
+	ldr	r3, [r2, #12]
+	add	r3, r3, r0
+	str	r3, [r2, #12]
+	str	r0, [r5]
+	ldr	r7, .L339+12
+	b	.L320
+.L337:
 	mov	r1, #28
 	ldr	r3, [r4, #36]
-	ldr	r2, .L337+32
-	strh	ip, [r0, #10]	@ movhi
+	ldr	r2, .L339+20
 	add	r3, r3, #1
 	str	r1, [r2, #8]
 	str	r3, [r4, #36]
 	mov	lr, pc
-	bx	r7
+	bx	r6
+	mov	r2, #67108864
+	mov	r0, #23552
 	ldr	r3, [r4, #36]
-	ldr	r9, .L337+40
+	ldr	r9, .L339+40
 	add	r3, r3, r3, lsl #1
 	add	r3, r9, r3, lsl #2
 	ldr	r1, [r3, #8]
-	mov	r0, #3
+	strh	r0, [r2, #10]	@ movhi
 	mov	r3, #2048
-	ldr	r2, .L337+44
+	mov	r0, #3
+	ldr	r2, .L339+44
 	mov	lr, pc
-	bx	r6
+	bx	r7
 	ldr	r3, [r4, #36]
 	add	r3, r3, #1
 	add	r3, r3, r3, lsl #1
 	add	r3, r9, r3, lsl #2
 	ldr	r1, [r3, #8]
-	ldr	r2, .L337+48
+	ldr	r2, .L339+48
 	mov	r3, #2048
 	mov	r0, #3
 	mov	lr, pc
-	bx	r6
+	bx	r7
 	mov	r2, #120
-	ldr	r3, .L337+36
+	ldr	r3, .L339+24
 	str	r8, [r5]
 	str	r8, [r4, #16]
 	str	r2, [r3, #12]
-	b	.L323
-.L336:
-	mov	ip, #23296
-	mov	r0, #67108864
+	b	.L326
+.L338:
 	mov	r1, #27
-	ldr	r3, .L337+32
-	strh	ip, [r0, #10]	@ movhi
+	ldr	r3, .L339+20
 	sub	r2, r2, #1
-	ldr	r7, .L337+8
+	ldr	r6, .L339+8
 	str	r1, [r3, #8]
 	str	r2, [r4, #36]
 	mov	lr, pc
-	bx	r7
+	bx	r6
+	mov	r2, #67108864
+	mov	r0, #23296
 	ldr	r3, [r4, #36]
-	ldr	r8, .L337+40
+	ldr	r8, .L339+40
 	add	r3, r3, r3, lsl #1
 	add	r3, r8, r3, lsl #2
 	ldr	r1, [r3, #8]
-	mov	r0, #3
+	ldr	r7, .L339+12
+	strh	r0, [r2, #10]	@ movhi
 	mov	r3, #2048
-	ldr	r2, .L337+52
-	ldr	r6, .L337+12
+	mov	r0, #3
+	ldr	r2, .L339+52
 	mov	lr, pc
-	bx	r6
+	bx	r7
 	ldr	r3, [r4, #36]
 	add	r3, r3, #1
 	add	r3, r3, r3, lsl #1
@@ -2076,30 +2095,30 @@ drawGame:
 	ldr	r1, [r3, #8]
 	mov	r0, #3
 	mov	r3, #2048
-	ldr	r2, .L337+44
+	ldr	r2, .L339+44
 	mov	lr, pc
-	bx	r6
+	bx	r7
 	mov	r0, #256
 	mov	r1, #1
 	mov	r2, #376
-	ldr	r3, .L337+36
+	ldr	r3, .L339+24
 	str	r0, [r5]
 	str	r1, [r4, #16]
 	str	r2, [r3, #12]
 	b	.L319
-.L338:
+.L340:
 	.align	2
-.L337:
+.L339:
 	.word	.LANCHOR0
 	.word	hOff
 	.word	waitForVBlank
 	.word	DMANow
-	.word	shadowOAM
-	.word	1431655766
-	.word	vOff
 	.word	67109120
 	.word	.LANCHOR1
 	.word	player
+	.word	shadowOAM
+	.word	vOff
+	.word	1431655766
 	.word	maps
 	.word	100720640
 	.word	100724736

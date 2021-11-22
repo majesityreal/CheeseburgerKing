@@ -184,6 +184,7 @@ void drawGame() {
     shadowOAMIndex = 0;
     drawHUD();
 
+
     // general rule of thumb, the checkers with offSet must go first, as they prevent twice function calling
 
     // this is to ensure you can only go left if it is not the first map
@@ -196,9 +197,11 @@ void drawGame() {
         currentScreenblock = 27;
         // I do this to get rid of movement past 256
         // set current to SB28
+
+        waitForVBlank();
+
         REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(27) | BG_SIZE_WIDE | BG_4BPP;
         // put the screenblock we just entered into 28
-        waitForVBlank();
         DMANow(3, maps[hScreenCounter].map, &SCREENBLOCK[26], map1MapLen / 2);
         // put next next (one after the one we entered) screenblock into next slot
         DMANow(3, maps[hScreenCounter + 1].map, &SCREENBLOCK[28], map1MapLen / 2);
@@ -216,7 +219,7 @@ void drawGame() {
         // load next map into background 0 (NEXT MAP currently = map1Map !to be changed!)
         // DMANow(3, maps[hScreenCounter + 1].map, &SCREENBLOCK[30], map1MapLen / 2);
         // this is if we have gone right without changing map
-
+            waitForVBlank();
             REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(currentScreenblock - 1) | BG_SIZE_WIDE | BG_4BPP;
             hOff = 256;
             player.worldCol += 256;
@@ -225,9 +228,6 @@ void drawGame() {
             currentScreenblock--;
 
         }
-    
-
-
 
 
     }
@@ -241,9 +241,9 @@ void drawGame() {
         currentScreenblock = 28;
         // should go down to 28
         // set current to SB28
+        waitForVBlank();
         REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_SIZE_WIDE | BG_4BPP;
         // put the screenblock we just entered into 28
-        waitForVBlank();
         DMANow(3, maps[hScreenCounter].map, &SCREENBLOCK[28], map1MapLen / 2);
         // put next next (one after the one we entered) screenblock into next slot
         DMANow(3, maps[hScreenCounter + 1].map, &SCREENBLOCK[30], map1MapLen / 2);
@@ -258,6 +258,7 @@ void drawGame() {
     // this one is after because of offSet var
     if (hOff >= 256 && BUTTON_HELD(BUTTON_RIGHT)) {
         // load next map into background 0 (NEXT MAP currently = map1Map !to be changed!)
+        waitForVBlank();
         REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(currentScreenblock + 1) | BG_SIZE_WIDE | BG_4BPP;
         hOff = 0;
         player.worldCol -= 256;
@@ -283,9 +284,16 @@ void drawGame() {
     REG_BG1HOFF = hOff;
     REG_BG1VOFF = vOff;
 
-    // parallax motion babbyyy :)
-    // TODO - make parallax fix on changes
-    REG_BG2HOFF = (hOff / 3);
+    // parallax motion babbyyy :) - these statements are to check for screen changes since they mess with hOff
+    if (offSet) {
+      REG_BG2HOFF = ((hOff + 256) / PARALLAXFACTOR);
+    }
+    else if (hScreenCounter % 2 == 1) {
+        REG_BG2HOFF = ((hOff + 512) / PARALLAXFACTOR);
+    }
+    else {
+        REG_BG2HOFF = (hOff / PARALLAXFACTOR);
+    }
 
 }
 
