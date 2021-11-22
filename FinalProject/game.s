@@ -2036,16 +2036,18 @@ drawGame:
 	str	r3, [r4, #36]
 	mov	lr, pc
 	bx	r6
-	mov	r2, #67108864
-	mov	r0, #23552
+	mov	r3, #67108864
+	mov	r2, #23552
+	strh	r2, [r3, #10]	@ movhi
+	mov	lr, pc
+	bx	r6
 	ldr	r3, [r4, #36]
 	ldr	r9, .L339+40
 	add	r3, r3, r3, lsl #1
 	add	r3, r9, r3, lsl #2
 	ldr	r1, [r3, #8]
-	strh	r0, [r2, #10]	@ movhi
-	mov	r3, #2048
 	mov	r0, #3
+	mov	r3, #2048
 	ldr	r2, .L339+44
 	mov	lr, pc
 	bx	r7
@@ -2074,18 +2076,20 @@ drawGame:
 	str	r2, [r4, #36]
 	mov	lr, pc
 	bx	r6
-	mov	r2, #67108864
-	mov	r0, #23296
+	mov	r3, #67108864
+	mov	r2, #23296
+	strh	r2, [r3, #10]	@ movhi
+	mov	lr, pc
+	bx	r6
 	ldr	r3, [r4, #36]
 	ldr	r8, .L339+40
 	add	r3, r3, r3, lsl #1
 	add	r3, r8, r3, lsl #2
 	ldr	r1, [r3, #8]
-	ldr	r7, .L339+12
-	strh	r0, [r2, #10]	@ movhi
-	mov	r3, #2048
 	mov	r0, #3
+	mov	r3, #2048
 	ldr	r2, .L339+52
+	ldr	r7, .L339+12
 	mov	lr, pc
 	bx	r7
 	ldr	r3, [r4, #36]

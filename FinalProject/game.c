@@ -201,6 +201,7 @@ void drawGame() {
         waitForVBlank();
 
         REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(27) | BG_SIZE_WIDE | BG_4BPP;
+        waitForVBlank();
         // put the screenblock we just entered into 28
         DMANow(3, maps[hScreenCounter].map, &SCREENBLOCK[26], map1MapLen / 2);
         // put next next (one after the one we entered) screenblock into next slot
@@ -244,6 +245,7 @@ void drawGame() {
         waitForVBlank();
         REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_SIZE_WIDE | BG_4BPP;
         // put the screenblock we just entered into 28
+        waitForVBlank();
         DMANow(3, maps[hScreenCounter].map, &SCREENBLOCK[28], map1MapLen / 2);
         // put next next (one after the one we entered) screenblock into next slot
         DMANow(3, maps[hScreenCounter + 1].map, &SCREENBLOCK[30], map1MapLen / 2);
@@ -285,6 +287,7 @@ void drawGame() {
     REG_BG1VOFF = vOff;
 
     // parallax motion babbyyy :) - these statements are to check for screen changes since they mess with hOff
+    // TODO - 3 and 4th part /4 are glitchy, but first two screen changes look fine
     if (offSet) {
       REG_BG2HOFF = ((hOff + 256) / PARALLAXFACTOR);
     }

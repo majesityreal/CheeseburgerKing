@@ -1938,6 +1938,7 @@ void drawGame() {
         waitForVBlank();
 
         (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((27) << 8) | (1 << 14) | (0 << 7);
+        waitForVBlank();
 
         DMANow(3, maps[hScreenCounter].map, &((screenblock *)0x6000000)[26], 4096 / 2);
 
@@ -1981,6 +1982,7 @@ void drawGame() {
         waitForVBlank();
         (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((28) << 8) | (1 << 14) | (0 << 7);
 
+        waitForVBlank();
         DMANow(3, maps[hScreenCounter].map, &((screenblock *)0x6000000)[28], 4096 / 2);
 
         DMANow(3, maps[hScreenCounter + 1].map, &((screenblock *)0x6000000)[30], 4096 / 2);
@@ -2312,7 +2314,7 @@ void animatePlayer() {
     }
 
     player.aniCounter++;
-# 588 "game.c"
+# 590 "game.c"
 }
 
 
