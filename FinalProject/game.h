@@ -13,6 +13,7 @@ typedef struct {
 typedef struct {
     // determines whether to show sprite + compute AI, if it is on camera then yes
     int active;
+    int onScreen;
     int worldRow;
     int worldCol;
     int width;

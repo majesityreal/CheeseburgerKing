@@ -54,6 +54,9 @@ int currentScreenblock = 28;
 // offset counter for 256 / 512 conversions mid map
 int offSet = 0;
 
+// world H position for enemy management
+int pWorldPos;
+
 MAP maps[4];
 
 // Player animation states for aniState
@@ -159,8 +162,6 @@ void updateGame() {
     if (BUTTON_PRESSED(BUTTON_START) | BUTTON_PRESSED(BUTTON_SELECT)) {
         pauseVar = 1;
     }
-
-
 
 	updatePlayer();
     // ^^ update slash is a part of update player, since it is so minor
@@ -439,6 +440,7 @@ void updatePlayer() {
             && !checkCollision(player.worldCol - player.cdel, player.worldRow + player.height - 1)) {
             if (player.worldCol >= 0) {
                 player.worldCol -= player.cdel;
+                pWorldPos -= player.cdel;
                 if (hOff >= 0 && (player.worldCol - hOff < (SCREENWIDTH / 2))) {
                     // Update background offset variable if the above is true
                     hOff-= player.cdel;
@@ -451,6 +453,7 @@ void updatePlayer() {
             && !checkCollision(player.worldCol + player.width + player.cdel, player.worldRow + player.height - 1)) {
             // if (player.worldCol <= MAPWIDTH + SCREENWIDTH - 30) {
                 player.worldCol += player.cdel;
+                pWorldPos += player.cdel;
                 if (hOff <= 512 && (player.worldCol - hOff > (SCREENWIDTH / 2))) {
                     hOff += player.cdel;
                 }
@@ -635,6 +638,18 @@ void drawPlayer() {
 
 void updateEnemies() {
 
+    // check for if it is on screen
+    if (goblin1.worldCol + goblin1.width > (pWorldPos - 120) && goblin1.worldCol < (pWorldPos + 120)) {
+        goblin1.onScreen = 1;
+    }
+    else {
+        goblin1.onScreen = 0;
+    }
+
+    if (!goblin1.active || !goblin1.onScreen) {
+        return;
+    }
+
     // wait until the player is done attacking to apply damage
     if (goblin1.damaged && !player.attacking) {
         goblin1.damaged = 0;
@@ -642,6 +657,7 @@ void updateEnemies() {
             // maybe make it so goblins are instantiated when camera crosses certain set of positions?
     }
 
+    // checks for collision with player
     if (collision(goblin1.worldCol, goblin1.worldRow, goblin1.width, goblin1.height, player.worldCol, player.worldRow, player.width, player.height) && !player.damaged) {
         player.damaged = 1;
         player.hearts--;
@@ -650,9 +666,9 @@ void updateEnemies() {
         }
     }
 
-
     int xDif = player.worldCol - goblin1.worldCol;
     int yDif = player.worldRow - goblin1.worldRow;
+    
 
     // checking if player is within range
     if (abs(xDif) < goblin1.xRange && abs(yDif) < goblin1.yRange) {
@@ -683,6 +699,9 @@ void updateEnemies() {
         }
 
     }
+
+
+
     // check for gravity
     if (!groundCheck(goblin1.worldCol, goblin1.worldRow, goblin1.width, goblin1.height)) {
         goblin1.worldRow++;
@@ -690,32 +709,21 @@ void updateEnemies() {
     animateEnemies();
 }
 
-// this method was used in Quake 3 Arena, it is a fast inverse square root calculation
-float Q_rsqrt( float number )
-{
-	long i;
-	float x2, y;
-	const float threehalfs = 1.5F;
-
-	x2 = number * 0.5F;
-	y  = number;
-	i  = * ( long * ) &y;                       
-	i  = 0x5f3759df - ( i >> 1 );                
-	y  = * ( float * ) &i;
-	y  = y * ( threehalfs - ( x2 * y * y ) );
-
-	return y;
-}
-
 void animateEnemies() {
     if (goblin1.aniCounter % 10 == 0) {
         goblin1.curFrame = (goblin1.curFrame + 1) % goblin1.numFrames;
+    }
+    if (goblin1.damaged) {
+        goblin1.aniState = 1;
+    }
+    else {
+        goblin1.aniState = 0;
     }
     goblin1.aniCounter++;
 }
 
 void drawEnemies() {
-    if (!goblin1.active) {
+    if (!goblin1.active || !goblin1.onScreen) {
         shadowOAM[shadowOAMIndex].attr0 |= ATTR0_HIDE;
     } else {
         // the reason vOff and hOff are included in here is to keep them according to the camera
@@ -726,7 +734,12 @@ void drawEnemies() {
             shadowOAM[shadowOAMIndex].attr1 |= ATTR1_HFLIP;
         }
         // on spritesheet, goblin1 is starting at tile (8,8) in 8x coordinates, which equates to + 3, 4
-        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((goblin1.curFrame + 9), 2) * 2;
+        if (goblin1.aniState == 1) {
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(((goblin1.curFrame + 9) % 2), 4) * 2;
+        }
+        else {
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((goblin1.curFrame + 9), (2 * goblin1.aniState) + 2) * 2;
+        }
     }
     shadowOAMIndex++;}
 
@@ -826,6 +839,27 @@ void drawFont() {
         shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
         shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (164)) | ATTR1_TINY;
         shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c1), 3);
+        shadowOAMIndex++;
+
+    int e4 = pWorldPos / 1000;
+    int e3 = (pWorldPos % 1000) / 100;
+    int e2 = (pWorldPos % 100) / 10;
+    int e1 = pWorldPos % 10;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (70)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e4), 3);
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (78)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e3), 3);
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (86)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e2), 3);
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (94)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e1), 3);
         shadowOAMIndex++;
 }
 

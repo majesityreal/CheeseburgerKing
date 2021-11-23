@@ -1590,6 +1590,7 @@ typedef struct {
 typedef struct {
 
     int active;
+    int onScreen;
     int worldRow;
     int worldCol;
     int width;
@@ -1667,7 +1668,7 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 107 "game.h"
+# 108 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
@@ -1791,6 +1792,9 @@ int currentScreenblock = 28;
 
 int offSet = 0;
 
+
+int pWorldPos;
+
 MAP maps[4];
 
 
@@ -1896,8 +1900,6 @@ void updateGame() {
     if ((!(~(oldButtons) & ((1 << 3))) && (~buttons & ((1 << 3)))) | (!(~(oldButtons) & ((1 << 2))) && (~buttons & ((1 << 2))))) {
         pauseVar = 1;
     }
-
-
 
  updatePlayer();
 
@@ -2022,6 +2024,7 @@ void drawGame() {
 
     (*(volatile unsigned short *)0x04000014) = hOff;
     (*(volatile unsigned short *)0x04000016) = vOff;
+
 
 
     if (offSet) {
@@ -2175,6 +2178,7 @@ void updatePlayer() {
             && !checkCollision(player.worldCol - player.cdel, player.worldRow + player.height - 1)) {
             if (player.worldCol >= 0) {
                 player.worldCol -= player.cdel;
+                pWorldPos -= player.cdel;
                 if (hOff >= 0 && (player.worldCol - hOff < (240 / 2))) {
 
                     hOff-= player.cdel;
@@ -2187,6 +2191,7 @@ void updatePlayer() {
             && !checkCollision(player.worldCol + player.width + player.cdel, player.worldRow + player.height - 1)) {
 
                 player.worldCol += player.cdel;
+                pWorldPos += player.cdel;
                 if (hOff <= 512 && (player.worldCol - hOff > (240 / 2))) {
                     hOff += player.cdel;
                 }
@@ -2314,7 +2319,7 @@ void animatePlayer() {
     }
 
     player.aniCounter++;
-# 590 "game.c"
+# 594 "game.c"
 }
 
 
@@ -2363,11 +2368,24 @@ void drawPlayer() {
 void updateEnemies() {
 
 
+    if (goblin1.worldCol + goblin1.width > (pWorldPos - 120) && goblin1.worldCol < (pWorldPos + 120)) {
+        goblin1.onScreen = 1;
+    }
+    else {
+        goblin1.onScreen = 0;
+    }
+
+    if (!goblin1.active || !goblin1.onScreen) {
+        return;
+    }
+
+
     if (goblin1.damaged && !player.attacking) {
         goblin1.damaged = 0;
 
 
     }
+
 
     if (collision(goblin1.worldCol, goblin1.worldRow, goblin1.width, goblin1.height, player.worldCol, player.worldRow, player.width, player.height) && !player.damaged) {
         player.damaged = 1;
@@ -2377,9 +2395,9 @@ void updateEnemies() {
         }
     }
 
-
     int xDif = player.worldCol - goblin1.worldCol;
     int yDif = player.worldRow - goblin1.worldRow;
+
 
 
     if (abs(xDif) < goblin1.xRange && abs(yDif) < goblin1.yRange) {
@@ -2411,38 +2429,30 @@ void updateEnemies() {
 
     }
 
+
+
+
     if (!groundCheck(goblin1.worldCol, goblin1.worldRow, goblin1.width, goblin1.height)) {
         goblin1.worldRow++;
     }
     animateEnemies();
 }
 
-
-float Q_rsqrt( float number )
-{
- long i;
- float x2, y;
- const float threehalfs = 1.5F;
-
- x2 = number * 0.5F;
- y = number;
- i = * ( long * ) &y;
- i = 0x5f3759df - ( i >> 1 );
- y = * ( float * ) &i;
- y = y * ( threehalfs - ( x2 * y * y ) );
-
- return y;
-}
-
 void animateEnemies() {
     if (goblin1.aniCounter % 10 == 0) {
         goblin1.curFrame = (goblin1.curFrame + 1) % goblin1.numFrames;
+    }
+    if (goblin1.damaged) {
+        goblin1.aniState = 1;
+    }
+    else {
+        goblin1.aniState = 0;
     }
     goblin1.aniCounter++;
 }
 
 void drawEnemies() {
-    if (!goblin1.active) {
+    if (!goblin1.active || !goblin1.onScreen) {
         shadowOAM[shadowOAMIndex].attr0 |= (2 << 8);
     } else {
 
@@ -2453,7 +2463,12 @@ void drawEnemies() {
             shadowOAM[shadowOAMIndex].attr1 |= (1 << 12);
         }
 
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((2)*32 + ((goblin1.curFrame + 9))) * 2;
+        if (goblin1.aniState == 1) {
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((4)*32 + (((goblin1.curFrame + 9) % 2))) * 2;
+        }
+        else {
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((2 * goblin1.aniState) + 2)*32 + ((goblin1.curFrame + 9))) * 2;
+        }
     }
     shadowOAMIndex++;}
 
@@ -2553,6 +2568,27 @@ void drawFont() {
         shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (164)) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + c1)));
+        shadowOAMIndex++;
+
+    int e4 = pWorldPos / 1000;
+    int e3 = (pWorldPos % 1000) / 100;
+    int e2 = (pWorldPos % 100) / 10;
+    int e1 = pWorldPos % 10;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (70)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + e4)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (78)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + e3)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (86)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + e2)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (94)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + e1)));
         shadowOAMIndex++;
 }
 

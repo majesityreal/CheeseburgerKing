@@ -138,7 +138,7 @@ startGame:
 	mov	r0, #3
 	ldr	r2, .L8+80
 	ldr	r1, .L8+84
-	mov	r3, #16384
+	mov	r3, #3600
 	mov	lr, pc
 	bx	r4
 	ldr	r3, .L8+88

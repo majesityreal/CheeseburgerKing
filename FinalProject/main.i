@@ -1342,6 +1342,7 @@ typedef struct {
 typedef struct {
 
     int active;
+    int onScreen;
     int worldRow;
     int worldCol;
     int width;
@@ -1419,7 +1420,7 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 107 "game.h"
+# 108 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
@@ -1475,7 +1476,7 @@ extern const unsigned short TitleScreenPal[256];
 # 8 "main.c" 2
 # 1 "spritesheet.h" 1
 # 22 "spritesheet.h"
-extern const unsigned short spritesheetTiles[16384];
+extern const unsigned short spritesheetTiles[3600];
 
 
 extern const unsigned short spritesheetMap[1024];
@@ -1657,7 +1658,7 @@ void startGame() {
 
 
     DMANow(3, spritesheetPal, ((unsigned short *)0x5000200), 512 / 2);
-    DMANow(3, spritesheetTiles, &((charblock *)0x6000000)[4], 32768 / 2);
+    DMANow(3, spritesheetTiles, &((charblock *)0x6000000)[4], 7200 / 2);
 
 
 
