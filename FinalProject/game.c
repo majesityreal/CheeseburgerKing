@@ -14,6 +14,7 @@ SLASH slash;
 
 // temp placeholder for the first goblin for testing
 GOBLIN goblin1;
+GOBLIN goblins[];
 
 int shadowOAMIndex = 0;
 
@@ -103,7 +104,6 @@ void initSlash() {
     slash.hide = 1;
     slash.width = 12;
     slash.height = 11;
-    // FIXME configure this TODO
     slash.rdel = 0;
     slash.cdel = 15;
 
@@ -120,24 +120,28 @@ void initSlash() {
 }
 
 void initEnemies() {
-    goblin1.active = 1;
-    goblin1.width = 13;
-    goblin1.height = 16;
+    for (int g = 0; g < 1; g++) {
+        goblins[g].active = 1;
+        goblins[g].width = 13;
+        goblins[g].height = 16;
 
-    // Place in the middle of the screen in the world location chosen earlier
-    goblin1.worldRow = 96;
-    goblin1.worldCol = 120;
-    goblin1.aniCounter = 0;
-    goblin1.curFrame = 0;
-    goblin1.numFrames = 4;
-    goblin1.aniState = IDLE;
-    // ai
-    goblin1.direction = 0;
-    goblin1.xRange = 128;
-    goblin1.yRange = 96;
-    goblin1.speed = 1;
-    goblin1.lives = 2;
-    goblin1.damaged = 0;
+        // TODO - add array of goblin locations to initialize these bad boyz
+        // Place in the middle of the screen in the world location chosen earlier
+        goblins[g].worldRow = 96;
+        goblins[g].worldCol = 120;
+        goblins[g].aniCounter = 0;
+        goblins[g].curFrame = 0;
+        goblins[g].numFrames = 4;
+        goblins[g].aniState = IDLE;
+        // ai
+        goblins[g].direction = 0;
+        goblins[g].xRange = 128;
+        goblins[g].yRange = 96;
+        goblins[g].speed = 1;
+        goblins[g].lives = 2;
+        goblins[g].damaged = 0;
+    }
+
 }
 
 void initMaps() {
@@ -173,7 +177,7 @@ void updateGame() {
         collisionMap = maps[hScreenCounter].collisionMap;
     }
 
-        // then we handle collision map change TODO - might need to add buttno_held????
+        // then we handle collision map change
     if (player.worldCol >= 256 && offSet && hOff > 20 && BUTTON_HELD(BUTTON_RIGHT)) {
         // load in the collision map of the next level
         collisionMap = maps[hScreenCounter + 1].collisionMap;
@@ -303,9 +307,7 @@ void drawGame() {
 
 // Handle every-frame actions of the player
 void updatePlayer() {
-    // TODO - not super happy with gravity implementation so far, jumps are random?
-
-    // FIXME - jump thuds, top right and top left clipping
+    // FIXME jumps are random?
 
     // #region yVel + jumping
     grounded = groundCheck(player.worldCol, player.worldRow, player.width, player.height);
@@ -582,15 +584,6 @@ void animatePlayer() {
 
     player.aniCounter++;
 
-    // TODO - fix this part up, for not it is commented out
-    // If the pacman aniState is idle, frame is pacman standing
-    // if (player.aniState == ATTACK) {
-    //     player.curFrame = 0;
-    //     player.aniCounter = 0;
-    //     player.aniState = player.prevAniState;
-    // } else {
-    //     player.aniCounter++;
-    // }
 }
 
 // Draw the player
