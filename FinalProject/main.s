@@ -65,7 +65,7 @@ startGame:
 	mov	r3, #67108864
 	mov	r2, #5632
 	mov	r0, #23552
-	push	{r4, r5, r6, lr}
+	push	{r4, lr}
 	ldr	r1, .L8
 	strh	r2, [r3]	@ movhi
 	ldr	r2, .L8+4
@@ -86,76 +86,69 @@ startGame:
 	ldr	r4, .L8+24
 	mov	lr, pc
 	bx	r3
-	mov	r3, #32
+	mov	r3, #48
 	mov	r2, #83886080
 	mov	r0, #3
 	ldr	r1, .L8+28
 	mov	lr, pc
 	bx	r4
-	ldr	r5, .L8+32
-	mov	r3, #672
+	mov	r3, #576
 	mov	r2, #100663296
 	mov	r0, #3
-	ldr	r1, .L8+36
+	ldr	r1, .L8+32
 	mov	lr, pc
 	bx	r4
 	mov	r3, #2048
 	mov	r0, #3
-	ldr	r2, .L8+40
-	ldr	r1, .L8+44
+	ldr	r2, .L8+36
+	ldr	r1, .L8+40
 	mov	lr, pc
 	bx	r4
-	mov	r1, r5
 	mov	r3, #2048
 	mov	r0, #3
-	ldr	r2, .L8+48
-	mov	lr, pc
-	bx	r4
-	mov	r1, r5
-	mov	r3, #2048
-	mov	r0, #3
-	ldr	r2, .L8+52
+	ldr	r2, .L8+44
+	ldr	r1, .L8+48
 	mov	lr, pc
 	bx	r4
 	mov	r3, #3904
 	mov	r0, #3
-	ldr	r2, .L8+56
-	ldr	r1, .L8+60
+	ldr	r2, .L8+52
+	ldr	r1, .L8+56
 	mov	lr, pc
 	bx	r4
 	mov	r3, #1024
 	mov	r0, #3
-	ldr	r2, .L8+64
-	ldr	r1, .L8+68
+	ldr	r2, .L8+60
+	ldr	r1, .L8+64
 	mov	lr, pc
 	bx	r4
 	mov	r3, #256
 	mov	r0, #3
-	ldr	r2, .L8+72
-	ldr	r1, .L8+76
+	ldr	r2, .L8+68
+	ldr	r1, .L8+72
 	mov	lr, pc
 	bx	r4
 	mov	r0, #3
-	ldr	r2, .L8+80
-	ldr	r1, .L8+84
+	ldr	r2, .L8+76
+	ldr	r1, .L8+80
 	mov	r3, #16384
 	mov	lr, pc
 	bx	r4
-	ldr	r3, .L8+88
+	ldr	r3, .L8+84
 	mov	lr, pc
 	bx	r3
 	mov	r2, #117440512
 	mov	r3, #512
 	mov	r0, #3
-	ldr	r1, .L8+92
+	ldr	r1, .L8+88
 	mov	lr, pc
 	bx	r4
-	ldr	r3, .L8+96
+	ldr	r3, .L8+92
 	mov	lr, pc
 	bx	r3
 	mov	r2, #1
-	ldr	r3, .L8+100
-	pop	{r4, r5, r6, lr}
+	ldr	r3, .L8+96
+	pop	{r4, lr}
 	str	r2, [r3]
 	bx	lr
 .L9:
@@ -169,12 +162,11 @@ startGame:
 	.word	waitForVBlank
 	.word	DMANow
 	.word	map1Pal
-	.word	map1Map
 	.word	map2Tiles
 	.word	100720640
 	.word	map2Map
 	.word	100724736
-	.word	100716544
+	.word	map1Map
 	.word	100696064
 	.word	parallaxBGTiles
 	.word	100712448

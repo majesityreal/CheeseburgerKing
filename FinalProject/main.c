@@ -153,14 +153,15 @@ void startGame() {
 //     DMANow(3, testmapMap, &SCREENBLOCK[26], testmapMapLen / 2);
 
     // adding temp mario map
-    DMANow(3, map1Pal, PALETTE, 32);
+    DMANow(3, map1Pal, PALETTE, 48);
     DMANow(3, map2Tiles, &CHARBLOCK[0], map2TilesLen / 2);
     DMANow(3, map2Map, &SCREENBLOCK[28], map2MapLen / 2);
+    // TODO - something that dma's in the map tiles in per thing ? but it doesnt work for everything
+
     // mario map 2 (since it is wide, it is using two consective screen blocks)
     // we do not need this if they use the same tiles, else we do
     // DMANow(3, map1Tiles, &CHARBLOCK[0], map1TilesLen / 2);
     DMANow(3, map1Map, &SCREENBLOCK[30], map1MapLen / 2);
-    DMANow(3, map1Map, &SCREENBLOCK[26], map1MapLen / 2);
 
     // adding parallax
     // DMANow(3, platformerPal, PALETTE, 32);
@@ -243,7 +244,9 @@ void goToWin() {
 }
 
 // Runs every frame of the win state
-void win() {}
+void win() {
+    
+}
 
 // Sets up the lose state
 void goToLose() {
@@ -254,5 +257,5 @@ void goToLose() {
 
 // Runs every frame of the lose state
 void lose() {
-
+    
 }

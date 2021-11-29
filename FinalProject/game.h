@@ -98,6 +98,7 @@ typedef struct {
 #define GRAVITY 1
 #define JUMPVEL -5
 #define PARALLAXFACTOR 3
+#define GOBLINCOUNT 5
 
 // number of frames the attack is
 #define ATTACK_DURATION 20
@@ -113,6 +114,9 @@ extern SLASH slash;
 
 extern int pauseVar;
 extern int level;
+
+// int to track whether player has died yet
+extern int dead;
 
 // Prototypes
 void initGame();
@@ -136,6 +140,8 @@ void initEnemies();
 void updateEnemies();
 void drawEnemies();
 void animateEnemies();
+
+void initGoblinLocations();
 
 void initMaps();
 // special square root function :)

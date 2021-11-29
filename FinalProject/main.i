@@ -1420,7 +1420,7 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 108 "game.h"
+# 109 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
@@ -1452,6 +1452,8 @@ void initEnemies();
 void updateEnemies();
 void drawEnemies();
 void animateEnemies();
+
+void initGoblinLocations();
 
 void initMaps();
 
@@ -1488,23 +1490,23 @@ extern const unsigned short spritesheetPal[256];
 
 # 1 "map1.h" 1
 # 22 "map1.h"
-extern const unsigned short map1Tiles[592];
+extern const unsigned short map1Tiles[480];
 
 
 extern const unsigned short map1Map[2048];
 
 
-extern const unsigned short map1Pal[32];
+extern const unsigned short map1Pal[256];
 # 12 "main.c" 2
 # 1 "map2.h" 1
 # 22 "map2.h"
-extern const unsigned short map2Tiles[672];
+extern const unsigned short map2Tiles[576];
 
 
 extern const unsigned short map2Map[2048];
 
 
-extern const unsigned short map2Pal[32];
+extern const unsigned short map2Pal[256];
 # 13 "main.c" 2
 
 # 1 "parallaxBG.h" 1
@@ -1637,14 +1639,15 @@ void startGame() {
 
     waitForVBlank();
 # 156 "main.c"
-    DMANow(3, map1Pal, ((unsigned short *)0x5000000), 32);
-    DMANow(3, map2Tiles, &((charblock *)0x6000000)[0], 1344 / 2);
+    DMANow(3, map1Pal, ((unsigned short *)0x5000000), 48);
+    DMANow(3, map2Tiles, &((charblock *)0x6000000)[0], 1152 / 2);
     DMANow(3, map2Map, &((screenblock *)0x6000000)[28], 4096 / 2);
 
 
 
+
+
     DMANow(3, map1Map, &((screenblock *)0x6000000)[30], 4096 / 2);
-    DMANow(3, map1Map, &((screenblock *)0x6000000)[26], 4096 / 2);
 
 
 
@@ -1689,7 +1692,7 @@ void game() {
 
 
 }
-# 226 "main.c"
+# 227 "main.c"
 void goToPause() {
     state = PAUSE;
 }

@@ -13,8 +13,8 @@ PLAYER player;
 SLASH slash;
 
 // temp placeholder for the first goblin for testing
-GOBLIN goblin1;
-GOBLIN goblins[];
+GOBLIN goblins[GOBLINCOUNT];
+int goblinLocations[GOBLINCOUNT][2];
 
 int shadowOAMIndex = 0;
 
@@ -60,6 +60,8 @@ int pWorldPos;
 
 MAP maps[4];
 
+int dead = 0;
+
 // Player animation states for aniState
 enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP };
 
@@ -68,6 +70,7 @@ enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP };
 void initGame() {
     initPlayer();
     initSlash();
+    initGoblinLocations();
     initEnemies();
     initMaps();
     gTimer = 0;
@@ -119,16 +122,33 @@ void initSlash() {
     slash.attackTimer = 0;
 }
 
+void initGoblinLocations() {
+    // default the values to 0
+    for (int i = 0; i < GOBLINCOUNT; i++) {
+        goblinLocations[i][0] = 0;
+        goblinLocations[i][1] = 0;
+    }
+    // hand write in some values
+    goblinLocations[0][0] = 96;
+    goblinLocations[0][1] = 120;
+    goblinLocations[1][0] = 20;
+    goblinLocations[1][1] = 176;
+    goblinLocations[2][0] = 75;
+    goblinLocations[2][1] = 390;
+    goblinLocations[2][0] = 20;
+    goblinLocations[2][1] = 460;
+}
+
 void initEnemies() {
-    for (int g = 0; g < 1; g++) {
+    for (int g = 0; g < GOBLINCOUNT; g++) {
         goblins[g].active = 1;
         goblins[g].width = 13;
         goblins[g].height = 16;
 
         // TODO - add array of goblin locations to initialize these bad boyz
         // Place in the middle of the screen in the world location chosen earlier
-        goblins[g].worldRow = 96;
-        goblins[g].worldCol = 120;
+        goblins[g].worldRow = goblinLocations[g][0];
+        goblins[g].worldCol = goblinLocations[g][1];
         goblins[g].aniCounter = 0;
         goblins[g].curFrame = 0;
         goblins[g].numFrames = 4;
@@ -182,6 +202,11 @@ void updateGame() {
         // load in the collision map of the next level
         collisionMap = maps[hScreenCounter + 1].collisionMap;
     }
+
+    if (player.hearts < 1) {
+        gameOver();
+    }
+
 }
 
 // Draws the game each frame
@@ -191,6 +216,7 @@ void drawGame() {
 
 
     // general rule of thumb, the checkers with offSet must go first, as they prevent twice function calling
+    // FIXME - the enemy locations are not working when switching maps
 
     // this is to ensure you can only go left if it is not the first map
     if (hScreenCounter != 0 || offSet == 1) {
@@ -211,8 +237,6 @@ void drawGame() {
         DMANow(3, maps[hScreenCounter].map, &SCREENBLOCK[26], map1MapLen / 2);
         // put next next (one after the one we entered) screenblock into next slot
         DMANow(3, maps[hScreenCounter + 1].map, &SCREENBLOCK[28], map1MapLen / 2);
-
-
 
         // FIXME hOff may be an issue
         hOff = 256;
@@ -237,8 +261,6 @@ void drawGame() {
 
 
     }
-
-
 
         // this is handling screen block changing FIXME may cause errors with the greater equal
     if (hOff >= 256 && offSet && BUTTON_HELD(BUTTON_RIGHT)) {
@@ -468,16 +490,18 @@ void updatePlayer() {
     // ATTACKING - this handles damaging enemies while doing the slash TODO - maybe make it into its own separate method
     if (player.attackTimer > 0) {
         // TODO - go through all the enemies
-        if (collision(slash.worldCol, slash.worldRow, slash.width, slash.height, goblin1.worldCol, goblin1.worldRow, goblin1.width, goblin1.height)) {
-            // mark it as damaged to prevent multiple hits per frame
-            if (!goblin1.damaged) {
-                goblin1.damaged = 1;
-                goblin1.lives--;
-                // TODO - add in death animation
-                if (goblin1.lives < 0) {
-                    // TODO FIXME - potential future issue with loading in sprite. make it 'dead' and not just inactive
-                    // maybe make it so goblins are instantiated when camera crosses certain set of positions?
-                    goblin1.active = 0;
+        for (int g = 0; g < GOBLINCOUNT; g++) {
+            if (collision(slash.worldCol, slash.worldRow, slash.width, slash.height, goblins[g].worldCol, goblins[g].worldRow, goblins[g].width, goblins[g].height)) {
+                // mark it as damaged to prevent multiple hits per frame
+                if (!goblins[g].damaged) {
+                    goblins[g].damaged = 1;
+                    goblins[g].lives--;
+                    // TODO - add in death animation
+                    if (goblins[g].lives < 0) {
+                        // TODO FIXME - potential future issue with loading in sprite. make it 'dead' and not just inactive
+                        // maybe make it so goblins are instantiated when camera crosses certain set of positions?
+                        goblins[g].active = 0;
+                    }
                 }
             }
         }
@@ -630,111 +654,125 @@ void drawPlayer() {
 }
 
 void updateEnemies() {
+    for (int g = 0; g < GOBLINCOUNT; g++) {
 
-    // check for if it is on screen
-    if (goblin1.worldCol + goblin1.width > (pWorldPos - 120) && goblin1.worldCol < (pWorldPos + 120)) {
-        goblin1.onScreen = 1;
-    }
-    else {
-        goblin1.onScreen = 0;
-    }
-
-    if (!goblin1.active || !goblin1.onScreen) {
-        return;
-    }
-
-    // wait until the player is done attacking to apply damage
-    if (goblin1.damaged && !player.attacking) {
-        goblin1.damaged = 0;
-            // TODO FIXME - potential future issue with loading in sprite. make it 'dead' and not just inactive
-            // maybe make it so goblins are instantiated when camera crosses certain set of positions?
-    }
-
-    // checks for collision with player
-    if (collision(goblin1.worldCol, goblin1.worldRow, goblin1.width, goblin1.height, player.worldCol, player.worldRow, player.width, player.height) && !player.damaged) {
-        player.damaged = 1;
-        player.hearts--;
-        if (player.hearts < 1) {
-            gameOver();
+        // check for if it is on screen
+        if (goblins[g].worldCol + goblins[g].width > (pWorldPos - 120) && goblins[g].worldCol < (pWorldPos + 120)) {
+            goblins[g].onScreen = 1;
         }
-    }
+        else {
+            goblins[g].onScreen = 0;
+        }
 
-    int xDif = player.worldCol - goblin1.worldCol;
-    int yDif = player.worldRow - goblin1.worldRow;
-    
+        if (!goblins[g].active || !goblins[g].onScreen) {
+            continue;
+        }
 
-    // checking if player is within range
-    if (abs(xDif) < goblin1.xRange && abs(yDif) < goblin1.yRange) {
-        // this is effectively 'halfing' the move speed, moving every other frame
-        if (gTimer % 2 == 0) {
-            // if the player is above, dont go into pit to fall
-            if (xDif < 0) {
-                if (!checkCollision((goblin1.worldCol - goblin1.speed), goblin1.worldRow) 
-                && !checkCollision((goblin1.worldCol - goblin1.speed), goblin1.worldRow + goblin1.height)) {
-                    if (goblinGroundCheck((goblin1.worldCol - goblin1.speed), goblin1.worldRow, goblin1.width, goblin1.height)) {
-                        goblin1.worldCol -= goblin1.speed;
-                    }
+        // wait until the player is done attacking to apply damage
+        if (goblins[g].damaged && !player.attacking) {
+            goblins[g].damaged = 0;
+                // TODO FIXME - potential future issue with loading in sprite. make it 'dead' and not just inactive
+                // maybe make it so goblins are instantiated when camera crosses certain set of positions?
+        }
 
-                }
+        // checks for collision with player
+        if (collision(goblins[g].worldCol, goblins[g].worldRow, goblins[g].width, goblins[g].height, pWorldPos, player.worldRow, player.width, player.height) && !player.damaged) {
+            player.damaged = 1;
+            player.hearts--;
+            if (player.hearts < 1) {
+                gameOver();
             }
-            else if (xDif > 0) {
-                if (!checkCollision((goblin1.worldCol + goblin1.speed + goblin1.width), goblin1.worldRow)
-                && !checkCollision((goblin1.worldCol + goblin1.speed + goblin1.width), goblin1.worldRow + goblin1.height)) {
-                    // if on ground, then move. otherwise dont
-                    if (goblinGroundCheck((goblin1.worldCol + goblin1.speed), goblin1.worldRow, goblin1.width, goblin1.height)) {
-                        goblin1.worldCol += goblin1.speed;
-                    }
-                    else {
+        }
+
+        int xDif = pWorldPos - goblins[g].worldCol;
+        int yDif = player.worldRow - goblins[g].worldRow;
+        
+
+        // checking if player is within range
+        if (abs(xDif) < goblins[g].xRange && abs(yDif) < goblins[g].yRange) {
+            // this is effectively 'halfing' the move speed, moving every other frame
+            if (gTimer % 2 == 0) {
+                // if the player is above, dont go into pit to fall
+                if (xDif < 0) {
+                    if (!checkCollision((goblins[g].worldCol - goblins[g].speed), goblins[g].worldRow) 
+                    && !checkCollision((goblins[g].worldCol - goblins[g].speed), goblins[g].worldRow + goblins[g].height)) {
+                        if (goblinGroundCheck((goblins[g].worldCol - goblins[g].speed), goblins[g].worldRow, goblins[g].width, goblins[g].height)) {
+                            goblins[g].worldCol -= goblins[g].speed;
+                        }
 
                     }
                 }
-            }        
+                else if (xDif > 0) {
+                    if (!checkCollision((goblins[g].worldCol + goblins[g].speed + goblins[g].width), goblins[g].worldRow)
+                    && !checkCollision((goblins[g].worldCol + goblins[g].speed + goblins[g].width), goblins[g].worldRow + goblins[g].height)) {
+                        // if on ground, then move. otherwise dont
+                        if (goblinGroundCheck((goblins[g].worldCol + goblins[g].speed), goblins[g].worldRow, goblins[g].width, goblins[g].height)) {
+                            goblins[g].worldCol += goblins[g].speed;
+                        }
+                        else {
+
+                        }
+                    }
+                }        
+            }
+
+        }
+
+        // check for gravity
+        if (!groundCheck(goblins[g].worldCol, goblins[g].worldRow, goblins[g].width, goblins[g].height)) {
+            goblins[g].worldRow++;
         }
 
     }
 
 
-
-    // check for gravity
-    if (!groundCheck(goblin1.worldCol, goblin1.worldRow, goblin1.width, goblin1.height)) {
-        goblin1.worldRow++;
-    }
     animateEnemies();
 }
 
 void animateEnemies() {
-    if (goblin1.aniCounter % 10 == 0) {
-        goblin1.curFrame = (goblin1.curFrame + 1) % goblin1.numFrames;
-    }
-    if (goblin1.damaged) {
-        goblin1.aniState = 1;
-    }
-    else {
-        goblin1.aniState = 0;
-    }
-    goblin1.aniCounter++;
-}
-
-void drawEnemies() {
-    if (!goblin1.active || !goblin1.onScreen) {
-        shadowOAM[shadowOAMIndex].attr0 |= ATTR0_HIDE;
-    } else {
-        // the reason vOff and hOff are included in here is to keep them according to the camera
-        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (goblin1.worldRow - vOff)) | ATTR0_SQUARE;
-        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (goblin1.worldCol - hOff)) | ATTR1_SMALL;
-        // if player is facing left, flip goblin1 to left
-        if (goblin1.direction) {
-            shadowOAM[shadowOAMIndex].attr1 |= ATTR1_HFLIP;
+    // go through all the goblins
+    for (int g = 0; g < GOBLINCOUNT; g++) {
+        if (goblins[g].aniCounter % 10 == 0) {
+            goblins[g].curFrame = (goblins[g].curFrame + 1) % goblins[g].numFrames;
         }
-        // on spritesheet, goblin1 is starting at tile (8,8) in 8x coordinates, which equates to + 3, 4
-        if (goblin1.aniState == 1) {
-            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(((goblin1.curFrame + 9) % 2), 4) * 2;
+        if (goblins[g].damaged) {
+            goblins[g].aniState = 1;
         }
         else {
-            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((goblin1.curFrame + 9), (2 * goblin1.aniState) + 2) * 2;
+            goblins[g].aniState = 0;
         }
+        goblins[g].aniCounter++;
     }
-    shadowOAMIndex++;}
+}
+
+// TODO FIXME - the drawing of sprites needs fixing for the changing of worlds
+void drawEnemies() {
+    // go through all the goblins
+    for (int g = 0; g < GOBLINCOUNT; g++) {
+        if (!goblins[g].active || !goblins[g].onScreen) {
+            shadowOAM[shadowOAMIndex].attr0 |= ATTR0_HIDE;
+        } else {
+            // TODO - fix this, not entirely working. ALSO, the goblin attack check isnt in the right position
+            // this is converting the goblin column to a world position
+            int xCol = (goblins[g].worldCol - (hOff + (256 * hScreenCounter) + (256 * offSet)));
+            // the reason vOff and hOff are included in here is to keep them according to the camera
+            shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (goblins[g].worldRow - vOff)) | ATTR0_SQUARE;
+            shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (xCol)) | ATTR1_SMALL;
+            // if player is facing left, flip goblins[g] to left
+            if (goblins[g].direction) {
+                shadowOAM[shadowOAMIndex].attr1 |= ATTR1_HFLIP;
+            }
+            // on spritesheet, goblins[g] is starting at tile (8,8) in 8x coordinates, which equates to + 3, 4
+            if (goblins[g].damaged == 1) {
+                shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(((goblins[g].curFrame % 2) + 9), 4) * 2;
+            }
+            else {
+                shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((goblins[g].curFrame + 9), 2) * 2;
+            }
+        }
+        shadowOAMIndex++;
+    }
+}
 
 void animateSlash() {
     if (slash.aniCounter == 6) {
@@ -901,5 +939,5 @@ void drawHUD() {
 
 // this handles when player loses all lives / hearts
 void gameOver() {
-
+    dead = 1;
 }

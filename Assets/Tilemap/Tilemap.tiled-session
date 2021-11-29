@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "tileset.tsx",
+    "activeFile": "map1.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -28,16 +28,16 @@
             "scale": 1.9359848484848485,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 239.92956368616709,
-                "y": 140.4969673253766
+                "x": 146.69536294267266,
+                "y": 139.98043435726862
             }
         },
         "map2.tmx": {
             "scale": 1.9359848484848485,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 284.3513989434553,
-                "y": 130.1663079632166
+                "x": 45.97143416161222,
+                "y": 130.16630796321658
             }
         },
         "tileMap.tmx": {
@@ -60,11 +60,14 @@
     "map.tileWidth": 16,
     "map.width": 32,
     "openFiles": [
-        "tileset.tsx"
+        "tileset.tsx",
+        "map2.tmx",
+        "map1.tmx"
     ],
     "project": "Tilemap.tiled-project",
     "recentFiles": [
         "tileset.tsx",
+        "map2.tmx",
         "map1.tmx",
         "tileMap.tmx",
         "C:/Users/Carson/Documents/CS2261/CheeseburgerKing/Assets/tilemapSmall/tileMap.tmx",
