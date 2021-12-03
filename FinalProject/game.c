@@ -15,7 +15,8 @@ PLAYER player;
 SLASH slash;
 
 // temp placeholder for the first goblin for testing
-GOBLIN goblins[GOBLINCOUNT];
+LETTUCE lettuce[LETTUCECOUNT];
+BIG_LETTUCE big_lettuce[BIGLETTUCECOUNT];
 
 int shadowOAMIndex = 0;
 
@@ -38,6 +39,10 @@ int grounded = 1;
 int jumping = 0;
 // check for player double jump
 int doubleJumping = 0;
+
+int dashing = 0;
+int dashingTimer = 0;
+int dashed = 0; // keeps track of whether or not you have dashed in the air (1 per airtime)
 
 // now being used as measure to prevent 'rejump' in air from holding up. Check around line 230 for context
 int jumpThud = 0;
@@ -133,36 +138,58 @@ void initSlash() {
 }
 
 void initEnemies() {
-    // the goblins. goes through all and sets defaults
-    for (int g = 0; g < GOBLINCOUNT; g++) {
-        goblins[g].active = 0;
-        goblins[g].width = 13;
-        goblins[g].height = 15;
+    // the lettuce. goes through all and sets defaults
+    for (int g = 0; g < LETTUCECOUNT; g++) {
+        lettuce[g].active = 0;
+        lettuce[g].width = 13;
+        lettuce[g].height = 15;
 
-        // TODO - add array of goblin locations to initialize these bad boyz
-        // Place in the middle of the screen in the world location chosen earlier
-        goblins[g].aniCounter = 0;
-        goblins[g].curFrame = 0;
-        goblins[g].numFrames = 4;
-        goblins[g].aniState = IDLE;
+        lettuce[g].aniCounter = 0;
+        lettuce[g].curFrame = 0;
+        lettuce[g].numFrames = 4;
+        lettuce[g].aniState = IDLE;
         // ai
-        goblins[g].direction = 0;
-        goblins[g].xRange = 128;
-        goblins[g].yRange = 96;
-        goblins[g].speed = 1;
-        goblins[g].lives = 1;
-        goblins[g].damaged = 0;
+        lettuce[g].direction = 0;
+        lettuce[g].xRange = 128;
+        lettuce[g].yRange = 96;
+        lettuce[g].speed = 1;
+        lettuce[g].lives = 1;
+        lettuce[g].damaged = 0;
+    }
+
+        // the big. goes through all and sets defaults
+    for (int g = 0; g < BIGLETTUCECOUNT; g++) {
+        big_lettuce[g].active = 0;
+        big_lettuce[g].width = 13;
+        big_lettuce[g].height = 15;
+
+        big_lettuce[g].aniCounter = 0;
+        big_lettuce[g].curFrame = 0;
+        big_lettuce[g].numFrames = 4;
+        big_lettuce[g].aniState = IDLE;
+        // ai
+        big_lettuce[g].direction = 0;
+        big_lettuce[g].xRange = 128;
+        big_lettuce[g].yRange = 60;
+        big_lettuce[g].shootSpeed = 1;
+        big_lettuce[g].lives = 2;
+        big_lettuce[g].damaged = 0;
     }
 
     // switch statement for which map u are on. set each individual enemy
     switch (currMap) {
         case 0:
-            goblins[0].active = 1;
-            goblins[0].worldRow = 160;
-            goblins[0].worldCol = 185;
-            goblins[1].active = 1;
-            goblins[1].worldRow = 125;
-            goblins[1].worldCol = 425;
+            lettuce[0].active = 1;
+            lettuce[0].worldRow = 160;
+            lettuce[0].worldCol = 185;
+            lettuce[1].active = 1;
+            lettuce[1].worldRow = 125;
+            lettuce[1].worldCol = 425;
+
+            big_lettuce[0].active = 1;
+            big_lettuce[0].worldRow = 48;
+            big_lettuce[0].worldCol = 960;
+            big_lettuce[0].direction = -1;
         break;
     }
 
@@ -264,13 +291,14 @@ void updatePlayer() {
     if (grounded)  {
         jumpThud = 0;
         doubleJumping = 0;
+        dashed = 0;
     }
 
     // the check for double jumping - must go before regular jumping to prevent double counting
     // checks for whether the player jumped, or whether they are just falling
     if(BUTTON_PRESSED(BUTTON_UP) && !doubleJumping && ((jumping || !grounded))) {
         doubleJumping = 1;
-        yVel = (JUMPVEL * 2) / 4;
+        yVel = JUMPVEL;
         framesInAir = 0;
         // this resets so you can continue holding the dJ
         jumpThud = 0;
@@ -281,7 +309,7 @@ void updatePlayer() {
     }
 
     // the check for jumping - the double collision check ensures both bottoms are on ground, no coyote jumping! Should this be changed to be more merciful to players?
-    if(BUTTON_PRESSED(BUTTON_UP) && grounded
+    if(BUTTON_PRESSED(BUTTON_UP) && grounded && !dashing
         && !pCheckCollision(player.worldCol, player.worldRow - 1)
         && !pCheckCollision(player.worldCol + player.width, player.worldRow - 1)) {
             // sets y to -4 for upwards movement, gravity will eventually bring it down
@@ -337,8 +365,11 @@ void updatePlayer() {
             }
         }
         // first jump, holding up gets higher velocity
-        if (BUTTON_HELD(BUTTON_UP) && jumping && !jumpThud) {
+        if (BUTTON_HELD(BUTTON_UP) && jumping && !jumpThud && !doubleJumping) {
             yVel = JUMPVEL + (GRAVITY * framesInAir);
+        }
+        else if (BUTTON_HELD(BUTTON_UP) && doubleJumping && !jumpThud) {
+            yVel = ((7 * JUMPVEL) / 8) + (GRAVITY * framesInAir);
         }
         else {
             // case where you let go of jump midair, but are still jumping
@@ -383,6 +414,39 @@ void updatePlayer() {
     }
 
     // #endregion
+
+    // TODO - cheat: make the dash longer, more invulnerable frames
+    // #region DASHING IN AIR. The dash works by changing movementCycle, so the player moves every frame instead of every other frame
+    if (dashing) {
+        dashingTimer++;
+        // allows for quick dash on ground
+        if (grounded && dashingTimer > DASH_TIME) {
+            dashing = 0;
+            dashingTimer = 0;
+            player.movementCycle = 2;
+            player.cdel = 3;
+        }
+        // has timer on dash
+        if (dashingTimer > DASH_TIME) {
+            dashing = 0;
+            dashingTimer = 0;
+            player.movementCycle = 2;
+        }
+    }
+
+    if (BUTTON_PRESSED(BUTTON_R) || BUTTON_PRESSED(BUTTON_L) && !dashing) {
+        dashing = 1;
+        // makes slower movement on the ground
+        if (grounded) {
+            player.movementCycle = 2;
+            player.cdel = 3;
+        }
+        else if (!dashed) {
+            dashed = 1;
+            player.movementCycle = 1;
+        }
+    }
+
 
     // #region left and right movement
     // left movement
@@ -444,17 +508,17 @@ void updatePlayer() {
     // ATTACKING - this handles damaging enemies while doing the slash TODO - maybe make it into its own separate method
     if (player.attackTimer > 0) {
         // go through all the enemies
-        for (int g = 0; g < GOBLINCOUNT; g++) {
-            if (collision(slash.worldCol + (256 * bgIndex) + slash.hitboxCDel, slash.worldRow, slash.width - slash.hitboxCDel, slash.height, goblins[g].worldCol, goblins[g].worldRow, goblins[g].width, goblins[g].height)) {
+        for (int g = 0; g < LETTUCECOUNT; g++) {
+            if (collision(slash.worldCol + (256 * bgIndex) + slash.hitboxCDel, slash.worldRow, slash.width - slash.hitboxCDel, slash.height, lettuce[g].worldCol, lettuce[g].worldRow, lettuce[g].width, lettuce[g].height)) {
                 // mark it as damaged to prevent multiple hits per frame
-                if (!goblins[g].damaged) {
-                    goblins[g].damaged = 1;
-                    goblins[g].lives--;
+                if (!lettuce[g].damaged) {
+                    lettuce[g].damaged = 1;
+                    lettuce[g].lives--;
                     // TODO - add in death animation
-                    if (goblins[g].lives < 0) {
+                    if (lettuce[g].lives < 0) {
                         // TODO FIXME - potential future issue with loading in sprite. make it 'dead' and not just inactive
                         // maybe make it so goblins are instantiated when camera crosses certain set of positions?
-                        goblins[g].active = 0;
+                        lettuce[g].active = 0;
                     }
                 }
             }
@@ -537,6 +601,9 @@ void animatePlayer() {
     if (player.damaged) {
         player.aniState = DAMAGED;
     }
+    if (dashing && grounded) {
+        player.aniState = DOUBLEJUMP;
+    }
 
     // Change the animation frame every X frames of gameplay for different states
     if(player.aniCounter % ATTACK_SPEED == 0 && player.aniState == ATTACK) {
@@ -609,30 +676,30 @@ void drawPlayer() {
 
 void updateEnemies() {
     // update goblins
-    for (int g = 0; g < GOBLINCOUNT; g++) {
+    for (int g = 0; g < LETTUCECOUNT; g++) {
 
         // check for if it is on screen.
-        if (goblins[g].worldCol + goblins[g].width > (pMapPos - 240) && goblins[g].worldCol < (pMapPos + 240)) {
-            goblins[g].onScreen = 1;
+        if (lettuce[g].worldCol + lettuce[g].width > (pMapPos - 240) && lettuce[g].worldCol < (pMapPos + 240)) {
+            lettuce[g].onScreen = 1;
         }
         else {
-            goblins[g].onScreen = 0;
+            lettuce[g].onScreen = 0;
         }
 
         // TODO - add future implementation with this
-        if (!goblins[g].active || !goblins[g].onScreen) {
+        if (!lettuce[g].active || !lettuce[g].onScreen) {
             continue;
         }
 
         // wait until the player is done attacking to apply damage
-        if (goblins[g].damaged && !player.attacking) {
-            goblins[g].damaged = 0;
+        if (lettuce[g].damaged && !player.attacking) {
+            lettuce[g].damaged = 0;
                 // TODO FIXME - potential future issue with loading in sprite. make it 'dead' and not just inactive
-                // maybe make it so goblins are instantiated when camera crosses certain set of positions?
+                // maybe make it so lettuce are instantiated when camera crosses certain set of positions?
         }
 
         // checks for collision with player
-        if (collision(goblins[g].worldCol, goblins[g].worldRow, goblins[g].width, goblins[g].height, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
+        if (collision(lettuce[g].worldCol, lettuce[g].worldRow, lettuce[g].width, lettuce[g].height, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
             player.damaged = 1;
             player.hearts--;
             if (player.hearts < 1) {
@@ -640,34 +707,34 @@ void updateEnemies() {
             }
         }
 
-        int xDif = pMapPos - goblins[g].worldCol;
-        int yDif = player.worldRow - goblins[g].worldRow;
+        int xDif = pMapPos - lettuce[g].worldCol;
+        int yDif = player.worldRow - lettuce[g].worldRow;
         
 
         // checking if player is within range
-        if (abs(xDif) < goblins[g].xRange && abs(yDif) < goblins[g].yRange) {
+        if (abs(xDif) < lettuce[g].xRange && abs(yDif) < lettuce[g].yRange) {
             // this is effectively 'halfing' the move speed, moving every other frame
             if (gTimer % 2 == 0) {
                 // goblins[g].worldRow -= 3;
                 // if the player is above, dont go into pit to fall
                 if (xDif < 0) {
                     // THIS IS CALLED
-                    if (!eCheckCollision((goblins[g].worldCol - goblins[g].speed), goblins[g].worldRow) 
-                    && !eCheckCollision((goblins[g].worldCol - goblins[g].speed), goblins[g].worldRow + goblins[g].height)) {
+                    if (!eCheckCollision((lettuce[g].worldCol - lettuce[g].speed), lettuce[g].worldRow) 
+                    && !eCheckCollision((lettuce[g].worldCol - lettuce[g].speed), lettuce[g].worldRow + lettuce[g].height)) {
                         // THIS IS NOT CALLED
-                        if (goblinGroundCheck((goblins[g].worldCol - goblins[g].speed), goblins[g].worldRow, goblins[g].width, goblins[g].height)) {
-                            goblins[g].worldCol -= goblins[g].speed;
+                        if (goblinGroundCheck((lettuce[g].worldCol - lettuce[g].speed), lettuce[g].worldRow, lettuce[g].width, lettuce[g].height)) {
+                            lettuce[g].worldCol -= lettuce[g].speed;
                         }
 
                     }
 
                 }
                 else if (xDif > 0) {
-                    if (!eCheckCollision((goblins[g].worldCol + goblins[g].speed + goblins[g].width), goblins[g].worldRow)
-                    && !eCheckCollision((goblins[g].worldCol + goblins[g].speed + goblins[g].width), goblins[g].worldRow + goblins[g].height)) {
+                    if (!eCheckCollision((lettuce[g].worldCol + lettuce[g].speed + lettuce[g].width), lettuce[g].worldRow)
+                    && !eCheckCollision((lettuce[g].worldCol + lettuce[g].speed + lettuce[g].width), lettuce[g].worldRow + lettuce[g].height)) {
                         // if on ground, then move. otherwise dont
-                        if (goblinGroundCheck((goblins[g].worldCol + goblins[g].speed), goblins[g].worldRow, goblins[g].width, goblins[g].height)) {
-                            goblins[g].worldCol += goblins[g].speed;
+                        if (goblinGroundCheck((lettuce[g].worldCol + lettuce[g].speed), lettuce[g].worldRow, lettuce[g].width, lettuce[g].height)) {
+                            lettuce[g].worldCol += lettuce[g].speed;
                         }
                         else {
 
@@ -679,8 +746,8 @@ void updateEnemies() {
         }
 
         // check for gravity
-        if (!goblinGroundCheck(goblins[g].worldCol, goblins[g].worldRow, goblins[g].width, goblins[g].height)) {
-            goblins[g].worldRow++;
+        if (!goblinGroundCheck(lettuce[g].worldCol, lettuce[g].worldRow, lettuce[g].width, lettuce[g].height)) {
+            lettuce[g].worldRow++;
         }
 
     }
@@ -690,43 +757,43 @@ void updateEnemies() {
 }
 
 void animateEnemies() {
-    // go through all the goblins
-    for (int g = 0; g < GOBLINCOUNT; g++) {
-        if (goblins[g].aniCounter % 10 == 0) {
-            goblins[g].curFrame = (goblins[g].curFrame + 1) % goblins[g].numFrames;
+    // go through all the lettuce
+    for (int g = 0; g < LETTUCECOUNT; g++) {
+        if (lettuce[g].aniCounter % 10 == 0) {
+            lettuce[g].curFrame = (lettuce[g].curFrame + 1) % lettuce[g].numFrames;
         }
-        if (goblins[g].damaged) {
-            goblins[g].aniState = 1;
+        if (lettuce[g].damaged) {
+            lettuce[g].aniState = 1;
         }
         else {
-            goblins[g].aniState = 0;
+            lettuce[g].aniState = 0;
         }
-        goblins[g].aniCounter++;
+        lettuce[g].aniCounter++;
     }
 }
 
 // TODO FIXME - the drawing of sprites needs fixing for the changing of worlds
 void drawEnemies() {
-    // go through all the goblins
-    for (int g = 0; g < GOBLINCOUNT; g++) {
-        if (!goblins[g].active || !goblins[g].onScreen) {
+    // go through all the lettuce
+    for (int g = 0; g < LETTUCECOUNT; g++) {
+        if (!lettuce[g].active || !lettuce[g].onScreen) {
             shadowOAM[shadowOAMIndex].attr0 |= ATTR0_HIDE;
         } else {
             // this is converting into camera position, subtracting map changes
-            int xCol = (goblins[g].worldCol - (hOff + (256 * bgIndex)));
+            int xCol = (lettuce[g].worldCol - (hOff + (256 * bgIndex)));
             // the reason vOff and hOff are included in here is to keep them according to the camera
-            shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (goblins[g].worldRow - vOff)) | ATTR0_SQUARE;
+            shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (lettuce[g].worldRow - vOff)) | ATTR0_SQUARE;
             shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (xCol)) | ATTR1_SMALL;
-            // if player is facing left, flip goblins[g] to left
-            if (goblins[g].direction) {
+            // if player is facing left, flip lettuce[g] to left
+            if (lettuce[g].direction) {
                 shadowOAM[shadowOAMIndex].attr1 |= ATTR1_HFLIP;
             }
-            // on spritesheet, goblins[g] is starting at tile (8,8) in 8x coordinates, which equates to + 3, 4
-            if (goblins[g].damaged == 1) {
-                shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(((goblins[g].curFrame % 2) + 9), 4) * 2;
+            // on spritesheet, lettuce[g] is starting at tile (8,8) in 8x coordinates, which equates to + 3, 4
+            if (lettuce[g].damaged == 1) {
+                shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(((lettuce[g].curFrame % 2) + 9), 4) * 2;
             }
             else {
-                shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((goblins[g].curFrame + 9), 2) * 2;
+                shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((lettuce[g].curFrame + 9), 2) * 2;
             }
         }
         shadowOAMIndex++;

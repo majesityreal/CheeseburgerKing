@@ -10,13 +10,16 @@
 #define JUMPVEL -5
 #define PARALLAXFACTOR 3
 
-#define GOBLINCOUNT 5
+#define LETTUCECOUNT 5
+#define BIGLETTUCECOUNT 3
 
 // number of frames the attack is
 #define ATTACK_DURATION 20
 #define ATTACK_SPEED 10
 
-// the orc will target the player, moving towards their x value. However, they are very stupid and
+#define DASH_TIME 15
+
+// the lettuce will target the player, moving towards their x value. However, they are very stupid and
 // only go towards the X value
 typedef struct {
     // determines whether to show sprite + compute AI, if it is on camera then yes
@@ -41,7 +44,32 @@ typedef struct {
     int speed;
     int xRange;
     int yRange;
-    } GOBLIN;
+    } LETTUCE;
+
+    typedef struct {
+    // determines whether to show sprite + compute AI, if it is on camera then yes
+    int active;
+    int onScreen;
+    int worldRow;
+    int worldCol;
+    int width;
+    int height;
+    // sprite animation stuff
+    int aniCounter;
+    int aniState;
+    int prevAniState;
+    int curFrame;
+    int numFrames;
+    // AI stuff
+    // this marks the goblin as being damaged, so that it decrements lives and can be attacked X frames later
+    int damaged;
+    int lives;
+    int targetX;
+    int direction;
+    int xRange;
+    int yRange;
+    int shootSpeed;
+    } BIG_LETTUCE;
 
     
 typedef struct {
@@ -54,7 +82,7 @@ typedef struct {
     int doorY;
     int doorWidth;
     int doorHeight;
-    GOBLIN goblins[GOBLINCOUNT];
+    LETTUCE lettuce[LETTUCECOUNT];
 } MAP;
 
 typedef struct {

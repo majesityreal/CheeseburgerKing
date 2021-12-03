@@ -1330,7 +1330,7 @@ int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, i
 
 # 1 "mylib.h" 1
 # 4 "game.h" 2
-# 21 "game.h"
+# 23 "game.h"
 typedef struct {
 
     int active;
@@ -1354,7 +1354,7 @@ typedef struct {
     int speed;
     int xRange;
     int yRange;
-    } GOBLIN;
+    } LETTUCE;
 
 
 typedef struct {
@@ -1367,7 +1367,7 @@ typedef struct {
     int doorY;
     int doorWidth;
     int doorHeight;
-    GOBLIN goblins[5];
+    LETTUCE lettuce[5];
 } MAP;
 
 typedef struct {
@@ -1407,6 +1407,7 @@ typedef struct {
     int cdel;
     int width;
     int height;
+    int hitboxCDel;
 
     int aniCounter;
     int curFrame;
@@ -1523,7 +1524,7 @@ extern const unsigned short map2Pal[256];
 
 # 1 "hugeMap.h" 1
 # 22 "hugeMap.h"
-extern const unsigned short hugeMapTiles[560];
+extern const unsigned short hugeMapTiles[752];
 
 
 extern const unsigned short hugeMapMap[8192];
@@ -1664,7 +1665,7 @@ void startGame() {
     waitForVBlank();
 
     DMANow(3, hugeMapPal, ((unsigned short *)0x5000000), 48);
-    DMANow(3, hugeMapTiles, &((charblock *)0x6000000)[0], 1120 / 2);
+    DMANow(3, hugeMapTiles, &((charblock *)0x6000000)[0], 1504 / 2);
     DMANow(3, hugeMapMap, &((screenblock *)0x6000000)[24], 16384 / 2);
 # 170 "main.c"
     DMANow(3, parallaxBGTiles, &((charblock *)0x6000000)[2], 7808 / 2);

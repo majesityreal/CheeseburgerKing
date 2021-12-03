@@ -1576,9 +1576,9 @@ extern long double strtold (const char *restrict, char **restrict);
 # 3 "game.h" 2
 # 1 "mylib.h" 1
 # 4 "game.h" 2
-# 21 "game.h"
+# 23 "game.h"
 
-# 21 "game.h"
+# 23 "game.h"
 typedef struct {
 
     int active;
@@ -1602,7 +1602,32 @@ typedef struct {
     int speed;
     int xRange;
     int yRange;
-    } GOBLIN;
+    } LETTUCE;
+
+    typedef struct {
+
+    int active;
+    int onScreen;
+    int worldRow;
+    int worldCol;
+    int width;
+    int height;
+
+    int aniCounter;
+    int aniState;
+    int prevAniState;
+    int curFrame;
+    int numFrames;
+
+
+    int damaged;
+    int lives;
+    int targetX;
+    int direction;
+    int speed;
+    int xRange;
+    int yRange;
+    } BIG_LETTUCE;
 
 
 typedef struct {
@@ -1615,7 +1640,7 @@ typedef struct {
     int doorY;
     int doorWidth;
     int doorHeight;
-    GOBLIN goblins[5];
+    LETTUCE lettuce[5];
 } MAP;
 
 typedef struct {
@@ -1774,7 +1799,7 @@ PLAYER player;
 SLASH slash;
 
 
-GOBLIN goblins[5];
+LETTUCE lettuce[5];
 
 int shadowOAMIndex = 0;
 
@@ -1798,6 +1823,10 @@ int jumping = 0;
 
 int doubleJumping = 0;
 
+int dashing = 0;
+int dashingTimer = 0;
+int dashed = 0;
+
 
 int jumpThud = 0;
 
@@ -1816,7 +1845,7 @@ int pMapPos;
 
 
 int bgIndex;
-# 68 "game.c"
+# 72 "game.c"
 MAP maps[4];
 
 int dead = 0;
@@ -1887,34 +1916,34 @@ void initSlash() {
 void initEnemies() {
 
     for (int g = 0; g < 5; g++) {
-        goblins[g].active = 0;
-        goblins[g].width = 13;
-        goblins[g].height = 15;
+        lettuce[g].active = 0;
+        lettuce[g].width = 13;
+        lettuce[g].height = 15;
 
 
 
-        goblins[g].aniCounter = 0;
-        goblins[g].curFrame = 0;
-        goblins[g].numFrames = 4;
-        goblins[g].aniState = IDLE;
+        lettuce[g].aniCounter = 0;
+        lettuce[g].curFrame = 0;
+        lettuce[g].numFrames = 4;
+        lettuce[g].aniState = IDLE;
 
-        goblins[g].direction = 0;
-        goblins[g].xRange = 128;
-        goblins[g].yRange = 96;
-        goblins[g].speed = 1;
-        goblins[g].lives = 1;
-        goblins[g].damaged = 0;
+        lettuce[g].direction = 0;
+        lettuce[g].xRange = 128;
+        lettuce[g].yRange = 96;
+        lettuce[g].speed = 1;
+        lettuce[g].lives = 1;
+        lettuce[g].damaged = 0;
     }
 
 
     switch (currMap) {
         case 0:
-            goblins[0].active = 1;
-            goblins[0].worldRow = 160;
-            goblins[0].worldCol = 185;
-            goblins[1].active = 1;
-            goblins[1].worldRow = 125;
-            goblins[1].worldCol = 425;
+            lettuce[0].active = 1;
+            lettuce[0].worldRow = 160;
+            lettuce[0].worldCol = 185;
+            lettuce[1].active = 1;
+            lettuce[1].worldRow = 125;
+            lettuce[1].worldCol = 425;
         break;
     }
 
@@ -2016,13 +2045,14 @@ void updatePlayer() {
     if (grounded) {
         jumpThud = 0;
         doubleJumping = 0;
+        dashed = 0;
     }
 
 
 
     if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && !doubleJumping && ((jumping || !grounded))) {
         doubleJumping = 1;
-        yVel = (-5 * 2) / 4;
+        yVel = -5;
         framesInAir = 0;
 
         jumpThud = 0;
@@ -2033,7 +2063,7 @@ void updatePlayer() {
     }
 
 
-    if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && grounded
+    if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && grounded && !dashing
         && !pCheckCollision(player.worldCol, player.worldRow - 1)
         && !pCheckCollision(player.worldCol + player.width, player.worldRow - 1)) {
 
@@ -2089,8 +2119,11 @@ void updatePlayer() {
             }
         }
 
-        if ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))) && jumping && !jumpThud) {
+        if ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))) && jumping && !jumpThud && !doubleJumping) {
             yVel = -5 + (1 * framesInAir);
+        }
+        else if ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))) && doubleJumping && !jumpThud) {
+            yVel = ((7 * -5) / 8) + (1 * framesInAir);
         }
         else {
 
@@ -2134,6 +2167,39 @@ void updatePlayer() {
         vOff += yVel;
     }
 
+
+
+
+
+    if (dashing) {
+        dashingTimer++;
+
+        if (grounded && dashingTimer > 15) {
+            dashing = 0;
+            dashingTimer = 0;
+            player.movementCycle = 2;
+            player.cdel = 3;
+        }
+
+        if (dashingTimer > 15) {
+            dashing = 0;
+            dashingTimer = 0;
+            player.movementCycle = 2;
+        }
+    }
+
+    if ((!(~(oldButtons) & ((1 << 8))) && (~buttons & ((1 << 8)))) || (!(~(oldButtons) & ((1 << 9))) && (~buttons & ((1 << 9)))) && !dashing) {
+        dashing = 1;
+
+        if (grounded) {
+            player.movementCycle = 2;
+            player.cdel = 3;
+        }
+        else if (!dashed) {
+            dashed = 1;
+            player.movementCycle = 1;
+        }
+    }
 
 
 
@@ -2197,16 +2263,16 @@ void updatePlayer() {
     if (player.attackTimer > 0) {
 
         for (int g = 0; g < 5; g++) {
-            if (collision(slash.worldCol + (256 * bgIndex) + slash.hitboxCDel, slash.worldRow, slash.width - slash.hitboxCDel, slash.height, goblins[g].worldCol, goblins[g].worldRow, goblins[g].width, goblins[g].height)) {
+            if (collision(slash.worldCol + (256 * bgIndex) + slash.hitboxCDel, slash.worldRow, slash.width - slash.hitboxCDel, slash.height, lettuce[g].worldCol, lettuce[g].worldRow, lettuce[g].width, lettuce[g].height)) {
 
-                if (!goblins[g].damaged) {
-                    goblins[g].damaged = 1;
-                    goblins[g].lives--;
+                if (!lettuce[g].damaged) {
+                    lettuce[g].damaged = 1;
+                    lettuce[g].lives--;
 
-                    if (goblins[g].lives < 0) {
+                    if (lettuce[g].lives < 0) {
 
 
-                        goblins[g].active = 0;
+                        lettuce[g].active = 0;
                     }
                 }
             }
@@ -2289,6 +2355,9 @@ void animatePlayer() {
     if (player.damaged) {
         player.aniState = DAMAGED;
     }
+    if (dashing && grounded) {
+        player.aniState = DOUBLEJUMP;
+    }
 
 
     if(player.aniCounter % 10 == 0 && player.aniState == ATTACK) {
@@ -2364,27 +2433,27 @@ void updateEnemies() {
     for (int g = 0; g < 5; g++) {
 
 
-        if (goblins[g].worldCol + goblins[g].width > (pMapPos - 240) && goblins[g].worldCol < (pMapPos + 240)) {
-            goblins[g].onScreen = 1;
+        if (lettuce[g].worldCol + lettuce[g].width > (pMapPos - 240) && lettuce[g].worldCol < (pMapPos + 240)) {
+            lettuce[g].onScreen = 1;
         }
         else {
-            goblins[g].onScreen = 0;
+            lettuce[g].onScreen = 0;
         }
 
 
-        if (!goblins[g].active || !goblins[g].onScreen) {
+        if (!lettuce[g].active || !lettuce[g].onScreen) {
             continue;
         }
 
 
-        if (goblins[g].damaged && !player.attacking) {
-            goblins[g].damaged = 0;
+        if (lettuce[g].damaged && !player.attacking) {
+            lettuce[g].damaged = 0;
 
 
         }
 
 
-        if (collision(goblins[g].worldCol, goblins[g].worldRow, goblins[g].width, goblins[g].height, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
+        if (collision(lettuce[g].worldCol, lettuce[g].worldRow, lettuce[g].width, lettuce[g].height, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
             player.damaged = 1;
             player.hearts--;
             if (player.hearts < 1) {
@@ -2392,34 +2461,34 @@ void updateEnemies() {
             }
         }
 
-        int xDif = pMapPos - goblins[g].worldCol;
-        int yDif = player.worldRow - goblins[g].worldRow;
+        int xDif = pMapPos - lettuce[g].worldCol;
+        int yDif = player.worldRow - lettuce[g].worldRow;
 
 
 
-        if (abs(xDif) < goblins[g].xRange && abs(yDif) < goblins[g].yRange) {
+        if (abs(xDif) < lettuce[g].xRange && abs(yDif) < lettuce[g].yRange) {
 
             if (gTimer % 2 == 0) {
 
 
                 if (xDif < 0) {
 
-                    if (!eCheckCollision((goblins[g].worldCol - goblins[g].speed), goblins[g].worldRow)
-                    && !eCheckCollision((goblins[g].worldCol - goblins[g].speed), goblins[g].worldRow + goblins[g].height)) {
+                    if (!eCheckCollision((lettuce[g].worldCol - lettuce[g].speed), lettuce[g].worldRow)
+                    && !eCheckCollision((lettuce[g].worldCol - lettuce[g].speed), lettuce[g].worldRow + lettuce[g].height)) {
 
-                        if (goblinGroundCheck((goblins[g].worldCol - goblins[g].speed), goblins[g].worldRow, goblins[g].width, goblins[g].height)) {
-                            goblins[g].worldCol -= goblins[g].speed;
+                        if (goblinGroundCheck((lettuce[g].worldCol - lettuce[g].speed), lettuce[g].worldRow, lettuce[g].width, lettuce[g].height)) {
+                            lettuce[g].worldCol -= lettuce[g].speed;
                         }
 
                     }
 
                 }
                 else if (xDif > 0) {
-                    if (!eCheckCollision((goblins[g].worldCol + goblins[g].speed + goblins[g].width), goblins[g].worldRow)
-                    && !eCheckCollision((goblins[g].worldCol + goblins[g].speed + goblins[g].width), goblins[g].worldRow + goblins[g].height)) {
+                    if (!eCheckCollision((lettuce[g].worldCol + lettuce[g].speed + lettuce[g].width), lettuce[g].worldRow)
+                    && !eCheckCollision((lettuce[g].worldCol + lettuce[g].speed + lettuce[g].width), lettuce[g].worldRow + lettuce[g].height)) {
 
-                        if (goblinGroundCheck((goblins[g].worldCol + goblins[g].speed), goblins[g].worldRow, goblins[g].width, goblins[g].height)) {
-                            goblins[g].worldCol += goblins[g].speed;
+                        if (goblinGroundCheck((lettuce[g].worldCol + lettuce[g].speed), lettuce[g].worldRow, lettuce[g].width, lettuce[g].height)) {
+                            lettuce[g].worldCol += lettuce[g].speed;
                         }
                         else {
 
@@ -2431,8 +2500,8 @@ void updateEnemies() {
         }
 
 
-        if (!goblinGroundCheck(goblins[g].worldCol, goblins[g].worldRow, goblins[g].width, goblins[g].height)) {
-            goblins[g].worldRow++;
+        if (!goblinGroundCheck(lettuce[g].worldCol, lettuce[g].worldRow, lettuce[g].width, lettuce[g].height)) {
+            lettuce[g].worldRow++;
         }
 
     }
@@ -2444,16 +2513,16 @@ void updateEnemies() {
 void animateEnemies() {
 
     for (int g = 0; g < 5; g++) {
-        if (goblins[g].aniCounter % 10 == 0) {
-            goblins[g].curFrame = (goblins[g].curFrame + 1) % goblins[g].numFrames;
+        if (lettuce[g].aniCounter % 10 == 0) {
+            lettuce[g].curFrame = (lettuce[g].curFrame + 1) % lettuce[g].numFrames;
         }
-        if (goblins[g].damaged) {
-            goblins[g].aniState = 1;
+        if (lettuce[g].damaged) {
+            lettuce[g].aniState = 1;
         }
         else {
-            goblins[g].aniState = 0;
+            lettuce[g].aniState = 0;
         }
-        goblins[g].aniCounter++;
+        lettuce[g].aniCounter++;
     }
 }
 
@@ -2461,24 +2530,24 @@ void animateEnemies() {
 void drawEnemies() {
 
     for (int g = 0; g < 5; g++) {
-        if (!goblins[g].active || !goblins[g].onScreen) {
+        if (!lettuce[g].active || !lettuce[g].onScreen) {
             shadowOAM[shadowOAMIndex].attr0 |= (2 << 8);
         } else {
 
-            int xCol = (goblins[g].worldCol - (hOff + (256 * bgIndex)));
+            int xCol = (lettuce[g].worldCol - (hOff + (256 * bgIndex)));
 
-            shadowOAM[shadowOAMIndex].attr0 = (0xFF & (goblins[g].worldRow - vOff)) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr0 = (0xFF & (lettuce[g].worldRow - vOff)) | (0 << 14);
             shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (xCol)) | (1 << 14);
 
-            if (goblins[g].direction) {
+            if (lettuce[g].direction) {
                 shadowOAM[shadowOAMIndex].attr1 |= (1 << 12);
             }
 
-            if (goblins[g].damaged == 1) {
-                shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((4)*32 + (((goblins[g].curFrame % 2) + 9))) * 2;
+            if (lettuce[g].damaged == 1) {
+                shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((4)*32 + (((lettuce[g].curFrame % 2) + 9))) * 2;
             }
             else {
-                shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((2)*32 + ((goblins[g].curFrame + 9))) * 2;
+                shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((2)*32 + ((lettuce[g].curFrame + 9))) * 2;
             }
         }
         shadowOAMIndex++;
@@ -2524,7 +2593,7 @@ void drawSlash() {
 
 
 int pCheckCollision(int col, int row) {
-# 784 "game.c"
+# 828 "game.c"
         if (collisionMap[((row) * (2048) + (col + (256 * bgIndex)))]) {
             return 1;
         }
