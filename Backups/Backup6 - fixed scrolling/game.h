@@ -6,12 +6,6 @@ typedef struct {
     int index;
     unsigned char* collisionMap;
     unsigned char* map;
-    int startingXPos;
-    int startingYPos;
-    int doorX;
-    int doorY;
-    int doorWidth;
-    int doorHeight;
 } MAP;
 
 // the orc will target the player, moving towards their x value. However, they are very stupid and

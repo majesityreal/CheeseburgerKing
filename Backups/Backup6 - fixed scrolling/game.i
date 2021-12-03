@@ -1583,12 +1583,6 @@ typedef struct {
     int index;
     unsigned char* collisionMap;
     unsigned char* map;
-    int startingXPos;
-    int startingYPos;
-    int doorX;
-    int doorY;
-    int doorWidth;
-    int doorHeight;
 } MAP;
 
 
@@ -1674,7 +1668,7 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 115 "game.h"
+# 109 "game.h"
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
@@ -1798,11 +1792,13 @@ int framesInAir = 0;
 int gTimer = 0;
 
 
-int currMap;
+int hScreenCounter = 0;
+int currentScreenblock = 28;
 
 
-int bgIndex;
-# 65 "game.c"
+int offSet = 0;
+
+
 int pWorldPos;
 
 MAP maps[4];
@@ -1912,8 +1908,6 @@ void initEnemies() {
 }
 
 void initMaps() {
-    currMap = 0;
-    bgIndex = 0;
     maps[0].collisionMap = map2CollisionBitmap;
     maps[0].map = map2Map;
 
@@ -1941,22 +1935,17 @@ void updateGame() {
     updateEnemies();
 
 
-    if (hOff >= 256) {
-        bgIndex++;
-        (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((28 + bgIndex) << 8) | (1 << 14) | (0 << 7);
-        hOff -= 256;
-        player.worldCol += 256;
-        pWorldPos -= 256;
+    if (player.worldCol <= 256 && offSet && (~((*(volatile unsigned short *)0x04000130)) & ((1 << 5)))) {
+
+        collisionMap = maps[hScreenCounter].collisionMap;
     }
 
-    if (hOff <= 0 && (~((*(volatile unsigned short *)0x04000130)) & ((1 << 5))) && bgIndex != 0) {
-        bgIndex--;
-        (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((28 + bgIndex) << 8) | (1 << 14) | (0 << 7);
-        hOff += 256;
-        player.worldCol -= 256;
-        pWorldPos += 256;
+
+    if (player.worldCol >= 256 && offSet && hOff > 20 && (~((*(volatile unsigned short *)0x04000130)) & ((1 << 4)))) {
+
+        collisionMap = maps[hScreenCounter + 1].collisionMap;
     }
-# 232 "game.c"
+
     if (player.hearts < 1) {
         gameOver();
     }
@@ -1967,7 +1956,92 @@ void updateGame() {
 void drawGame() {
     shadowOAMIndex = 0;
     drawHUD();
-# 329 "game.c"
+
+
+
+
+
+
+    if (hScreenCounter != 0 || offSet == 1) {
+
+
+    if (hOff < 0 && !offSet && (~((*(volatile unsigned short *)0x04000130)) & ((1 << 5)))) {
+
+        hScreenCounter--;
+        currentScreenblock = 27;
+
+
+
+        waitForVBlank();
+
+        (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((27) << 8) | (1 << 14) | (0 << 7);
+        waitForVBlank();
+
+        DMANow(3, maps[hScreenCounter].map, &((screenblock *)0x6000000)[26], 4096 / 2);
+
+        DMANow(3, maps[hScreenCounter + 1].map, &((screenblock *)0x6000000)[28], 4096 / 2);
+
+
+        hOff = 256;
+        offSet = 1;
+        player.worldCol = 120 + hOff;
+    }
+
+
+        if (hOff < 0 && ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 5))))) {
+
+
+
+            waitForVBlank();
+            (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((currentScreenblock - 1) << 8) | (1 << 14) | (0 << 7);
+            hOff = 256;
+            player.worldCol += 256;
+            offSet = 0;
+
+            currentScreenblock--;
+
+        }
+
+
+    }
+
+
+    if (hOff >= 256 && offSet && (~((*(volatile unsigned short *)0x04000130)) & ((1 << 4)))) {
+
+        hScreenCounter++;
+        currentScreenblock = 28;
+
+
+        waitForVBlank();
+        (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((28) << 8) | (1 << 14) | (0 << 7);
+
+        waitForVBlank();
+        DMANow(3, maps[hScreenCounter].map, &((screenblock *)0x6000000)[28], 4096 / 2);
+
+        DMANow(3, maps[hScreenCounter + 1].map, &((screenblock *)0x6000000)[30], 4096 / 2);
+
+        hOff = 0;
+        offSet = 0;
+        player.worldCol = 120;
+
+    }
+
+
+
+    if (hOff >= 256 && (~((*(volatile unsigned short *)0x04000130)) & ((1 << 4)))) {
+
+        waitForVBlank();
+        (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((currentScreenblock + 1) << 8) | (1 << 14) | (0 << 7);
+        hOff = 0;
+        player.worldCol -= 256;
+        offSet = 1;
+
+        currentScreenblock++;
+
+    }
+
+
+
     drawPlayer();
     drawSlash();
     drawEnemies();
@@ -1981,35 +2055,19 @@ void drawGame() {
 
     (*(volatile unsigned short *)0x04000014) = hOff;
     (*(volatile unsigned short *)0x04000016) = vOff;
-# 351 "game.c"
-    (*(volatile unsigned short *)0x04000018) = (hOff / 3);
-
-}
-
-void updateMap() {
-    MAP temp = maps[currMap];
-
-    if (collision(player.worldCol, player.worldRow, player.width, player.height, temp.doorX, temp.doorY, temp.doorWidth, temp.doorHeight)) {
-
-        currMap++;
 
 
-        DMANow(3, maps[currMap].map, &((screenblock *)0x6000000)[28], 4096 / 2);
 
-
-        collisionMap = maps[currMap].collisionMap;
-
-
-        player.worldCol = temp.startingXPos;
-        player.worldRow = temp.startingYPos;
-
-
-        pWorldPos = 0;
-        hOff = 0;
-        vOff = 0;
-
-
+    if (offSet) {
+      (*(volatile unsigned short *)0x04000018) = ((hOff + 256) / 3);
     }
+    else if (hScreenCounter % 2 == 1) {
+        (*(volatile unsigned short *)0x04000018) = ((hOff + 512) / 3);
+    }
+    else {
+        (*(volatile unsigned short *)0x04000018) = (hOff / 3);
+    }
+
 }
 
 
@@ -2160,13 +2218,12 @@ void updatePlayer() {
         if ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 4)))
             && !checkCollision(player.worldCol + player.width + player.cdel, player.worldRow)
             && !checkCollision(player.worldCol + player.width + player.cdel, player.worldRow + player.height - 1)) {
-            if (player.worldCol <= 512 + 240) {
+
                 player.worldCol += player.cdel;
                 pWorldPos += player.cdel;
                 if (hOff <= 512 && (player.worldCol - hOff > (240 / 2))) {
                     hOff += player.cdel;
                 }
-            }
         }
     }
 
@@ -2440,7 +2497,7 @@ void drawEnemies() {
         } else {
 
 
-            int xCol = (goblins[g].worldCol - (hOff));
+            int xCol = (goblins[g].worldCol - (hOff + (256 * hScreenCounter) + (256 * offSet)));
 
             shadowOAM[shadowOAMIndex].attr0 = (0xFF & (goblins[g].worldRow - vOff)) | (0 << 14);
             shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (xCol)) | (1 << 14);
@@ -2500,13 +2557,14 @@ void drawSlash() {
 
 int checkCollision(int col, int row) {
 
-    if (bgIndex % 2 == 1) {
+
+
+    if (offSet) {
         if (collisionMap[((row) * (512) + (col + 256))]) {
             return 1;
         }
         return 0;
     }
-
 
         if (collisionMap[((row) * (512) + (col))]) {
             return 1;
