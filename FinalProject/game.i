@@ -1679,6 +1679,9 @@ extern int pauseVar;
 extern int level;
 
 
+extern int dead;
+
+
 void initGame();
 void updateGame();
 void drawGame();
@@ -1799,6 +1802,8 @@ int offSet = 0;
 int pWorldPos;
 
 MAP maps[4];
+
+int dead = 0;
 
 
 enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP };
@@ -1940,6 +1945,11 @@ void updateGame() {
 
         collisionMap = maps[hScreenCounter + 1].collisionMap;
     }
+
+    if (player.hearts < 1) {
+        gameOver();
+    }
+
 }
 
 
@@ -2487,9 +2497,10 @@ void drawEnemies() {
         } else {
 
 
+            int xCol = (goblins[g].worldCol - (hOff + (256 * hScreenCounter) + (256 * offSet)));
 
             shadowOAM[shadowOAMIndex].attr0 = (0xFF & (goblins[g].worldRow - vOff)) | (0 << 14);
-            shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (goblins[g].worldCol - hOff)) | (1 << 14);
+            shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (xCol)) | (1 << 14);
 
             if (goblins[g].direction) {
                 shadowOAM[shadowOAMIndex].attr1 |= (1 << 12);
@@ -2671,5 +2682,5 @@ void drawHUD() {
 
 
 void gameOver() {
-
+    dead = 1;
 }

@@ -1431,6 +1431,9 @@ extern int pauseVar;
 extern int level;
 
 
+extern int dead;
+
+
 void initGame();
 void updateGame();
 void drawGame();
@@ -1713,7 +1716,9 @@ void goToWin() {
 }
 
 
-void win() {}
+void win() {
+
+}
 
 
 void goToLose() {
