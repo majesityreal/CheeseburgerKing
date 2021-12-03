@@ -2,17 +2,19 @@
 #include <stdlib.h>
 #include "mylib.h"
 
-typedef struct {
-    int index;
-    unsigned char* collisionMap;
-    unsigned char* map;
-    int startingXPos;
-    int startingYPos;
-    int doorX;
-    int doorY;
-    int doorWidth;
-    int doorHeight;
-} MAP;
+
+// Constants
+#define MAPHEIGHT 256
+#define MAPWIDTH 2048
+#define GRAVITY 1
+#define JUMPVEL -5
+#define PARALLAXFACTOR 3
+
+#define GOBLINCOUNT 5
+
+// number of frames the attack is
+#define ATTACK_DURATION 20
+#define ATTACK_SPEED 10
 
 // the orc will target the player, moving towards their x value. However, they are very stupid and
 // only go towards the X value
@@ -40,6 +42,20 @@ typedef struct {
     int xRange;
     int yRange;
     } GOBLIN;
+
+    
+typedef struct {
+    int index;
+    unsigned char* collisionMap;
+    unsigned char* map;
+    int startingXPos;
+    int startingYPos;
+    int doorX;
+    int doorY;
+    int doorWidth;
+    int doorHeight;
+    GOBLIN goblins[GOBLINCOUNT];
+} MAP;
 
 typedef struct {
     // screen stuff
@@ -73,11 +89,12 @@ typedef struct {
     // screen stuff
     int worldRow;
     int worldCol;
-    // we are using rdel and cdel to determine offset from player
+    // we are using rdel and cdel to determine offset from player (for animations)
     int rdel;
     int cdel;
     int width;
     int height;
+    int hitboxCDel;
     // animation stuff
     int aniCounter;
     int curFrame;
@@ -98,17 +115,7 @@ typedef struct {
     int active;
 } BIGPELLET;
 
-// Constants
-#define MAPHEIGHT 256
-#define MAPWIDTH 512
-#define GRAVITY 1
-#define JUMPVEL -5
-#define PARALLAXFACTOR 3
-#define GOBLINCOUNT 5
 
-// number of frames the attack is
-#define ATTACK_DURATION 20
-#define ATTACK_SPEED 10
 
 
 // Variables
@@ -126,33 +133,32 @@ extern int dead;
 
 // Prototypes
 void initGame();
-void updateGame();
-void drawGame();
+
+void initMaps();
 void initPlayer();
-void updatePlayer();
-void animatePlayer();
+void initSlash();
+void initEnemies();
+
+int goblinGroundCheck(int col, int row, int width, int height);
+int groundCheck(int col, int row, int width, int height);
+int pCheckCollision(int col, int row);
+int eCheckCollision(int col, int row);
+
+void drawGame();
 void drawPlayer();
 void drawFont();
 void drawPellets();
-int goblinGroundCheck(int col, int row, int width, int height);
-int groundCheck(int col, int row, int width, int height);
-int checkCollision(int col, int row);
-// slash
-void initSlash();
 void drawSlash();
-void animateSlash();
-// enemies
-void initEnemies();
-void updateEnemies();
 void drawEnemies();
+void drawHUD();
+
+void animateSlash();
+void animatePlayer();
 void animateEnemies();
 
-void initGoblinLocations();
-
-void initMaps();
-// special square root function :)
-float Q_rsqrt(float number);
-
-void drawHUD();
+void updateEnemies();
+void updateMap();
+void updateGame();
+void updatePlayer();
 
 void gameOver();

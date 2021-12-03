@@ -1330,15 +1330,7 @@ int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, i
 
 # 1 "mylib.h" 1
 # 4 "game.h" 2
-
-typedef struct {
-    int index;
-    unsigned char* collisionMap;
-    unsigned char* map;
-} MAP;
-
-
-
+# 21 "game.h"
 typedef struct {
 
     int active;
@@ -1363,6 +1355,20 @@ typedef struct {
     int xRange;
     int yRange;
     } GOBLIN;
+
+
+typedef struct {
+    int index;
+    unsigned char* collisionMap;
+    unsigned char* map;
+    int startingXPos;
+    int startingYPos;
+    int doorX;
+    int doorY;
+    int doorWidth;
+    int doorHeight;
+    GOBLIN goblins[5];
+} MAP;
 
 typedef struct {
 
@@ -1420,7 +1426,11 @@ typedef struct {
     int number;
     int active;
 } BIGPELLET;
-# 109 "game.h"
+
+
+
+
+
 extern int hOff;
 extern int vOff;
 extern OBJ_ATTR shadowOAM[128];
@@ -1435,34 +1445,33 @@ extern int dead;
 
 
 void initGame();
-void updateGame();
-void drawGame();
+
+void initMaps();
 void initPlayer();
-void updatePlayer();
-void animatePlayer();
+void initSlash();
+void initEnemies();
+
+int goblinGroundCheck(int col, int row, int width, int height);
+int groundCheck(int col, int row, int width, int height);
+int pCheckCollision(int col, int row);
+int eCheckCollision(int col, int row);
+
+void drawGame();
 void drawPlayer();
 void drawFont();
 void drawPellets();
-int goblinGroundCheck(int col, int row, int width, int height);
-int groundCheck(int col, int row, int width, int height);
-int checkCollision(int col, int row);
-
-void initSlash();
 void drawSlash();
-void animateSlash();
-
-void initEnemies();
-void updateEnemies();
 void drawEnemies();
+void drawHUD();
+
+void animateSlash();
+void animatePlayer();
 void animateEnemies();
 
-void initGoblinLocations();
-
-void initMaps();
-
-float Q_rsqrt(float number);
-
-void drawHUD();
+void updateEnemies();
+void updateMap();
+void updateGame();
+void updatePlayer();
 
 void gameOver();
 # 5 "main.c" 2
@@ -1512,6 +1521,18 @@ extern const unsigned short map2Map[2048];
 extern const unsigned short map2Pal[256];
 # 13 "main.c" 2
 
+# 1 "hugeMap.h" 1
+# 22 "hugeMap.h"
+extern const unsigned short hugeMapTiles[560];
+
+
+extern const unsigned short hugeMapMap[8192];
+
+
+extern const unsigned short hugeMapPal[256];
+# 15 "main.c" 2
+
+
 # 1 "parallaxBG.h" 1
 # 22 "parallaxBG.h"
 extern const unsigned short parallaxBGTiles[3904];
@@ -1521,8 +1542,8 @@ extern const unsigned short parallaxBGMap[1024];
 
 
 extern const unsigned short parallaxBGPal[256];
-# 15 "main.c" 2
-# 30 "main.c"
+# 18 "main.c" 2
+# 33 "main.c"
 void initialize();
 
 
@@ -1628,8 +1649,8 @@ void startGame() {
 
 
     (*(volatile unsigned short *)0x4000000) = 0 | (1 << 12) | (1 << 9) | (1 << 10);
-    (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((28) << 8) | (1 << 14) | (0 << 7);
-    (*(volatile unsigned short *)0x400000C) = ((2) << 2) | ((24) << 8) | (0 << 14) | (0 << 7);
+    (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((24) << 8) | (1 << 14) | (0 << 7);
+    (*(volatile unsigned short *)0x400000C) = ((2) << 2) | ((22) << 8) | (0 << 14) | (0 << 7);
 
 
     (*(volatile unsigned short *)0x04000016) = vOff;
@@ -1641,21 +1662,13 @@ void startGame() {
     srand(timer);
 
     waitForVBlank();
-# 156 "main.c"
-    DMANow(3, map1Pal, ((unsigned short *)0x5000000), 48);
-    DMANow(3, map2Tiles, &((charblock *)0x6000000)[0], 1152 / 2);
-    DMANow(3, map2Map, &((screenblock *)0x6000000)[28], 4096 / 2);
 
-
-
-
-
-    DMANow(3, map1Map, &((screenblock *)0x6000000)[30], 4096 / 2);
-
-
-
+    DMANow(3, hugeMapPal, ((unsigned short *)0x5000000), 48);
+    DMANow(3, hugeMapTiles, &((charblock *)0x6000000)[0], 1120 / 2);
+    DMANow(3, hugeMapMap, &((screenblock *)0x6000000)[24], 16384 / 2);
+# 170 "main.c"
     DMANow(3, parallaxBGTiles, &((charblock *)0x6000000)[2], 7808 / 2);
-    DMANow(3, parallaxBGMap, &((screenblock *)0x6000000)[24], 2048 / 2);
+    DMANow(3, parallaxBGMap, &((screenblock *)0x6000000)[22], 2048 / 2);
 
 
 
@@ -1695,7 +1708,7 @@ void game() {
 
 
 }
-# 227 "main.c"
+# 229 "main.c"
 void goToPause() {
     state = PAUSE;
 }

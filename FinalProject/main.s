@@ -64,7 +64,7 @@ startGame:
 	@ frame_needed = 0, uses_anonymous_args = 0
 	mov	r3, #67108864
 	mov	r2, #5632
-	mov	r0, #23552
+	mov	r0, #22528
 	push	{r4, lr}
 	ldr	r1, .L8
 	strh	r2, [r3]	@ movhi
@@ -92,84 +92,76 @@ startGame:
 	ldr	r1, .L8+28
 	mov	lr, pc
 	bx	r4
-	mov	r3, #576
+	mov	r3, #560
 	mov	r2, #100663296
 	mov	r0, #3
 	ldr	r1, .L8+32
 	mov	lr, pc
 	bx	r4
-	mov	r3, #2048
+	mov	r3, #8192
 	mov	r0, #3
 	ldr	r2, .L8+36
 	ldr	r1, .L8+40
 	mov	lr, pc
 	bx	r4
-	mov	r3, #2048
+	mov	r3, #3904
 	mov	r0, #3
 	ldr	r2, .L8+44
 	ldr	r1, .L8+48
 	mov	lr, pc
 	bx	r4
-	mov	r3, #3904
+	mov	r3, #1024
 	mov	r0, #3
 	ldr	r2, .L8+52
 	ldr	r1, .L8+56
 	mov	lr, pc
 	bx	r4
-	mov	r3, #1024
+	mov	r3, #256
 	mov	r0, #3
 	ldr	r2, .L8+60
 	ldr	r1, .L8+64
 	mov	lr, pc
 	bx	r4
-	mov	r3, #256
 	mov	r0, #3
 	ldr	r2, .L8+68
 	ldr	r1, .L8+72
-	mov	lr, pc
-	bx	r4
-	mov	r0, #3
-	ldr	r2, .L8+76
-	ldr	r1, .L8+80
 	mov	r3, #16384
 	mov	lr, pc
 	bx	r4
-	ldr	r3, .L8+84
+	ldr	r3, .L8+76
 	mov	lr, pc
 	bx	r3
 	mov	r2, #117440512
 	mov	r3, #512
 	mov	r0, #3
-	ldr	r1, .L8+88
+	ldr	r1, .L8+80
 	mov	lr, pc
 	bx	r4
-	ldr	r3, .L8+92
+	ldr	r3, .L8+84
 	mov	lr, pc
 	bx	r3
 	mov	r2, #1
-	ldr	r3, .L8+96
+	ldr	r3, .L8+88
 	pop	{r4, lr}
 	str	r2, [r3]
 	bx	lr
 .L9:
 	.align	2
 .L8:
-	.word	6152
+	.word	5640
 	.word	vOff
 	.word	hOff
 	.word	.LANCHOR0
 	.word	srand
 	.word	waitForVBlank
 	.word	DMANow
-	.word	map1Pal
-	.word	map2Tiles
-	.word	100720640
-	.word	map2Map
-	.word	100724736
-	.word	map1Map
+	.word	hugeMapPal
+	.word	hugeMapTiles
+	.word	100712448
+	.word	hugeMapMap
 	.word	100696064
 	.word	parallaxBGTiles
-	.word	100712448
+	.word	100708352
 	.word	parallaxBGMap
 	.word	83886592
 	.word	spritesheetPal

@@ -10,6 +10,9 @@
 // maps in order
 #include "map1.h"
 #include "map2.h"
+
+#include "hugeMap.h"
+
 // parallax background
 #include "parallaxBG.h"
 
@@ -132,8 +135,8 @@ void startGame() {
     // BG 2 is the parallax background, BG 1 is the actual tiles
 
     REG_DISPCTL = MODE0 | SPRITE_ENABLE | BG1_ENABLE | BG2_ENABLE; // TODO add BG0_ENABLE
-    REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_SIZE_WIDE | BG_4BPP;
-    REG_BG2CNT = BG_CHARBLOCK(2) | BG_SCREENBLOCK(24) | BG_SIZE_SMALL | BG_4BPP;
+    REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(24) | BG_SIZE_WIDE | BG_4BPP;
+    REG_BG2CNT = BG_CHARBLOCK(2) | BG_SCREENBLOCK(22) | BG_SIZE_SMALL | BG_4BPP;
 
     // sets up the background offset
     REG_BG1VOFF = vOff;
@@ -146,27 +149,26 @@ void startGame() {
 
     waitForVBlank();
 
+    DMANow(3, hugeMapPal, PALETTE, 48);
+    DMANow(3, hugeMapTiles, &CHARBLOCK[0], hugeMapTilesLen / 2);
+    DMANow(3, hugeMapMap, &SCREENBLOCK[24], hugeMapMapLen / 2);
 
-    // setting up the game background
-//     DMANow(3, testmapPal, PALETTE, 16);
-//     DMANow(3, testmapTiles, &CHARBLOCK[2], testmapTilesLen / 2);
-//     DMANow(3, testmapMap, &SCREENBLOCK[26], testmapMapLen / 2);
 
     // adding temp mario map
-    DMANow(3, map1Pal, PALETTE, 48);
-    DMANow(3, map2Tiles, &CHARBLOCK[0], map2TilesLen / 2);
-    DMANow(3, map2Map, &SCREENBLOCK[28], map2MapLen / 2);
+    // DMANow(3, map1Pal, PALETTE, 48);
+    // DMANow(3, map2Tiles, &CHARBLOCK[0], map2TilesLen / 2);
+    // DMANow(3, map2Map, &SCREENBLOCK[28], map2MapLen / 2);
     // TODO - something that dma's in the map tiles in per thing ? but it doesnt work for everything
 
     // mario map 2 (since it is wide, it is using two consective screen blocks)
     // we do not need this if they use the same tiles, else we do
     // DMANow(3, map1Tiles, &CHARBLOCK[0], map1TilesLen / 2);
-    DMANow(3, map1Map, &SCREENBLOCK[30], map1MapLen / 2);
+    // DMANow(3, map1Map, &SCREENBLOCK[30], map1MapLen / 2);
 
     // adding parallax
     // DMANow(3, platformerPal, PALETTE, 32);
     DMANow(3, parallaxBGTiles, &CHARBLOCK[2], parallaxBGTilesLen / 2);
-    DMANow(3, parallaxBGMap, &SCREENBLOCK[24], parallaxBGMapLen / 2);
+    DMANow(3, parallaxBGMap, &SCREENBLOCK[22], parallaxBGMapLen / 2);
 
     // old aadding maop
     // DMANow(3, GameBackgroundPal, PALETTE, 16);
