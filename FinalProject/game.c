@@ -1,12 +1,14 @@
 #include <math.h>
 #include "myLib.h"
 #include "game.h"
+#include "boss1AI.h"
 
 #include "map1.h"
 #include "map1Collision.h"
 
 #include "boss1.h"
 #include "boss1Collision.h"
+
 
 /*
 
@@ -22,6 +24,8 @@ KNOWN BUGS:
 */
 
 OBJ_ATTR shadowOAM[128];
+
+
 PLAYER player;
 SLASH slash;
 
@@ -81,18 +85,25 @@ MAP maps[4];
 
 int dead = 0;
 
+// whether or not to lock the camera. Useful for certain situations, like boss fights or arenas
+int cameraLock = 0;
+
 // Player animation states for aniState
 enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP };
 
 // Initialize the game
 // #region init
 void initGame() {
+    // for (int i=0; i<128; i++) {
+    //     // hides the sprites in the beginning
+    //     shadowOAM[i].attr0 = 2 << 8;
+    // }
     initMaps();
     initPlayer();
     initSlash();
     initEnemies();
     gTimer = 0;
-    shadowOAMIndex = 0;
+    shadowOAMIndex = 2;
     // changes per which map to load in!
     hOff = maps[currMap].startingHOff;
     vOff = maps[currMap].startingVOff;
@@ -101,7 +112,7 @@ void initGame() {
 // Initialize the player
 void initPlayer() {
     player.hide = 0;
-    player.width = 13;
+    player.width = 8;
     player.height = 16;
     player.rdel = 1;
     player.cdel = 3;
@@ -269,6 +280,10 @@ void initEnemies() {
             big_lettuce[5].worldCol = 1936;
             big_lettuce[5].direction = 0;
         break;
+        case 1:
+            // this is the boss level
+            initBoss1();
+        break;
     }
 
 }
@@ -279,6 +294,7 @@ void initMaps() {
     switch (currMap)
     {
     case 0:
+        cameraLock = 0;
         maps[currMap].startingHOff = 0;
         maps[currMap].startingVOff = 60;
 
@@ -286,8 +302,16 @@ void initMaps() {
         maps[currMap].map = map1Map;
         maps[currMap].palette = map1Pal;
         maps[currMap].tiles = map1Tiles;
+
+        maps[currMap].doorX = 1978;
+        maps[currMap].doorY = 66;
+        maps[currMap].doorWidth = 28;
+        maps[currMap].doorHeight = 28;
+
+
         break;
     case 1:
+        cameraLock = 1;
         maps[currMap].startingHOff = 0;
         maps[currMap].startingVOff = 0;
 
@@ -325,6 +349,10 @@ void updateGame() {
     updateBullets();
     updateMap();
 
+    if (currMap == 1) {
+        updateBoss1();
+    }
+
     // this determines lose conditions
     if (player.hearts < 1 || player.worldRow > 240) {
         gameOver();
@@ -334,7 +362,7 @@ void updateGame() {
 
 // Draws the game each frame
 void drawGame() {
-    shadowOAMIndex = 0;
+    shadowOAMIndex = 1;
     drawHUD();
 
     drawPlayer();
@@ -342,6 +370,11 @@ void drawGame() {
     drawEnemies();
     drawBullets();
     drawFont();
+
+    if (currMap == 1) {
+        drawBoss1();
+        animateBoss1();
+    }
 
     waitForVBlank();
 
@@ -415,7 +448,9 @@ void updatePlayer() {
             || pCheckCollision(player.worldCol + player.width, player.worldRow + i)) {
                 // snaps player to ground and resets yVel
                 player.worldRow += (i + 1);
-                vOff += (i + 1);
+                if (!cameraLock) {
+                    vOff += (i + 1);
+                }
                 yVel = 0;
                 jumping = 0;
                 jumpThud = 1;
@@ -448,7 +483,9 @@ void updatePlayer() {
             || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
                 // snaps player to ground and resets yVel
                 player.worldRow += (i - 1);
-                vOff += (i - 1);
+                if (!cameraLock) {
+                    vOff += (i - 1);
+                }
                 yVel = 0;
                 grounded = 1;
                 break;
@@ -495,12 +532,17 @@ void updatePlayer() {
 
     // moves camera down if player is moving down
     if (vOff < MAPHEIGHT && (player.worldRow - vOff >= SCREENHEIGHT / 2) && (yVel > 0)) {
+        if (!cameraLock) {
         vOff += yVel;
+        }
+
     }
     
     // moves camera up if player is moving up
     if (vOff > 0 && (player.worldRow - vOff <= SCREENHEIGHT / 2) && (yVel < 0)) {
-        vOff += yVel;
+        if (!cameraLock) {
+            vOff += yVel;
+        }
     }
 
     // #endregion
@@ -547,21 +589,22 @@ void updatePlayer() {
             && !pCheckCollision(player.worldCol - player.cdel, player.worldRow + player.height - 1)) {
             if (player.worldCol >= 0) {
                 player.worldCol -= player.cdel;
-                if (hOff >= 0 && (player.worldCol - hOff < (SCREENWIDTH / 2))) {
-                    // Update background offset variable if the above is true
-                    hOff-= player.cdel;
+                if (!cameraLock) {
+                    if (hOff >= 0 && (player.worldCol - hOff < (SCREENWIDTH / 2))) {
+                        // Update background offset variable if the above is true
+                        hOff-= player.cdel;
+                    }
+                    
+                    // left map / camera changing!
+                    if (hOff <= 0 && bgIndex != 0) {
+                        waitForVBlank();
+                        bgIndex--;
+                        REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(24 + bgIndex) | BG_SIZE_WIDE | BG_4BPP;
+                        hOff = 256;
+                        player.worldCol = 120 + 256;
+                        // pWorldPos += 256;
+                    }
                 }
-                
-                // left map / camera changing!
-                if (hOff <= 0 && bgIndex != 0) {
-                    waitForVBlank();
-                    bgIndex--;
-                    REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(24 + bgIndex) | BG_SIZE_WIDE | BG_4BPP;
-                    hOff = 256;
-                    player.worldCol = 120 + 256;
-                    // pWorldPos += 256;
-                }
-
             }
         }
 
@@ -571,21 +614,22 @@ void updatePlayer() {
             && !pCheckCollision(player.worldCol + player.width + player.cdel, player.worldRow + player.height - 1)) {
             if (pMapPos + player.width <= MAPWIDTH) {
                 player.worldCol += player.cdel;
-                if (hOff <= 256 && (player.worldCol - hOff > (SCREENWIDTH / 2)) && pMapPos <= (MAPWIDTH - 120)) {
-                    hOff += player.cdel;
-                }
+                if (!cameraLock) {
+                    if (hOff <= 256 && (player.worldCol - hOff > (SCREENWIDTH / 2)) && pMapPos <= (MAPWIDTH - 120)) {
+                        hOff += player.cdel;
+                    }
 
-                // check for right camera changes
-                // if goes over, changes thingy
-                if (hOff > 256) {
-                    waitForVBlank();
-                    bgIndex++;
-                    REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(24 + bgIndex) | BG_SIZE_WIDE | BG_4BPP;
-                    hOff = 0;
-                    player.worldCol = 120;
-                    // pWorldPos = 256;
+                    // check for right camera changes
+                    // if goes over, changes thingy
+                    if (hOff > 256) {
+                        waitForVBlank();
+                        bgIndex++;
+                        REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(24 + bgIndex) | BG_SIZE_WIDE | BG_4BPP;
+                        hOff = 0;
+                        player.worldCol = 120;
+                        // pWorldPos = 256;
+                    }
                 }
-
             }
         }
 
@@ -595,7 +639,7 @@ void updatePlayer() {
     }
     // #endregion
 
-    slash.worldCol = player.worldCol + (slash.cdel * ((player.direction * -2) + 1));
+    slash.worldCol = player.worldCol + (slash.cdel * ((player.direction * -2) + 1)) - 2;
     slash.worldRow = player.worldRow;
     animateSlash();
     // ATTACKING - this handles damaging enemies while doing the slash - maybe make it into its own separate method
@@ -859,7 +903,7 @@ void drawPlayer() {
     } else {
         // the reason vOff and hOff are included in here is to keep them according to the camera
         shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (player.worldRow - vOff)) | ATTR0_SQUARE;
-        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (player.worldCol - hOff)) | ATTR1_SMALL;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (player.worldCol - hOff - 3)) | ATTR1_SMALL;
         // if player is facing left, flip sprite to left
         if (player.direction) {
             shadowOAM[shadowOAMIndex].attr1 |= ATTR1_HFLIP;

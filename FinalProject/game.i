@@ -925,11 +925,9 @@ typedef struct
     unsigned short attr2;
     unsigned short fill;
 } OBJ_ATTR;
-
-
-
+# 141 "myLib.h"
 extern OBJ_ATTR shadowOAM[];
-# 159 "myLib.h"
+# 174 "myLib.h"
 void hideSprites();
 
 
@@ -954,10 +952,10 @@ typedef struct
     int numFrames;
     int hide;
 } ANISPRITE;
-# 202 "myLib.h"
+# 217 "myLib.h"
 extern unsigned short oldButtons;
 extern unsigned short buttons;
-# 212 "myLib.h"
+# 227 "myLib.h"
 typedef volatile struct
 {
     volatile const void *src;
@@ -967,7 +965,7 @@ typedef volatile struct
 
 
 extern DMA *dma;
-# 253 "myLib.h"
+# 268 "myLib.h"
 void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned int cnt);
 
 
@@ -1729,6 +1727,10 @@ extern OBJ_ATTR shadowOAM[128];
 extern PLAYER player;
 extern SLASH slash;
 
+extern LETTUCE lettuce[7];
+extern BIG_LETTUCE big_lettuce[6];
+extern BL_BULLET bl_bullets[6 * 2];
+
 extern int pauseVar;
 extern int level;
 
@@ -1737,6 +1739,8 @@ extern int dead;
 
 
 extern int currMap;
+
+extern int shadowOAMIndex;
 
 
 void initGame();
@@ -1767,24 +1771,49 @@ void updateBullets();
 
 void gameOver();
 # 4 "game.c" 2
+# 1 "boss1AI.h" 1
+typedef struct {
+    int lives;
+    int worldCol;
+    int worldRow;
+    int eyesOffsetX;
+    int eyesOffsetY;
+    int state;
+
+    int direction;
+
+    int hide;
+
+    int aniCounter;
+
+} BOSS1;
+
+void initBoss1();
+void updateBoss1();
+void drawBoss1();
+void animateBoss1();
+
+void spawnLettuce();
+void spawnBigLettuce();
+# 5 "game.c" 2
 
 # 1 "map1.h" 1
 # 22 "map1.h"
-extern const unsigned short map1Tiles[752];
+extern const unsigned short map1Tiles[1008];
 
 
 extern const unsigned short map1Map[8192];
 
 
 extern const unsigned short map1Pal[256];
-# 6 "game.c" 2
+# 7 "game.c" 2
 # 1 "map1Collision.h" 1
 # 21 "map1Collision.h"
 extern const unsigned short map1CollisionBitmap[262144];
 
 
 extern const unsigned short map1CollisionPal[256];
-# 7 "game.c" 2
+# 8 "game.c" 2
 
 # 1 "boss1.h" 1
 # 22 "boss1.h"
@@ -1795,16 +1824,18 @@ extern const unsigned short boss1Map[8192];
 
 
 extern const unsigned short boss1Pal[256];
-# 9 "game.c" 2
+# 10 "game.c" 2
 # 1 "boss1Collision.h" 1
 # 21 "boss1Collision.h"
 extern const unsigned short boss1CollisionBitmap[262144];
 
 
 extern const unsigned short boss1CollisionPal[256];
-# 10 "game.c" 2
-# 24 "game.c"
+# 11 "game.c" 2
+# 26 "game.c"
 OBJ_ATTR shadowOAM[128];
+
+
 PLAYER player;
 SLASH slash;
 
@@ -1865,17 +1896,24 @@ MAP maps[4];
 int dead = 0;
 
 
+int cameraLock = 0;
+
+
 enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP };
 
 
 
 void initGame() {
+
+
+
+
     initMaps();
     initPlayer();
     initSlash();
     initEnemies();
     gTimer = 0;
-    shadowOAMIndex = 0;
+    shadowOAMIndex = 2;
 
     hOff = maps[currMap].startingHOff;
     vOff = maps[currMap].startingVOff;
@@ -1884,7 +1922,7 @@ void initGame() {
 
 void initPlayer() {
     player.hide = 0;
-    player.width = 13;
+    player.width = 8;
     player.height = 16;
     player.rdel = 1;
     player.cdel = 3;
@@ -1915,7 +1953,6 @@ void initPlayer() {
     default:
         break;
     }
-
 
 }
 
@@ -2053,6 +2090,10 @@ void initEnemies() {
             big_lettuce[5].worldCol = 1936;
             big_lettuce[5].direction = 0;
         break;
+        case 1:
+
+            initBoss1();
+        break;
     }
 
 }
@@ -2063,6 +2104,7 @@ void initMaps() {
     switch (currMap)
     {
     case 0:
+        cameraLock = 0;
         maps[currMap].startingHOff = 0;
         maps[currMap].startingVOff = 60;
 
@@ -2070,8 +2112,16 @@ void initMaps() {
         maps[currMap].map = map1Map;
         maps[currMap].palette = map1Pal;
         maps[currMap].tiles = map1Tiles;
+
+        maps[currMap].doorX = 1978;
+        maps[currMap].doorY = 66;
+        maps[currMap].doorWidth = 28;
+        maps[currMap].doorHeight = 28;
+
+
         break;
     case 1:
+        cameraLock = 1;
         maps[currMap].startingHOff = 0;
         maps[currMap].startingVOff = 0;
 
@@ -2090,7 +2140,7 @@ void initMaps() {
         DMANow(3, maps[currMap].map, &((screenblock *)0x6000000)[24], (16384 / 2));
 
         DMANow(3, maps[currMap].palette, ((unsigned short *)0x5000000), 48);
-        DMANow(3, maps[currMap].tiles, &((charblock *)0x6000000)[0], 1504 / 2);
+        DMANow(3, maps[currMap].tiles, &((charblock *)0x6000000)[0], 2016 / 2);
 
 }
 
@@ -2109,6 +2159,10 @@ void updateGame() {
     updateBullets();
     updateMap();
 
+    if (currMap == 1) {
+        updateBoss1();
+    }
+
 
     if (player.hearts < 1 || player.worldRow > 240) {
         gameOver();
@@ -2118,7 +2172,7 @@ void updateGame() {
 
 
 void drawGame() {
-    shadowOAMIndex = 0;
+    shadowOAMIndex = 1;
     drawHUD();
 
     drawPlayer();
@@ -2126,6 +2180,11 @@ void drawGame() {
     drawEnemies();
     drawBullets();
     drawFont();
+
+    if (currMap == 1) {
+        drawBoss1();
+        animateBoss1();
+    }
 
     waitForVBlank();
 
@@ -2199,7 +2258,9 @@ void updatePlayer() {
             || pCheckCollision(player.worldCol + player.width, player.worldRow + i)) {
 
                 player.worldRow += (i + 1);
-                vOff += (i + 1);
+                if (!cameraLock) {
+                    vOff += (i + 1);
+                }
                 yVel = 0;
                 jumping = 0;
                 jumpThud = 1;
@@ -2232,7 +2293,9 @@ void updatePlayer() {
             || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
 
                 player.worldRow += (i - 1);
-                vOff += (i - 1);
+                if (!cameraLock) {
+                    vOff += (i - 1);
+                }
                 yVel = 0;
                 grounded = 1;
                 break;
@@ -2279,12 +2342,17 @@ void updatePlayer() {
 
 
     if (vOff < 256 && (player.worldRow - vOff >= 160 / 2) && (yVel > 0)) {
+        if (!cameraLock) {
         vOff += yVel;
+        }
+
     }
 
 
     if (vOff > 0 && (player.worldRow - vOff <= 160 / 2) && (yVel < 0)) {
-        vOff += yVel;
+        if (!cameraLock) {
+            vOff += yVel;
+        }
     }
 
 
@@ -2331,21 +2399,22 @@ void updatePlayer() {
             && !pCheckCollision(player.worldCol - player.cdel, player.worldRow + player.height - 1)) {
             if (player.worldCol >= 0) {
                 player.worldCol -= player.cdel;
-                if (hOff >= 0 && (player.worldCol - hOff < (240 / 2))) {
+                if (!cameraLock) {
+                    if (hOff >= 0 && (player.worldCol - hOff < (240 / 2))) {
 
-                    hOff-= player.cdel;
+                        hOff-= player.cdel;
+                    }
+
+
+                    if (hOff <= 0 && bgIndex != 0) {
+                        waitForVBlank();
+                        bgIndex--;
+                        (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((24 + bgIndex) << 8) | (1 << 14) | (0 << 7);
+                        hOff = 256;
+                        player.worldCol = 120 + 256;
+
+                    }
                 }
-
-
-                if (hOff <= 0 && bgIndex != 0) {
-                    waitForVBlank();
-                    bgIndex--;
-                    (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((24 + bgIndex) << 8) | (1 << 14) | (0 << 7);
-                    hOff = 256;
-                    player.worldCol = 120 + 256;
-
-                }
-
             }
         }
 
@@ -2355,21 +2424,22 @@ void updatePlayer() {
             && !pCheckCollision(player.worldCol + player.width + player.cdel, player.worldRow + player.height - 1)) {
             if (pMapPos + player.width <= 2048) {
                 player.worldCol += player.cdel;
-                if (hOff <= 256 && (player.worldCol - hOff > (240 / 2)) && pMapPos <= (2048 - 120)) {
-                    hOff += player.cdel;
+                if (!cameraLock) {
+                    if (hOff <= 256 && (player.worldCol - hOff > (240 / 2)) && pMapPos <= (2048 - 120)) {
+                        hOff += player.cdel;
+                    }
+
+
+
+                    if (hOff > 256) {
+                        waitForVBlank();
+                        bgIndex++;
+                        (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((24 + bgIndex) << 8) | (1 << 14) | (0 << 7);
+                        hOff = 0;
+                        player.worldCol = 120;
+
+                    }
                 }
-
-
-
-                if (hOff > 256) {
-                    waitForVBlank();
-                    bgIndex++;
-                    (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((24 + bgIndex) << 8) | (1 << 14) | (0 << 7);
-                    hOff = 0;
-                    player.worldCol = 120;
-
-                }
-
             }
         }
 
@@ -2379,7 +2449,7 @@ void updatePlayer() {
     }
 
 
-    slash.worldCol = player.worldCol + (slash.cdel * ((player.direction * -2) + 1));
+    slash.worldCol = player.worldCol + (slash.cdel * ((player.direction * -2) + 1)) - 2;
     slash.worldRow = player.worldRow;
     animateSlash();
 
@@ -2643,7 +2713,7 @@ void drawPlayer() {
     } else {
 
         shadowOAM[shadowOAMIndex].attr0 = (0xFF & (player.worldRow - vOff)) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (player.worldCol - hOff)) | (1 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (player.worldCol - hOff - 3)) | (1 << 14);
 
         if (player.direction) {
             shadowOAM[shadowOAMIndex].attr1 |= (1 << 12);

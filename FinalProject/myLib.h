@@ -123,6 +123,19 @@ typedef struct
     unsigned short fill;
 } OBJ_ATTR;
 
+// // Affine Sprite Attribute Struct
+// typedef struct
+// {
+//  u16 fill0[3]; // leave gaps for the normal OAM attrs
+//  short a; // make sure they're signed (-sin(x), etc.)!
+//  u16 fill1[3];
+//  short b;
+//  u16 fill2[3];
+//  short c;
+//  u16 fill3[3];
+//  short d;
+// } OBJ_AFFINE;
+
 // Object Attribute Memory
 #define OAM ((OBJ_ATTR *)(0x7000000))
 extern OBJ_ATTR shadowOAM[];
@@ -154,6 +167,8 @@ extern OBJ_ATTR shadowOAM[];
 #define ATTR2_TILEID(col, row) ((row)*32 + (col))
 #define ATTR2_PRIORITY(num) ((num) << 10)
 #define ATTR2_PALROW(row) ((row) << 12)
+
+#define ALIGN(x) __attribute__((aligned(x)))
 
 // Sprite Functions
 void hideSprites();

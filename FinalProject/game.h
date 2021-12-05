@@ -95,6 +95,10 @@ extern OBJ_ATTR shadowOAM[128];
 extern PLAYER player;
 extern SLASH slash;
 
+extern LETTUCE lettuce[LETTUCECOUNT];
+extern BIG_LETTUCE big_lettuce[BIGLETTUCECOUNT];
+extern BL_BULLET bl_bullets[BIGLETTUCECOUNT * 2];
+
 extern int pauseVar;
 extern int level;
 
@@ -103,6 +107,8 @@ extern int dead;
 
 // keeps track of map to play, used for level selection
 extern int currMap;
+
+extern int shadowOAMIndex;
 
 // Prototypes
 void initGame();

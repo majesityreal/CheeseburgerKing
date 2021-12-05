@@ -27,8 +27,8 @@ map1Pal:
 	.short	9513
 	.short	13642
 	.short	6280
-	.short	0
-	.short	0
+	.short	2216
+	.short	16878
 	.short	0
 	.short	0
 	.short	0
@@ -7724,6 +7724,10 @@ map1Map:
 	.short	0
 	.short	0
 	.short	0
+	.short	47
+	.short	48
+	.short	49
+	.short	50
 	.short	0
 	.short	0
 	.short	0
@@ -7752,6 +7756,10 @@ map1Map:
 	.short	0
 	.short	0
 	.short	0
+	.short	51
+	.short	52
+	.short	53
+	.short	54
 	.short	0
 	.short	0
 	.short	0
@@ -7780,6 +7788,10 @@ map1Map:
 	.short	0
 	.short	0
 	.short	0
+	.short	55
+	.short	56
+	.short	57
+	.short	58
 	.short	0
 	.short	0
 	.short	0
@@ -7808,22 +7820,10 @@ map1Map:
 	.short	0
 	.short	0
 	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
+	.short	59
+	.short	60
+	.short	61
+	.short	62
 	.short	0
 	.short	0
 	.short	0
@@ -8470,7 +8470,7 @@ map1Map:
 	.short	28
 	.short	29
 	.type	map1Tiles, %object
-	.size	map1Tiles, 1504
+	.size	map1Tiles, 2016
 map1Tiles:
 	.short	0
 	.short	0
@@ -9224,4 +9224,260 @@ map1Tiles:
 	.short	13141
 	.short	13107
 	.short	13107
+	.short	0
+	.short	0
+	.short	0
+	.short	4352
+	.short	0
+	.short	30481
+	.short	4096
+	.short	-32393
+	.short	-32512
+	.short	4488
+	.short	-32496
+	.short	24
+	.short	5904
+	.short	24577
+	.short	30849
+	.short	24673
+	.short	4368
+	.short	4369
+	.short	6001
+	.short	6007
+	.short	6279
+	.short	6280
+	.short	4376
+	.short	4369
+	.short	1
+	.short	0
+	.short	24672
+	.short	-32666
+	.short	24678
+	.short	-32666
+	.short	24680
+	.short	-32666
+	.short	4369
+	.short	273
+	.short	6007
+	.short	6007
+	.short	6280
+	.short	6280
+	.short	4369
+	.short	28945
+	.short	0
+	.short	4096
+	.short	24678
+	.short	24678
+	.short	24678
+	.short	24710
+	.short	24710
+	.short	24710
+	.short	0
+	.short	0
+	.short	17
+	.short	0
+	.short	4471
+	.short	0
+	.short	30600
+	.short	17
+	.short	-30703
+	.short	24
+	.short	4352
+	.short	273
+	.short	4198
+	.short	4471
+	.short	4198
+	.short	6273
+	.short	6273
+	.short	24672
+	.short	6280
+	.short	24678
+	.short	273
+	.short	24678
+	.short	24951
+	.short	24678
+	.short	4376
+	.short	24678
+	.short	5912
+	.short	4369
+	.short	-22767
+	.short	6055
+	.short	5911
+	.short	4369
+	.short	24680
+	.short	24678
+	.short	24680
+	.short	24680
+	.short	24712
+	.short	24678
+	.short	24712
+	.short	24680
+	.short	24710
+	.short	24680
+	.short	24712
+	.short	-32664
+	.short	24710
+	.short	-30840
+	.short	24710
+	.short	-30328
+	.short	24678
+	.short	24710
+	.short	24710
+	.short	24712
+	.short	24710
+	.short	-32632
+	.short	24710
+	.short	-32632
+	.short	24710
+	.short	-32634
+	.short	24710
+	.short	4200
+	.short	26470
+	.short	4374
+	.short	27014
+	.short	30486
+	.short	104
+	.short	6273
+	.short	24680
+	.short	4369
+	.short	24680
+	.short	30488
+	.short	-32634
+	.short	-30698
+	.short	-32634
+	.short	-30698
+	.short	24593
+	.short	-30696
+	.short	4375
+	.short	4374
+	.short	6007
+	.short	30488
+	.short	4376
+	.short	0
+	.short	392
+	.short	24710
+	.short	24849
+	.short	24710
+	.short	-32393
+	.short	24710
+	.short	-32376
+	.short	24710
+	.short	4376
+	.short	24710
+	.short	5905
+	.short	4369
+	.short	-22761
+	.short	6055
+	.short	24710
+	.short	-30328
+	.short	26502
+	.short	-30328
+	.short	26502
+	.short	27014
+	.short	26472
+	.short	27014
+	.short	26470
+	.short	26982
+	.short	26472
+	.short	26982
+	.short	26472
+	.short	26982
+	.short	26472
+	.short	26982
+	.short	26982
+	.short	5912
+	.short	-30362
+	.short	6680
+	.short	-30362
+	.short	-24168
+	.short	-30362
+	.short	5992
+	.short	-30360
+	.short	1896
+	.short	-30360
+	.short	26472
+	.short	-30360
+	.short	26470
+	.short	-30872
+	.short	26470
+	.short	5905
+	.short	-30696
+	.short	6673
+	.short	-30696
+	.short	426
+	.short	4376
+	.short	-32751
+	.short	30488
+	.short	-32768
+	.short	-30696
+	.short	-32666
+	.short	-30696
+	.short	-32666
+	.short	4376
+	.short	-32666
+	.short	30486
+	.short	5912
+	.short	4369
+	.short	4376
+	.short	0
+	.short	24968
+	.short	24678
+	.short	273
+	.short	0
+	.short	4471
+	.short	4369
+	.short	6024
+	.short	-21846
+	.short	30856
+	.short	-30591
+	.short	4369
+	.short	4369
+	.short	-30872
+	.short	26982
+	.short	-30872
+	.short	27014
+	.short	-30872
+	.short	27014
+	.short	-22784
+	.short	-26247
+	.short	4369
+	.short	4369
+	.short	-22006
+	.short	-22102
+	.short	-30696
+	.short	-32376
+	.short	4369
+	.short	4369
+	.short	-30872
+	.short	26470
+	.short	-30360
+	.short	26470
+	.short	26982
+	.short	-30874
+	.short	31127
+	.short	1945
+	.short	4369
+	.short	4369
+	.short	31402
+	.short	-21846
+	.short	6280
+	.short	6280
+	.short	4369
+	.short	4369
+	.short	-32666
+	.short	-30698
+	.short	-32666
+	.short	-30698
+	.short	-32634
+	.short	4376
+	.short	0
+	.short	30480
+	.short	4369
+	.short	-30703
+	.short	-21856
+	.short	-30694
+	.short	-30584
+	.short	-30591
+	.short	4369
+	.short	4369
 	.ident	"GCC: (devkitARM release 53) 9.1.0"
