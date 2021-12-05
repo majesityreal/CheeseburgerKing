@@ -1330,7 +1330,10 @@ int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, i
 
 # 1 "mylib.h" 1
 # 4 "game.h" 2
-# 23 "game.h"
+# 1 "enemies.h" 1
+
+
+
 typedef struct {
 
     int active;
@@ -1356,7 +1359,57 @@ typedef struct {
     int yRange;
     } LETTUCE;
 
+        typedef struct {
 
+    int active;
+    int onScreen;
+    int worldRow;
+    int worldCol;
+    int width;
+    int height;
+
+    int aniCounter;
+    int aniState;
+    int prevAniState;
+    int curFrame;
+    int numFrames;
+
+
+    int damaged;
+    int lives;
+    int targetX;
+    int direction;
+    int xRange;
+    int yRange;
+
+    int shootSpeed;
+    int shootTimer;
+    int shooting;
+    } BIG_LETTUCE;
+
+    typedef struct {
+
+    int active;
+    int onScreen;
+    int worldRow;
+    int worldCol;
+    int width;
+    int height;
+
+    int aniCounter;
+    int curFrame;
+    int numFrames;
+
+    int direction;
+    int speed;
+    } BL_BULLET;
+
+    void initEnemies();
+    void drawEnemies();
+    void animateEnemies();
+    void updateEnemies();
+# 5 "game.h" 2
+# 27 "game.h"
 typedef struct {
     int index;
     unsigned char* collisionMap;
@@ -1367,7 +1420,7 @@ typedef struct {
     int doorY;
     int doorWidth;
     int doorHeight;
-    LETTUCE lettuce[5];
+    LETTUCE lettuce[7];
 } MAP;
 
 typedef struct {
@@ -1420,17 +1473,6 @@ typedef struct {
     int attackTimer;
 } SLASH;
 
-typedef struct {
-    int worldRow;
-    int worldCol;
-    int size;
-    int number;
-    int active;
-} BIGPELLET;
-
-
-
-
 
 extern int hOff;
 extern int vOff;
@@ -1450,7 +1492,6 @@ void initGame();
 void initMaps();
 void initPlayer();
 void initSlash();
-void initEnemies();
 
 int goblinGroundCheck(int col, int row, int width, int height);
 int groundCheck(int col, int row, int width, int height);
@@ -1460,19 +1501,17 @@ int eCheckCollision(int col, int row);
 void drawGame();
 void drawPlayer();
 void drawFont();
-void drawPellets();
 void drawSlash();
-void drawEnemies();
 void drawHUD();
+void drawBullets();
 
 void animateSlash();
 void animatePlayer();
-void animateEnemies();
 
-void updateEnemies();
 void updateMap();
 void updateGame();
 void updatePlayer();
+void updateBullets();
 
 void gameOver();
 # 5 "main.c" 2
@@ -1503,35 +1542,14 @@ extern const unsigned short spritesheetPal[256];
 
 # 1 "map1.h" 1
 # 22 "map1.h"
-extern const unsigned short map1Tiles[480];
+extern const unsigned short map1Tiles[752];
 
 
-extern const unsigned short map1Map[2048];
+extern const unsigned short map1Map[8192];
 
 
 extern const unsigned short map1Pal[256];
 # 12 "main.c" 2
-# 1 "map2.h" 1
-# 22 "map2.h"
-extern const unsigned short map2Tiles[576];
-
-
-extern const unsigned short map2Map[2048];
-
-
-extern const unsigned short map2Pal[256];
-# 13 "main.c" 2
-
-# 1 "hugeMap.h" 1
-# 22 "hugeMap.h"
-extern const unsigned short hugeMapTiles[752];
-
-
-extern const unsigned short hugeMapMap[8192];
-
-
-extern const unsigned short hugeMapPal[256];
-# 15 "main.c" 2
 
 
 # 1 "parallaxBG.h" 1
@@ -1543,8 +1561,8 @@ extern const unsigned short parallaxBGMap[1024];
 
 
 extern const unsigned short parallaxBGPal[256];
-# 18 "main.c" 2
-# 33 "main.c"
+# 15 "main.c" 2
+# 30 "main.c"
 void initialize();
 
 
@@ -1664,10 +1682,10 @@ void startGame() {
 
     waitForVBlank();
 
-    DMANow(3, hugeMapPal, ((unsigned short *)0x5000000), 48);
-    DMANow(3, hugeMapTiles, &((charblock *)0x6000000)[0], 1504 / 2);
-    DMANow(3, hugeMapMap, &((screenblock *)0x6000000)[24], 16384 / 2);
-# 170 "main.c"
+    DMANow(3, map1Pal, ((unsigned short *)0x5000000), 48);
+    DMANow(3, map1Tiles, &((charblock *)0x6000000)[0], 1504 / 2);
+    DMANow(3, map1Map, &((screenblock *)0x6000000)[24], 16384 / 2);
+# 167 "main.c"
     DMANow(3, parallaxBGTiles, &((charblock *)0x6000000)[2], 7808 / 2);
     DMANow(3, parallaxBGMap, &((screenblock *)0x6000000)[22], 2048 / 2);
 
@@ -1709,7 +1727,7 @@ void game() {
 
 
 }
-# 229 "main.c"
+# 226 "main.c"
 void goToPause() {
     state = PAUSE;
 }

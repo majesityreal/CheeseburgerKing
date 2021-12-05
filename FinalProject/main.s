@@ -155,10 +155,10 @@ startGame:
 	.word	srand
 	.word	waitForVBlank
 	.word	DMANow
-	.word	hugeMapPal
-	.word	hugeMapTiles
+	.word	map1Pal
+	.word	map1Tiles
 	.word	100712448
-	.word	hugeMapMap
+	.word	map1Map
 	.word	100696064
 	.word	parallaxBGTiles
 	.word	100708352

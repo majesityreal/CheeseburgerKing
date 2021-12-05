@@ -2,8 +2,13 @@
 #include "myLib.h"
 #include "game.h"
 
-#include "map1.h"
 #include "map1Collision.h"
+#include "map2Collision.h"
+
+#include "map1.h"
+#include "map2.h"
+
+#include "hugeMapCollision.h"
 
 /*
 
@@ -12,8 +17,8 @@
 // How do I prevent the camera from overlapping itself? When at the bottom, I start to see the top of the map
 
 KNOWN BUGS:
-    The lettuce projectiles will ocassionaly freeze
-    I do not know the cause of this, but it is very minor, and they are fixed as soon as the big_lettuce fires another one. It is visual glitch
+    When changing between maps (camera changes) the lettuce projectiles will ocassionaly freeze
+    I do not know the cause of this, but it is very minor, and they are fixed as soon as the big_lettuce fires another one
 
 
 */
@@ -29,7 +34,7 @@ BL_BULLET bl_bullets[BIGLETTUCECOUNT * 2];
 int shadowOAMIndex = 0;
 
 // gets the collision map set up
-unsigned char* collisionMap = map1CollisionBitmap;
+unsigned char* collisionMap = hugeMapCollisionBitmap;
 
 int score = 0;
 
@@ -218,13 +223,6 @@ void initEnemies() {
             lettuce[4].active = 1;
             lettuce[4].worldRow = 112;
             lettuce[4].worldCol = 920;
-            lettuce[5].active = 1;
-            lettuce[5].worldRow = 96;
-            lettuce[5].worldCol = 1304;
-            lettuce[6].active = 1;
-            lettuce[6].worldRow = 160;
-            lettuce[6].worldCol = 1600;
-
 
             // 8 less than the player position
             big_lettuce[0].active = 1;
@@ -236,26 +234,6 @@ void initEnemies() {
             big_lettuce[1].worldRow = 119;
             big_lettuce[1].worldCol = 350;
             big_lettuce[1].direction = 0;
-
-            big_lettuce[2].active = 1;
-            big_lettuce[2].worldRow = 87;
-            big_lettuce[2].worldCol = 1417;
-            big_lettuce[2].direction = 0;
-
-            big_lettuce[3].active = 1;
-            big_lettuce[3].worldRow = 135;
-            big_lettuce[3].worldCol = 1689;
-            big_lettuce[3].direction = 0;
-
-            big_lettuce[4].active = 1;
-            big_lettuce[4].worldRow = 135;
-            big_lettuce[4].worldCol = 2016;
-            big_lettuce[4].direction = 0;
-
-            big_lettuce[5].active = 1;
-            big_lettuce[5].worldRow = 135;
-            big_lettuce[5].worldCol = 1936;
-            big_lettuce[5].direction = 0;
         break;
     }
 
@@ -264,17 +242,17 @@ void initEnemies() {
 void initMaps() {
     currMap = 0;
     bgIndex = 0;
-    // maps[0].collisionMap = map2CollisionBitmap;
-    // maps[0].map = map2Map;
+    maps[0].collisionMap = map2CollisionBitmap;
+    maps[0].map = map2Map;
 
-    // maps[1].collisionMap = map1CollisionBitmap;
-    // maps[1].map = map1Map;
+    maps[1].collisionMap = map1CollisionBitmap;
+    maps[1].map = map1Map;
 
-    // maps[2].collisionMap = map2CollisionBitmap;
-    // maps[2].map = map2Map;
+    maps[2].collisionMap = map2CollisionBitmap;
+    maps[2].map = map2Map;
 
-    // maps[3].collisionMap = map1CollisionBitmap;
-    // maps[3].map = map1Map;
+    maps[3].collisionMap = map1CollisionBitmap;
+    maps[3].map = map1Map;
 }
 
 // #endregion
@@ -330,8 +308,8 @@ void updateMap() {
         // increment current map index
         currMap++;
 
-        // FIXME TODO load in new map here buddy!!!
-        DMANow(3, maps[currMap].map, &SCREENBLOCK[24], (16384 / 2)); 
+        // load in new map
+        DMANow(3, maps[currMap].map, &SCREENBLOCK[24], map2MapLen / 2); 
 
         // update collision map
         collisionMap = maps[currMap].collisionMap;
@@ -547,9 +525,9 @@ void updatePlayer() {
         if (BUTTON_HELD(BUTTON_RIGHT) 
             && !pCheckCollision(player.worldCol + player.width + player.cdel, player.worldRow)
             && !pCheckCollision(player.worldCol + player.width + player.cdel, player.worldRow + player.height - 1)) {
-            if (pMapPos + player.width <= MAPWIDTH) {
+            if (player.worldCol <= MAPWIDTH + SCREENWIDTH) {
                 player.worldCol += player.cdel;
-                if (hOff <= 256 && (player.worldCol - hOff > (SCREENWIDTH / 2)) && pMapPos <= (MAPWIDTH - 120)) {
+                if (hOff <= 512 && (player.worldCol - hOff > (SCREENWIDTH / 2))) {
                     hOff += player.cdel;
                 }
 

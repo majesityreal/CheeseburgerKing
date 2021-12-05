@@ -9,6 +9,9 @@
 
 // maps in order
 #include "map1.h"
+#include "map2.h"
+
+#include "hugeMap.h"
 
 // parallax background
 #include "parallaxBG.h"
@@ -146,9 +149,9 @@ void startGame() {
 
     waitForVBlank();
 
-    DMANow(3, map1Pal, PALETTE, 48);
-    DMANow(3, map1Tiles, &CHARBLOCK[0], map1TilesLen / 2);
-    DMANow(3, map1Map, &SCREENBLOCK[24], map1MapLen / 2);
+    DMANow(3, hugeMapPal, PALETTE, 48);
+    DMANow(3, hugeMapTiles, &CHARBLOCK[0], hugeMapTilesLen / 2);
+    DMANow(3, hugeMapMap, &SCREENBLOCK[24], hugeMapMapLen / 2);
 
 
     // adding temp mario map
