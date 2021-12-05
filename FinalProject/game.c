@@ -10,18 +10,7 @@
 #include "boss1Collision.h"
 
 
-/*
 
-
-
-// How do I prevent the camera from overlapping itself? When at the bottom, I start to see the top of the map
-
-KNOWN BUGS:
-    The lettuce projectiles will ocassionaly freeze
-    I do not know the cause of this, but it is very minor, and they are fixed as soon as the big_lettuce fires another one. It is visual glitch
-
-
-*/
 
 OBJ_ATTR shadowOAM[128];
 
@@ -363,13 +352,10 @@ void updateGame() {
 // Draws the game each frame
 void drawGame() {
     shadowOAMIndex = 1;
+    hideSprites();
     drawHUD();
 
     if (currMap == 1) {
-        for (int i=0; i<128; i++) {
-            // hides the sprites in the beginning
-            shadowOAM[i].attr0 = 2 << 8;
-        }
         drawBoss1();
         animateBoss1();
     }
@@ -383,6 +369,7 @@ void drawGame() {
 
 
     waitForVBlank();
+
 
     DMANow(3, shadowOAM, OAM, 128 * 4);
 
@@ -537,9 +524,9 @@ void updatePlayer() {
     player.worldRow += yVel;
 
     // moves camera down if player is moving down
-    if (vOff < MAPHEIGHT && (player.worldRow - vOff >= SCREENHEIGHT / 2) && (yVel > 0)) {
+    if (vOff < 256 - SCREENHEIGHT && (player.worldRow - vOff >= SCREENHEIGHT / 2) && (yVel > 0)) {
         if (!cameraLock) {
-        vOff += yVel;
+            vOff += yVel;
         }
 
     }
@@ -1316,7 +1303,7 @@ void drawHUD() {
         shadowOAMIndex++;
         }
 
-// this handles when player loses all lives / hearts
+// this handles when player loses all lives / hearts, or falls off map
 void gameOver() {
     dead = 1;
 }

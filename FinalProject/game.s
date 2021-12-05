@@ -2348,7 +2348,7 @@ updatePlayer:
 	ldr	r3, [r9]
 	bne	.L390
 	add	r5, r5, r0
-	cmp	r3, #255
+	cmp	r3, #95
 	str	r5, [r7, #8]
 	sub	r2, r5, r3
 	ble	.L461
@@ -3016,43 +3016,46 @@ drawGame:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	mov	r2, #1
-	ldr	r3, .L536
+	mov	r1, #1
+	ldr	r2, .L534
 	push	{r4, lr}
-	str	r2, [r3, #8]
+	ldr	r3, .L534+4
+	str	r1, [r2, #8]
+	mov	lr, pc
+	bx	r3
 	bl	drawHUD
-	ldr	r3, .L536+4
+	ldr	r3, .L534+8
 	ldr	r3, [r3]
 	cmp	r3, #1
-	beq	.L535
+	beq	.L533
 .L531:
 	bl	drawPlayer
 	bl	drawSlash
 	bl	drawEnemies
 	bl	drawBullets
 	bl	drawFont
-	ldr	r3, .L536+8
+	ldr	r3, .L534+12
 	mov	lr, pc
 	bx	r3
-	ldr	r4, .L536+12
+	ldr	r4, .L534+16
 	mov	r3, #512
 	mov	r2, #117440512
 	mov	r0, #3
-	ldr	r1, .L536+16
+	ldr	r1, .L534+20
 	mov	lr, pc
 	bx	r4
 	mov	r1, #67108864
-	ldr	r3, .L536+20
+	ldr	r3, .L534+24
 	ldr	r2, [r3]
 	lsl	r3, r2, #16
 	lsr	r3, r3, #16
 	strh	r3, [r1, #20]	@ movhi
-	ldr	r3, .L536+24
+	ldr	r3, .L534+28
 	ldrh	r0, [r3]
-	ldr	r3, .L536+28
+	ldr	r3, .L534+32
 	strh	r0, [r1, #22]	@ movhi
 	ldr	r0, [r3]
-	ldr	r3, .L536+32
+	ldr	r3, .L534+36
 	add	r2, r2, r0, lsl #8
 	smull	r0, r3, r2, r3
 	sub	r3, r3, r2, asr #31
@@ -3061,25 +3064,19 @@ drawGame:
 	strh	r3, [r1, #24]	@ movhi
 	pop	{r4, lr}
 	bx	lr
-.L535:
-	mov	r1, #512
-	ldr	r3, .L536+16
-	add	r2, r3, #1024
-.L532:
-	strh	r1, [r3], #8	@ movhi
-	cmp	r3, r2
-	bne	.L532
-	ldr	r3, .L536+36
+.L533:
+	ldr	r3, .L534+40
 	mov	lr, pc
 	bx	r3
-	ldr	r3, .L536+40
+	ldr	r3, .L534+44
 	mov	lr, pc
 	bx	r3
 	b	.L531
-.L537:
+.L535:
 	.align	2
-.L536:
+.L534:
 	.word	.LANCHOR0
+	.word	hideSprites
 	.word	currMap
 	.word	waitForVBlank
 	.word	DMANow
@@ -3103,12 +3100,12 @@ gameOver:
 	@ frame_needed = 0, uses_anonymous_args = 0
 	@ link register save eliminated.
 	mov	r2, #1
-	ldr	r3, .L539
+	ldr	r3, .L537
 	str	r2, [r3, #24]
 	bx	lr
-.L540:
+.L538:
 	.align	2
-.L539:
+.L537:
 	.word	.LANCHOR0
 	.size	gameOver, .-gameOver
 	.global	cameraLock

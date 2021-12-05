@@ -1412,7 +1412,14 @@ typedef struct {
     void animateEnemies();
     void updateEnemies();
 # 5 "game.h" 2
-# 27 "game.h"
+# 22 "game.h"
+typedef struct {
+    int currFrame;
+    int totalFrames;
+    int xLocation;
+    int yLocation;
+} SELECTOR;
+# 36 "game.h"
 typedef struct {
     int index;
     unsigned char* map;
@@ -1529,6 +1536,8 @@ void updateBullets();
 void gameOver();
 # 3 "boss1AI.c" 2
 # 1 "boss1AI.h" 1
+
+
 typedef struct {
     int lives;
     int worldCol;
@@ -1555,6 +1564,8 @@ void initBoss1();
 void updateBoss1();
 void drawBoss1();
 void animateBoss1();
+
+void drawHealthBar();
 
 void spawnLettuce();
 void spawnBigLettuce();
@@ -1964,7 +1975,7 @@ int currentState;
 
 void initBoss1() {
     timer = 0;
-    boss.lives = 5;
+    boss.lives = 24;
     hoverX = 104;
     hoverY = 45;
     boss.worldRow = hoverY;
@@ -2057,6 +2068,7 @@ void updateBoss1() {
     }
 }
 
+
 void drawBoss1() {
     if (boss.hide) {
         shadowOAM[shadowOAMIndex].attr0 |= (2 << 8);
@@ -2066,8 +2078,22 @@ void drawBoss1() {
             shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (boss.worldCol + boss.eyesOffsetX)) | (2 << 14);
             shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((10)*32 + ((12))) * 2;
             shadowOAMIndex++;
+        if (boss.damaged) {
+            if (time % 10 < 5) {
+                shadowOAM[shadowOAMIndex].attr0 = (0xFF & (boss.worldRow)) | (0 << 14);
+                shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (boss.worldCol)) | (2 << 14);
+                shadowOAM[shadowOAMIndex].attr2 = ((4) << 12) | ((7)*32 + ((5))) * 4;
+                shadowOAMIndex++;
+            }
+            else {
+                shadowOAM[shadowOAMIndex].attr0 = (0xFF & (boss.worldRow)) | (0 << 14);
+                shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (boss.worldCol)) | (2 << 14);
+                shadowOAM[shadowOAMIndex].attr2 = ((4) << 12) | ((6)*32 + ((5))) * 4;
+                shadowOAMIndex++;
+            }
 
-        if (boss.state == ROLLING) {
+        }
+        else if (boss.state == ROLLING) {
             shadowOAM[shadowOAMIndex].attr0 = (1 << 8) | (0xFF & (boss.worldRow)) | (0 << 14);
             shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (boss.worldCol)) | (2 << 14);
             shadowOAM[shadowOAMIndex].attr2 = ((4) << 12) | ((10)*32 + ((10))) * 2;
@@ -2090,6 +2116,76 @@ void drawBoss1() {
 
         }
     }
+    drawHealthBar();
+}
+
+void drawHealthBar() {
+    if (!(boss.lives > 0)) {
+        return;
+    }
+    int startingCol = 72;
+
+    if (boss.lives == 1) {
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (15)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (startingCol)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((7)*32 + ((13)));
+        shadowOAMIndex++;
+    }
+    else {
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (15)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (startingCol)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((6)*32 + ((10)));
+        shadowOAMIndex++;
+    }
+
+    for (int i = 1; i < 11; i++) {
+
+        if (boss.lives >= 2 * (i + 1)) {
+            shadowOAM[shadowOAMIndex].attr0 = (0xFF & (15)) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (startingCol + 8 * i)) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((6)*32 + ((11)));
+            shadowOAMIndex++;
+        }
+
+        else if (boss.lives == (2 * i) + 1) {
+            shadowOAM[shadowOAMIndex].attr0 = (0xFF & (15)) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (startingCol + 8 * i)) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((6)*32 + ((13)));
+            shadowOAMIndex++;
+        }
+
+        else {
+            shadowOAM[shadowOAMIndex].attr0 = (0xFF & (15)) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (startingCol + 8 * i)) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((7)*32 + ((11)));
+            shadowOAMIndex++;
+        }
+
+    }
+
+    int end = (24 / 2) - 1;
+
+
+    if (boss.lives == 24) {
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (15)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (startingCol + (8 * end))) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((6)*32 + ((12)));
+        shadowOAMIndex++;
+    }
+    else if (boss.lives == 24 - 1) {
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (15)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (startingCol + (8 * end))) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((6)*32 + ((14)));
+        shadowOAMIndex++;
+    }
+    else {
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (15)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (startingCol + (8 * end))) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((7)*32 + ((12)));
+        shadowOAMIndex++;
+    }
+
+
 }
 
 void animateBoss1() {

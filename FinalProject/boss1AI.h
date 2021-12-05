@@ -1,3 +1,5 @@
+#define BOSS_LIVES 24
+
 typedef struct {
     int lives;
     int worldCol;
@@ -24,6 +26,8 @@ void initBoss1();
 void updateBoss1();
 void drawBoss1();
 void animateBoss1();
+
+void drawHealthBar();
 
 void spawnLettuce();
 void spawnBigLettuce();

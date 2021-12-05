@@ -43,7 +43,7 @@ int currentState;
 
 void initBoss1() {
     timer = 0;
-    boss.lives = 20;
+    boss.lives = BOSS_LIVES;
     hoverX = 104;
     hoverY = 45;
     boss.worldRow = hoverY;
@@ -146,8 +146,22 @@ void drawBoss1() {
             shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (boss.worldCol + boss.eyesOffsetX)) | ATTR1_MEDIUM;
             shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((12), 10) * 2;
             shadowOAMIndex++;
+        if (boss.damaged) {
+            if (time % 10 < 5) {
+                shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (boss.worldRow)) | ATTR0_SQUARE;
+                shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (boss.worldCol)) | ATTR1_MEDIUM;
+                shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(4) | ATTR2_TILEID((5), 7) * 4;
+                shadowOAMIndex++;
+            }
+            else {
+                shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (boss.worldRow)) | ATTR0_SQUARE;
+                shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (boss.worldCol)) | ATTR1_MEDIUM;
+                shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(4) | ATTR2_TILEID((5), 6) * 4;
+                shadowOAMIndex++;
+            }
 
-        if (boss.state == ROLLING) {
+        }
+        else if (boss.state == ROLLING) {
             shadowOAM[shadowOAMIndex].attr0 = ATTR0_AFFINE | (ROWMASK & (boss.worldRow)) | ATTR0_SQUARE;
             shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (boss.worldCol)) | ATTR1_MEDIUM;
             shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(4) | ATTR2_TILEID((10), 10) * 2;
@@ -170,6 +184,76 @@ void drawBoss1() {
             
         }
     }
+    drawHealthBar();
+}
+
+void drawHealthBar() {
+    if (!(boss.lives > 0)) {
+        return;
+    }
+    int startingCol = 72;
+    // sliver of health for beginning, otherwise its full
+    if (boss.lives == 1) {
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (15)) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (startingCol)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((13), 7);
+        shadowOAMIndex++;
+    }
+    else {
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (15)) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (startingCol)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((10), 6);
+        shadowOAMIndex++;
+    }
+
+    for (int i = 1; i < 11; i++) {
+        // puts full middle bar
+        if (boss.lives >= 2 * (i + 1)) {
+            shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (15)) | ATTR0_SQUARE;
+            shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (startingCol + 8 * i)) | ATTR1_TINY;
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((11), 6);
+            shadowOAMIndex++;
+        }
+        // half bar
+        else if (boss.lives == (2 * i) + 1) {
+            shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (15)) | ATTR0_SQUARE;
+            shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (startingCol + 8 * i)) | ATTR1_TINY;
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((13), 6);
+            shadowOAMIndex++;
+        }
+        // empty bar
+        else {
+            shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (15)) | ATTR0_SQUARE;
+            shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (startingCol + 8 * i)) | ATTR1_TINY;
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((11), 7);
+            shadowOAMIndex++;
+        }
+
+    }
+
+    int end = (BOSS_LIVES / 2) - 1;
+
+    // the end of the health bar
+    if (boss.lives == BOSS_LIVES) {
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (15)) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (startingCol + (8 * end))) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((12), 6);
+        shadowOAMIndex++;
+    }
+    else if (boss.lives == BOSS_LIVES - 1) {
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (15)) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (startingCol + (8 * end))) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((14), 6);
+        shadowOAMIndex++;
+    }
+    else {
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (15)) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (startingCol + (8 * end))) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((12), 7);
+        shadowOAMIndex++;
+    }
+            
+
 }
 
 void animateBoss1() {

@@ -7,8 +7,24 @@
 #include "titlescreen.h"
 #include "spritesheet.h"
 
+#include "TitleSpritesheet.h"
+
 // parallax background
 #include "parallaxBG.h"
+
+/*
+
+// which UI Button do you like better? 1,2,3?
+
+// How do I prevent the camera from overlapping itself? When at the bottom, I start to see the top of the map
+
+KNOWN BUGS:
+    - The lettuce projectiles will ocassionaly freeze
+       I do not know the cause of this, but it is very minor, and they are fixed as soon as the big_lettuce fires another one. It is visual glitch
+
+    - There is a weird bug where when I press up, it sometimes registers as pressing 'A'??? In the title screen, I had to purposely negate this for the buttons
+
+*/
 
 // Prototypes
 void initialize();
@@ -27,8 +43,13 @@ void goToWin();
 void win();
 void goToLose();
 void lose();
+void setupCredits();
+void credits();
+void setupLevelSelect();
+void levelSelect();
 
-
+void drawSelector();
+void drawButtons();
 
 // sets up the title screen
 void setupTitleScreen();
@@ -41,7 +62,9 @@ enum
     GAME,
     PAUSE,
     WIN,
-    LOSE
+    LOSE,
+    LEVEL_SELECT,
+    CREDITS
 };
 int state;
 
@@ -51,6 +74,9 @@ unsigned short oldButtons;
 
 // Timer variables
 int timer = 0;
+
+int currSelection = 0;
+SELECTOR selector;
 
 // Shadow OAM
 OBJ_ATTR shadowOAM[128];
@@ -75,6 +101,12 @@ int main()
         case TITLE:
             titleScreen();
             break;
+        case LEVEL_SELECT:
+            levelSelect();
+            break;
+        case CREDITS:
+            credits();
+            break;
         case GAME:
             game();
             break;
@@ -93,20 +125,163 @@ int main()
 
 // sets up title screen in MODE 4
 void setupTitleScreen() {
-    REG_DISPCTL = MODE4 | BG2_ENABLE;
-    REG_BG2CNT = BG_4BPP;
+    REG_DISPCTL = MODE0 | BG2_ENABLE | SPRITE_ENABLE;
+    REG_BG2CNT = BG_4BPP | BG_CHARBLOCK(0) | BG_SCREENBLOCK(24);
     // draw the title screen image
     DMANow(3, TitleScreenPal, PALETTE, TitleScreenPalLen / 2);
-    drawFullscreenImage4(TitleScreenBitmap);
+    DMANow(3, TitleScreenTiles, &CHARBLOCK[0], TitleScreenTilesLen / 2);
+    DMANow(3, TitleScreenMap, &SCREENBLOCK[24], TitleScreenMapLen / 2);
+
+    // title screen spritesheet
+    DMANow(3, TitleSpritesheetPal, SPRITEPALETTE, TitleSpritesheetPalLen / 2);
+    DMANow(3, TitleSpritesheetTiles, &CHARBLOCK[4], TitleSpritesheetTilesLen / 2);
+
+    REG_BG2VOFF = vOff;
+    REG_BG2HOFF = hOff;
+
     state = TITLE;
+
+    // setting up selector. not big enough to grant its own method
+    selector.currFrame = 0;
+    selector.totalFrames = 3;
+    selector.xLocation = 20;
+    selector.yLocation = 50;
+
+    DMANow(3, shadowOAM, OAM, 128 * 4);
+
 }
 
 // runs every frame of the title screen
 void titleScreen() {
     timer++;
+    shadowOAMIndex = 0;
+    hideSprites();
+    if (BUTTON_PRESSED(BUTTON_UP)) {
+        currSelection--;
+        if (currSelection < 0) {
+            currSelection = BUTTON_COUNT - 1;
+        }
+    }
+    if (BUTTON_PRESSED(BUTTON_DOWN)) {
+        currSelection++;
+        if (currSelection > BUTTON_COUNT - 1) {
+            currSelection = 0;
+        }
+    }
     // if start,select pressed, launch into game
-    if (BUTTON_PRESSED(BUTTON_START) || BUTTON_PRESSED(BUTTON_SELECT)) {
+    if (BUTTON_PRESSED(BUTTON_A) && !BUTTON_HELD(BUTTON_UP)) {
+        switch (currSelection) {
+            case 0:
+                startGame();
+                currMap = 0;
+                initGame();
+            break;
+            case 2:
+                setupLevelSelect();
+            break;
+            case 1:
+                setupCredits();
+            break;
+        }
+    }
+    waitForVBlank();
+
+    drawSelector();
+    drawButtons();
+
+    DMANow(3, shadowOAM, OAM, 128 * 4);
+}
+
+void setupLevelSelect() {
+    currSelection = 0;
+    state = LEVEL_SELECT;
+}
+
+void levelSelect() {
+    timer++;
+    shadowOAMIndex = 0;
+    hideSprites();
+    if (BUTTON_PRESSED(BUTTON_UP)) {
+        currSelection--;
+        if (currSelection < 0) {
+            currSelection = BUTTON_COUNT + 1;
+        }
+    }
+    if (BUTTON_PRESSED(BUTTON_DOWN)) {
+        currSelection++;
+        if (currSelection > BUTTON_COUNT + 1) {
+            currSelection = 0;
+        }
+    }
+    
+    if (BUTTON_PRESSED(BUTTON_A) && !BUTTON_HELD(BUTTON_UP)) {
         startGame();
+        currMap = currSelection;
+        initGame();
+    }
+
+    if (BUTTON_PRESSED(BUTTON_B)) {
+        currSelection = 0;
+        state = TITLE;
+        selector.currFrame = 0;
+        selector.totalFrames = 3;
+        selector.xLocation = 20;
+        selector.yLocation = 50;
+    }
+
+    waitForVBlank();
+
+    drawSelector();
+    drawButtons();
+
+    DMANow(3, shadowOAM, OAM, 128 * 4);
+}
+
+void setupCredits() {
+
+
+    state = CREDITS;
+}
+
+void credits() {
+
+}
+
+void drawSelector() {
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (selector.yLocation + 16 * currSelection)) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (selector.xLocation)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((10), (12 + selector.currFrame));
+        shadowOAMIndex++;
+        if (timer % 10 == 0) {
+            selector.currFrame++;
+            selector.currFrame = selector.currFrame % selector.totalFrames;
+        }
+}
+
+void drawButtons() {
+    if (state == TITLE) {
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (selector.yLocation - 4)) | ATTR0_WIDE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (selector.xLocation + 8)) | ATTR1_MEDIUM;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((6), (12));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (selector.yLocation + 12)) | ATTR0_WIDE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (selector.xLocation + 8)) | ATTR1_MEDIUM;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((6), (14));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (selector.yLocation + 28)) | ATTR0_WIDE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (selector.xLocation + 8)) | ATTR1_MEDIUM;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((6), (16));
+        shadowOAMIndex++;
+    }
+    else {
+        // using this to count indices to easily add more levels
+        for (int i = 0; i < 5; i++) {
+            shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (selector.yLocation - 4 + (i * 16))) | ATTR0_SQUARE;
+            shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (selector.xLocation + 8)) | ATTR1_SMALL;
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((6), (18 + (2 * i)));
+            shadowOAMIndex++;
+        }
+
     }
 }
 
@@ -166,9 +341,7 @@ void startGame() {
     // spooky scary shadowOAM
     DMANow(3, shadowOAM, OAM, 128 * 4);
 
-    currMap = 1;
-    initGame();
-
+    dead = 0;
     state = GAME;
 }
 
@@ -177,6 +350,12 @@ void startGame() {
 
 // Runs every frame of the game state
 void game() {
+    if (dead) {
+        hOff = 0;
+        vOff = 0;
+        setupTitleScreen();
+        return;
+    }
     if (pauseVar) {
         goToPause();
     }

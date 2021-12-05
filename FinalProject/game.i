@@ -1655,7 +1655,14 @@ typedef struct {
     void animateEnemies();
     void updateEnemies();
 # 5 "game.h" 2
-# 27 "game.h"
+# 22 "game.h"
+typedef struct {
+    int currFrame;
+    int totalFrames;
+    int xLocation;
+    int yLocation;
+} SELECTOR;
+# 36 "game.h"
 typedef struct {
     int index;
     unsigned char* map;
@@ -1772,6 +1779,8 @@ void updateBullets();
 void gameOver();
 # 4 "game.c" 2
 # 1 "boss1AI.h" 1
+
+
 typedef struct {
     int lives;
     int worldCol;
@@ -1798,6 +1807,8 @@ void initBoss1();
 void updateBoss1();
 void drawBoss1();
 void animateBoss1();
+
+void drawHealthBar();
 
 void spawnLettuce();
 void spawnBigLettuce();
@@ -1838,7 +1849,10 @@ extern const unsigned short boss1CollisionBitmap[262144];
 
 extern const unsigned short boss1CollisionPal[256];
 # 11 "game.c" 2
-# 26 "game.c"
+
+
+
+
 OBJ_ATTR shadowOAM[128];
 
 
@@ -2179,13 +2193,10 @@ void updateGame() {
 
 void drawGame() {
     shadowOAMIndex = 1;
+    hideSprites();
     drawHUD();
 
     if (currMap == 1) {
-        for (int i=0; i<128; i++) {
-
-            shadowOAM[i].attr0 = 2 << 8;
-        }
         drawBoss1();
         animateBoss1();
     }
@@ -2199,6 +2210,7 @@ void drawGame() {
 
 
     waitForVBlank();
+
 
     DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
 
@@ -2353,9 +2365,9 @@ void updatePlayer() {
     player.worldRow += yVel;
 
 
-    if (vOff < 256 && (player.worldRow - vOff >= 160 / 2) && (yVel > 0)) {
+    if (vOff < 256 - 160 && (player.worldRow - vOff >= 160 / 2) && (yVel > 0)) {
         if (!cameraLock) {
-        vOff += yVel;
+            vOff += yVel;
         }
 
     }

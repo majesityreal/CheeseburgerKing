@@ -17,6 +17,15 @@
 
 #define DASH_TIME 15
 
+#define BUTTON_COUNT 3
+
+typedef struct {
+    int currFrame;
+    int totalFrames;
+    int xLocation;
+    int yLocation;
+} SELECTOR;
+
 // the lettuce will target the player, moving towards their x value. However, they are very stupid and
 // only go towards the X value
 

@@ -1407,7 +1407,14 @@ typedef struct {
     void animateEnemies();
     void updateEnemies();
 # 5 "game.h" 2
-# 27 "game.h"
+# 22 "game.h"
+typedef struct {
+    int currFrame;
+    int totalFrames;
+    int xLocation;
+    int yLocation;
+} SELECTOR;
+# 36 "game.h"
 typedef struct {
     int index;
     unsigned char* map;
@@ -1530,8 +1537,11 @@ void drawString(int col, int row, char *str, unsigned short color);
 # 6 "main.c" 2
 
 # 1 "titlescreen.h" 1
-# 21 "titlescreen.h"
-extern const unsigned short TitleScreenBitmap[19200];
+# 22 "titlescreen.h"
+extern const unsigned short TitleScreenTiles[6288];
+
+
+extern const unsigned short TitleScreenMap[1024];
 
 
 extern const unsigned short TitleScreenPal[256];
@@ -1547,6 +1557,17 @@ extern const unsigned short spritesheetMap[1024];
 extern const unsigned short spritesheetPal[256];
 # 9 "main.c" 2
 
+# 1 "TitleSpritesheet.h" 1
+# 22 "TitleSpritesheet.h"
+extern const unsigned short TitleSpritesheetTiles[16384];
+
+
+extern const unsigned short TitleSpritesheetMap[1024];
+
+
+extern const unsigned short TitleSpritesheetPal[256];
+# 11 "main.c" 2
+
 
 # 1 "parallaxBG.h" 1
 # 22 "parallaxBG.h"
@@ -1557,9 +1578,8 @@ extern const unsigned short parallaxBGMap[1024];
 
 
 extern const unsigned short parallaxBGPal[256];
-# 12 "main.c" 2
-
-
+# 14 "main.c" 2
+# 30 "main.c"
 void initialize();
 
 
@@ -1576,8 +1596,13 @@ void goToWin();
 void win();
 void goToLose();
 void lose();
+void setupCredits();
+void credits();
+void setupLevelSelect();
+void levelSelect();
 
-
+void drawSelector();
+void drawButtons();
 
 
 void setupTitleScreen();
@@ -1590,7 +1615,9 @@ enum
     GAME,
     PAUSE,
     WIN,
-    LOSE
+    LOSE,
+    LEVEL_SELECT,
+    CREDITS
 };
 int state;
 
@@ -1600,6 +1627,9 @@ unsigned short oldButtons;
 
 
 int timer = 0;
+
+int currSelection = 0;
+SELECTOR selector;
 
 
 OBJ_ATTR shadowOAM[128];
@@ -1624,6 +1654,12 @@ int main()
         case TITLE:
             titleScreen();
             break;
+        case LEVEL_SELECT:
+            levelSelect();
+            break;
+        case CREDITS:
+            credits();
+            break;
         case GAME:
             game();
             break;
@@ -1642,20 +1678,163 @@ int main()
 
 
 void setupTitleScreen() {
-    (*(volatile unsigned short *)0x4000000) = 4 | (1 << 10);
-    (*(volatile unsigned short *)0x400000C) = (0 << 7);
+    (*(volatile unsigned short *)0x4000000) = 0 | (1 << 10) | (1 << 12);
+    (*(volatile unsigned short *)0x400000C) = (0 << 7) | ((0) << 2) | ((24) << 8);
 
     DMANow(3, TitleScreenPal, ((unsigned short *)0x5000000), 512 / 2);
-    drawFullscreenImage4(TitleScreenBitmap);
+    DMANow(3, TitleScreenTiles, &((charblock *)0x6000000)[0], 12576 / 2);
+    DMANow(3, TitleScreenMap, &((screenblock *)0x6000000)[24], 2048 / 2);
+
+
+    DMANow(3, TitleSpritesheetPal, ((unsigned short *)0x5000200), 512 / 2);
+    DMANow(3, TitleSpritesheetTiles, &((charblock *)0x6000000)[4], 32768 / 2);
+
+    (*(volatile unsigned short *)0x0400001A) = vOff;
+    (*(volatile unsigned short *)0x04000018) = hOff;
+
     state = TITLE;
+
+
+    selector.currFrame = 0;
+    selector.totalFrames = 3;
+    selector.xLocation = 20;
+    selector.yLocation = 50;
+
+    DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
+
 }
 
 
 void titleScreen() {
     timer++;
+    shadowOAMIndex = 0;
+    hideSprites();
+    if ((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6))))) {
+        currSelection--;
+        if (currSelection < 0) {
+            currSelection = 3 - 1;
+        }
+    }
+    if ((!(~(oldButtons) & ((1 << 7))) && (~buttons & ((1 << 7))))) {
+        currSelection++;
+        if (currSelection > 3 - 1) {
+            currSelection = 0;
+        }
+    }
 
-    if ((!(~(oldButtons) & ((1 << 3))) && (~buttons & ((1 << 3)))) || (!(~(oldButtons) & ((1 << 2))) && (~buttons & ((1 << 2))))) {
+    if ((!(~(oldButtons) & ((1 << 0))) && (~buttons & ((1 << 0)))) && !(~((*(volatile unsigned short *)0x04000130)) & ((1 << 6)))) {
+        switch (currSelection) {
+            case 0:
+                startGame();
+                currMap = 0;
+                initGame();
+            break;
+            case 2:
+                setupLevelSelect();
+            break;
+            case 1:
+                setupCredits();
+            break;
+        }
+    }
+    waitForVBlank();
+
+    drawSelector();
+    drawButtons();
+
+    DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
+}
+
+void setupLevelSelect() {
+    currSelection = 0;
+    state = LEVEL_SELECT;
+}
+
+void levelSelect() {
+    timer++;
+    shadowOAMIndex = 0;
+    hideSprites();
+    if ((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6))))) {
+        currSelection--;
+        if (currSelection < 0) {
+            currSelection = 3 + 1;
+        }
+    }
+    if ((!(~(oldButtons) & ((1 << 7))) && (~buttons & ((1 << 7))))) {
+        currSelection++;
+        if (currSelection > 3 + 1) {
+            currSelection = 0;
+        }
+    }
+
+    if ((!(~(oldButtons) & ((1 << 0))) && (~buttons & ((1 << 0)))) && !(~((*(volatile unsigned short *)0x04000130)) & ((1 << 6)))) {
         startGame();
+        currMap = currSelection;
+        initGame();
+    }
+
+    if ((!(~(oldButtons) & ((1 << 1))) && (~buttons & ((1 << 1))))) {
+        currSelection = 0;
+        state = TITLE;
+        selector.currFrame = 0;
+        selector.totalFrames = 3;
+        selector.xLocation = 20;
+        selector.yLocation = 50;
+    }
+
+    waitForVBlank();
+
+    drawSelector();
+    drawButtons();
+
+    DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
+}
+
+void setupCredits() {
+
+
+    state = CREDITS;
+}
+
+void credits() {
+
+}
+
+void drawSelector() {
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (selector.yLocation + 16 * currSelection)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (selector.xLocation)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((12 + selector.currFrame))*32 + ((10)));
+        shadowOAMIndex++;
+        if (timer % 10 == 0) {
+            selector.currFrame++;
+            selector.currFrame = selector.currFrame % selector.totalFrames;
+        }
+}
+
+void drawButtons() {
+    if (state == TITLE) {
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (selector.yLocation - 4)) | (1 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (selector.xLocation + 8)) | (2 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((12))*32 + ((6)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (selector.yLocation + 12)) | (1 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (selector.xLocation + 8)) | (2 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((14))*32 + ((6)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (selector.yLocation + 28)) | (1 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (selector.xLocation + 8)) | (2 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((16))*32 + ((6)));
+        shadowOAMIndex++;
+    }
+    else {
+
+        for (int i = 0; i < 5; i++) {
+            shadowOAM[shadowOAMIndex].attr0 = (0xFF & (selector.yLocation - 4 + (i * 16))) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (selector.xLocation + 8)) | (1 << 14);
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((18 + (2 * i)))*32 + ((6)));
+            shadowOAMIndex++;
+        }
+
     }
 }
 
@@ -1678,7 +1857,7 @@ void startGame() {
     srand(timer);
 
     waitForVBlank();
-# 147 "main.c"
+# 322 "main.c"
     DMANow(3, parallaxBGTiles, &((charblock *)0x6000000)[2], 7808 / 2);
     DMANow(3, parallaxBGMap, &((screenblock *)0x6000000)[22], 2048 / 2);
 
@@ -1701,9 +1880,7 @@ void startGame() {
 
     DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
 
-    currMap = 1;
-    initGame();
-
+    dead = 0;
     state = GAME;
 }
 
@@ -1712,6 +1889,12 @@ void startGame() {
 
 
 void game() {
+    if (dead) {
+        hOff = 0;
+        vOff = 0;
+        setupTitleScreen();
+        return;
+    }
     if (pauseVar) {
         goToPause();
     }
@@ -1721,7 +1904,7 @@ void game() {
 
 
 }
-# 207 "main.c"
+# 386 "main.c"
 void goToPause() {
     state = PAUSE;
 }
