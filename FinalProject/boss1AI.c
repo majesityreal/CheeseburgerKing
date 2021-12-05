@@ -6,8 +6,13 @@
 
 
 int timer;
+int damageTimer = 0;
 
-int beginning;
+// vars for states
+
+int roundCounter;
+int rollCounter;
+int hoverCounter;
 
 int hoverX;
 int hoverY;
@@ -30,9 +35,7 @@ OBJ_AFFINE *SHADOW_OAM_AFF = (OBJ_AFFINE*)shadowOAM;
 BOSS1 boss;
 
 int time = 0;
-int pikachuFramecount = 6;
-int pikachuFrames[] = {0, 8, 16, 24, 256, 264};
-  int currentFrame = 0;
+int currentFrame = 0;
 
 // boss behaviors
 enum {ROLLING, HOVERING, DIZZY};
@@ -40,8 +43,7 @@ int currentState;
 
 void initBoss1() {
     timer = 0;
-    boss.lives = 50;
-    beginning = 0;
+    boss.lives = 20;
     hoverX = 104;
     hoverY = 45;
     boss.worldRow = hoverY;
@@ -50,25 +52,37 @@ void initBoss1() {
     boss.eyesOffsetY = 6;
     boss.state = HOVERING;
     boss.aniCounter = 0;
+    boss.width = 32;
+    boss.height = 32;
     // left
     boss.direction = 0;
+    rollCounter = 0;
+    hoverCounter = 0;
+    roundCounter = 0;
 }
 
 void updateBoss1() {
     timer++;
     time++;
-        if (time % 10 == 0) currentFrame = (currentFrame + 1) % pikachuFramecount;
-
-    // 3 seconds in
-    if (timer > 180 && beginning) {
-        spawnLettuce();
-        timer = 0;
-        beginning = 1;
+    // TODO - do something special when the boss dies???
+    if (boss.lives <= 0) {
+        boss.hide = 1;
+        currMap++;
+        initGame();
     }
+
+    if (boss.damaged) {
+        damageTimer++;
+        if (damageTimer > 20) {
+            damageTimer = 0;
+            boss.damaged = 0;
+        }
+    }
+
     // 6.5 seconds in
-    if (timer > 150) {
+    if (timer > 150 && rollCounter <= 2 && boss.state == ROLLING) {
         timer = 0;
-        boss.state = ROLLING;
+        rollCounter++;
         boss.direction = rand() % 2;
         boss.worldRow = 113;
         if (boss.direction) { // right motion
@@ -78,8 +92,51 @@ void updateBoss1() {
             boss.worldCol = 192;
         }
     }
+
+    if (rollCounter > 2 && boss.state == ROLLING) {
+        rollCounter = 0;
+        roundCounter++;
+        boss.state = HOVERING;
+        boss.worldRow = hoverY;
+        boss.worldCol = hoverX;
+    }
+
+    if (timer > 240 && hoverCounter <= 2 && boss.state == HOVERING) {
+        timer = 0;
+        hoverCounter++;
+        if (roundCounter > 0 && hoverCounter == 1) {
+            spawnBigLettuce();
+        }
+        else {
+            spawnLettuce();
+        }
+    }
+
+    if (hoverCounter > 2 && boss.state == HOVERING) {
+        hoverCounter = 0;
+        boss.state = ROLLING;
+        boss.worldRow = hoverY;
+        boss.worldCol = hoverX;
+    }
+
+    if (boss.state == ROLLING) {
+        int direction = (boss.direction * 2) - 1;
+        if (rollCounter == 0) {
+            boss.worldCol += direction * 2;
+            timer++;
+            return;
+        }
+        if (timer < 15) {
+            boss.worldCol += direction;
+        }
+        else {
+            boss.worldCol += 2 * direction;
+        }
+
+    }
 }
 
+// TODO - add in damaged animation for visual indicator to player
 void drawBoss1() {
     if (boss.hide) {
         shadowOAM[shadowOAMIndex].attr0 |= ATTR0_HIDE;
@@ -156,14 +213,14 @@ void spawnLettuce() {
                 lettuce[g].active = 1;
                 lettuce[g].worldRow = 80;
                 lettuce[g].worldCol = 40;
-                lettuce[g].lives = 0;
+                lettuce[g].lives = 1;
                 return;
             }
             else {
                 lettuce[g].active = 1;
                 lettuce[g].worldRow = 80;
                 lettuce[g].worldCol = 200;
-                lettuce[g].lives = 0;
+                lettuce[g].lives = 1;
                 counter++;
             }
         }
@@ -176,14 +233,16 @@ void spawnBigLettuce() {
         if (!big_lettuce[g].active) {
             if (counter == 1) {
                 big_lettuce[g].active = 1;
-                big_lettuce[g].worldRow = 137;
+                big_lettuce[g].worldRow = 120;
                 big_lettuce[g].worldCol = 10;
+                big_lettuce[g].lives = 2;
                 return;
             }
             else {
                 big_lettuce[g].active = 1;
-                big_lettuce[g].worldRow = 137;
+                big_lettuce[g].worldRow = 120;
                 big_lettuce[g].worldCol = 210;
+                big_lettuce[g].lives = 2;
                 counter++;
             }
         }

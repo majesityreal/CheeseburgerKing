@@ -94,10 +94,10 @@ enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP };
 // Initialize the game
 // #region init
 void initGame() {
-    // for (int i=0; i<128; i++) {
-    //     // hides the sprites in the beginning
-    //     shadowOAM[i].attr0 = 2 << 8;
-    // }
+    for (int i=0; i<128; i++) {
+        // hides the sprites in the beginning
+        shadowOAM[i].attr0 = 2 << 8;
+    }
     initMaps();
     initPlayer();
     initSlash();
@@ -365,16 +365,22 @@ void drawGame() {
     shadowOAMIndex = 1;
     drawHUD();
 
+    if (currMap == 1) {
+        for (int i=0; i<128; i++) {
+            // hides the sprites in the beginning
+            shadowOAM[i].attr0 = 2 << 8;
+        }
+        drawBoss1();
+        animateBoss1();
+    }
+
     drawPlayer();
     drawSlash();
     drawEnemies();
     drawBullets();
     drawFont();
 
-    if (currMap == 1) {
-        drawBoss1();
-        animateBoss1();
-    }
+
 
     waitForVBlank();
 
@@ -669,6 +675,15 @@ void updatePlayer() {
                         big_lettuce[j].active = 0;
                     }
                 }
+            }
+        }
+        if (currMap == 1) {
+            if (collision(slash.worldCol + slash.hitboxCDel, slash.worldRow, slash.width - slash.hitboxCDel, slash.height, boss.worldCol, boss.worldRow, boss.width, boss.height)) {
+                if (!boss.damaged) {
+                    boss.lives--;
+                    boss.damaged = 1;
+                }
+
             }
         }
         // we are displacing slash by its cdel off from the main player

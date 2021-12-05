@@ -1776,9 +1776,13 @@ typedef struct {
     int lives;
     int worldCol;
     int worldRow;
+    int width;
+    int height;
     int eyesOffsetX;
     int eyesOffsetY;
     int state;
+
+    int damaged;
 
     int direction;
 
@@ -1787,6 +1791,8 @@ typedef struct {
     int aniCounter;
 
 } BOSS1;
+
+extern BOSS1 boss;
 
 void initBoss1();
 void updateBoss1();
@@ -1904,10 +1910,10 @@ enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP };
 
 
 void initGame() {
+    for (int i=0; i<128; i++) {
 
-
-
-
+        shadowOAM[i].attr0 = 2 << 8;
+    }
     initMaps();
     initPlayer();
     initSlash();
@@ -2175,16 +2181,22 @@ void drawGame() {
     shadowOAMIndex = 1;
     drawHUD();
 
+    if (currMap == 1) {
+        for (int i=0; i<128; i++) {
+
+            shadowOAM[i].attr0 = 2 << 8;
+        }
+        drawBoss1();
+        animateBoss1();
+    }
+
     drawPlayer();
     drawSlash();
     drawEnemies();
     drawBullets();
     drawFont();
 
-    if (currMap == 1) {
-        drawBoss1();
-        animateBoss1();
-    }
+
 
     waitForVBlank();
 
@@ -2479,6 +2491,15 @@ void updatePlayer() {
                         big_lettuce[j].active = 0;
                     }
                 }
+            }
+        }
+        if (currMap == 1) {
+            if (collision(slash.worldCol + slash.hitboxCDel, slash.worldRow, slash.width - slash.hitboxCDel, slash.height, boss.worldCol, boss.worldRow, boss.width, boss.height)) {
+                if (!boss.damaged) {
+                    boss.lives--;
+                    boss.damaged = 1;
+                }
+
             }
         }
 

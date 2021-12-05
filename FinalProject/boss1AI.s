@@ -22,37 +22,46 @@ initBoss1:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	mov	r2, #0
-	mov	ip, #8
-	push	{r4, r5, lr}
-	mov	r0, #45
-	mov	r5, #50
-	mov	r4, #6
-	mov	lr, #1
-	mov	r1, #104
+	push	{r4, r5, r6, lr}
+	mov	lr, #6
+	mov	r6, #5
+	mov	r5, #8
+	mov	r4, #1
+	mov	ip, #45
+	mov	r0, #104
+	mov	r1, #32
 	ldr	r3, .L4
 	str	r2, [r3]
 	ldr	r3, .L4+4
 	str	r2, [r3]
 	ldr	r3, .L4+8
-	str	r2, [r3, #32]
-	str	r2, [r3, #24]
-	str	ip, [r3, #12]
-	ldr	r2, .L4+12
-	ldr	ip, .L4+16
-	str	r5, [r3]
-	str	r4, [r3, #16]
-	str	lr, [r3, #20]
-	str	r0, [r3, #8]
-	str	r0, [ip]
-	str	r1, [r3, #4]
-	str	r1, [r2]
-	pop	{r4, r5, lr}
+	str	r2, [r3]
+	ldr	r3, .L4+12
+	str	r2, [r3]
+	ldr	r3, .L4+16
+	str	r2, [r3, #44]
+	str	r2, [r3, #36]
+	str	lr, [r3, #24]
+	ldr	r2, .L4+20
+	ldr	lr, .L4+24
+	str	r6, [r3]
+	str	r5, [r3, #20]
+	str	r4, [r3, #28]
+	str	ip, [lr]
+	str	ip, [r3, #8]
+	str	r0, [r3, #4]
+	str	r0, [r2]
+	str	r1, [r3, #12]
+	str	r1, [r3, #16]
+	pop	{r4, r5, r6, lr}
 	bx	lr
 .L5:
 	.align	2
 .L4:
 	.word	timer
-	.word	beginning
+	.word	rollCounter
+	.word	hoverCounter
+	.word	roundCounter
 	.word	boss
 	.word	hoverX
 	.word	hoverY
@@ -68,7 +77,7 @@ drawBoss1:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	ldr	r2, .L11
-	ldr	r3, [r2, #28]
+	ldr	r3, [r2, #40]
 	push	{r4, r5, r6, r7, r8, r9, lr}
 	ldr	r4, .L11+4
 	cmp	r3, #0
@@ -84,14 +93,14 @@ drawBoss1:
 .L7:
 	mov	r6, #664
 	ldr	r5, [r2, #8]
-	ldr	r0, [r2, #16]
+	ldr	r0, [r2, #24]
 	lsl	ip, r5, #16
 	ldr	r7, [r2, #4]
-	ldr	r1, [r2, #12]
+	ldr	r1, [r2, #20]
 	lsr	ip, ip, #16
 	ldr	lr, .L11+8
 	add	r0, ip, r0
-	ldr	r8, [r2, #20]
+	ldr	r8, [r2, #28]
 	and	r0, r0, #255
 	add	r2, r1, r7
 	lsl	r1, r3, #3
@@ -188,13 +197,13 @@ animateBoss1:
 	@ frame_needed = 0, uses_anonymous_args = 0
 	@ link register save eliminated.
 	ldr	r2, .L18
-	ldr	r3, [r2, #20]
+	ldr	r3, [r2, #28]
 	cmp	r3, #1
-	ldr	r3, [r2, #32]
+	ldr	r3, [r2, #44]
 	beq	.L17
 .L14:
 	add	r3, r3, #1
-	str	r3, [r2, #32]
+	str	r3, [r2, #44]
 	bx	lr
 .L17:
 	ldr	r1, .L18+4
@@ -259,24 +268,24 @@ spawnLettuce:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	mov	r3, #0
-	push	{r4, r5, r6, r7, lr}
-	mov	r7, #1
+	push	{r4, r5, r6, lr}
+	mov	ip, #1
 	mov	r4, r3
 	mov	r6, #80
 	mov	r5, #200
 	ldr	r2, .L37
 .L27:
 	add	r1, r3, r3, lsl #3
-	ldr	ip, [r2, r1, lsl #3]
-	cmp	ip, #0
-	add	r0, r2, r1, lsl #3
+	ldr	r0, [r2, r1, lsl #3]
+	cmp	r0, #0
 	lsl	lr, r3, #3
+	add	r0, r2, r1, lsl #3
 	bne	.L22
 	cmp	r4, #1
 	beq	.L26
 	add	r3, r3, #1
 	cmp	r3, #7
-	str	r7, [r2, r1, lsl #3]
+	str	ip, [r2, r1, lsl #3]
 	str	r6, [r0, #8]
 	str	r5, [r0, #12]
 	str	ip, [r0, #48]
@@ -287,18 +296,17 @@ spawnLettuce:
 	lsl	lr, r3, #3
 	bne	.L36
 .L26:
-	mov	r4, #1
-	mov	ip, #80
-	mov	r0, #40
-	mov	r1, #0
+	mov	r0, #1
+	mov	r4, #80
+	mov	ip, #40
 	add	r3, lr, r3
-	str	r4, [r2, r3, lsl #3]
-	add	r2, r2, r3, lsl #3
-	str	ip, [r2, #8]
-	str	r0, [r2, #12]
-	str	r1, [r2, #48]
+	add	r1, r2, r3, lsl #3
+	str	r4, [r1, #8]
+	str	ip, [r1, #12]
+	str	r0, [r1, #48]
+	str	r0, [r2, r3, lsl #3]
 .L21:
-	pop	{r4, r5, r6, r7, lr}
+	pop	{r4, r5, r6, lr}
 	bx	lr
 .L36:
 	mov	r4, #1
@@ -306,101 +314,13 @@ spawnLettuce:
 	add	r3, r3, #1
 	cmp	r3, #7
 	bne	.L27
-	pop	{r4, r5, r6, r7, lr}
+	pop	{r4, r5, r6, lr}
 	bx	lr
 .L38:
 	.align	2
 .L37:
 	.word	lettuce
 	.size	spawnLettuce, .-spawnLettuce
-	.global	__aeabi_idivmod
-	.align	2
-	.global	updateBoss1
-	.syntax unified
-	.arm
-	.fpu softvfp
-	.type	updateBoss1, %function
-updateBoss1:
-	@ Function supports interworking.
-	@ args = 0, pretend = 0, frame = 0
-	@ frame_needed = 0, uses_anonymous_args = 0
-	push	{r4, r5, r6, lr}
-	ldr	r5, .L50
-	ldr	r3, [r5]
-	ldr	r2, .L50+4
-	add	r3, r3, #1
-	smull	r0, r1, r2, r3
-	ldr	r6, .L50+8
-	asr	r2, r3, #31
-	ldr	r4, [r6]
-	rsb	r2, r2, r1, asr #2
-	add	r2, r2, r2, lsl #2
-	add	r4, r4, #1
-	cmp	r3, r2, lsl #1
-	str	r3, [r5]
-	str	r4, [r6]
-	bne	.L40
-	ldr	r0, [r5, #4]
-	ldr	r3, .L50+12
-	add	r0, r0, #1
-	ldr	r1, [r3, #4]
-	ldr	r3, .L50+16
-	mov	lr, pc
-	bx	r3
-	str	r1, [r5, #4]
-.L40:
-	cmp	r4, #180
-	ble	.L41
-	ldr	r4, .L50+20
-	ldr	r3, [r4]
-	cmp	r3, #0
-	bne	.L49
-.L42:
-	mov	r3, #0
-	ldr	r4, .L50+24
-	ldr	r2, .L50+28
-	str	r3, [r6]
-	str	r3, [r4, #20]
-	mov	lr, pc
-	bx	r2
-	mov	r3, #113
-	cmp	r0, #0
-	and	r0, r0, #1
-	mov	r2, r0
-	rsblt	r2, r0, #0
-	cmp	r0, #0
-	str	r3, [r4, #8]
-	movne	r3, #17
-	moveq	r3, #192
-	str	r2, [r4, #24]
-	str	r3, [r4, #4]
-	pop	{r4, r5, r6, lr}
-	bx	lr
-.L41:
-	cmp	r4, #150
-	bgt	.L42
-	pop	{r4, r5, r6, lr}
-	bx	lr
-.L49:
-	bl	spawnLettuce
-	mov	r2, #0
-	mov	r3, #1
-	str	r2, [r6]
-	str	r3, [r4]
-	pop	{r4, r5, r6, lr}
-	bx	lr
-.L51:
-	.align	2
-.L50:
-	.word	.LANCHOR0
-	.word	1717986919
-	.word	timer
-	.word	.LANCHOR1
-	.word	__aeabi_idivmod
-	.word	beginning
-	.word	boss
-	.word	rand
-	.size	updateBoss1, .-updateBoss1
 	.align	2
 	.global	spawnBigLettuce
 	.syntax unified
@@ -412,67 +332,272 @@ spawnBigLettuce:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	mov	r3, #0
-	push	{r4, r5, r6, lr}
-	mov	r6, #1
+	push	{r4, r5, r6, r7, lr}
+	mov	r7, #1
 	mov	lr, r3
-	mov	r5, #137
-	mov	r4, #210
-	ldr	r2, .L68
-.L58:
+	mov	r6, #120
+	mov	r5, #210
+	mov	r4, #2
+	ldr	r2, .L55
+.L45:
 	add	r1, r3, r3, lsl #2
 	ldr	r0, [r2, r1, lsl #4]
 	cmp	r0, #0
 	lsl	ip, r3, #2
 	add	r0, r2, r1, lsl #4
-	bne	.L53
+	bne	.L40
 	cmp	lr, #1
-	beq	.L57
+	beq	.L44
 	add	r3, r3, #1
 	cmp	r3, #6
-	str	r6, [r2, r1, lsl #4]
-	str	r5, [r0, #8]
-	str	r4, [r0, #12]
+	str	r7, [r2, r1, lsl #4]
+	str	r6, [r0, #8]
+	str	r5, [r0, #12]
+	str	r4, [r0, #48]
 	add	ip, r3, r3, lsl #2
-	beq	.L52
+	beq	.L39
 	ldr	r1, [r2, ip, lsl #4]
 	cmp	r1, #0
 	lsl	ip, r3, #2
-	bne	.L67
-.L57:
+	bne	.L54
+.L44:
 	mov	r4, #1
-	mov	lr, #137
+	mov	lr, #120
 	mov	r0, #10
+	mov	r1, #2
 	add	r3, ip, r3
-	add	r1, r2, r3, lsl #4
 	str	r4, [r2, r3, lsl #4]
-	str	lr, [r1, #8]
-	str	r0, [r1, #12]
-.L52:
-	pop	{r4, r5, r6, lr}
+	add	r2, r2, r3, lsl #4
+	str	lr, [r2, #8]
+	str	r0, [r2, #12]
+	str	r1, [r2, #48]
+.L39:
+	pop	{r4, r5, r6, r7, lr}
 	bx	lr
-.L67:
+.L54:
 	mov	lr, #1
-.L53:
+.L40:
 	add	r3, r3, #1
 	cmp	r3, #6
-	bne	.L58
-	pop	{r4, r5, r6, lr}
+	bne	.L45
+	pop	{r4, r5, r6, r7, lr}
 	bx	lr
-.L69:
+.L56:
 	.align	2
-.L68:
+.L55:
 	.word	big_lettuce
 	.size	spawnBigLettuce, .-spawnBigLettuce
+	.align	2
+	.global	updateBoss1
+	.syntax unified
+	.arm
+	.fpu softvfp
+	.type	updateBoss1, %function
+updateBoss1:
+	@ Function supports interworking.
+	@ args = 0, pretend = 0, frame = 0
+	@ frame_needed = 0, uses_anonymous_args = 0
+	push	{r4, r5, r6, r7, r8, lr}
+	ldr	r5, .L85
+	ldr	r6, .L85+4
+	ldr	r4, .L85+8
+	ldr	r3, [r5]
+	ldr	r2, [r6]
+	ldr	r1, [r4]
+	add	r3, r3, #1
+	add	r2, r2, #1
+	cmp	r1, #0
+	str	r3, [r5]
+	str	r2, [r6]
+	ble	.L79
+.L58:
+	ldr	r2, [r4, #32]
+	cmp	r2, #0
+	beq	.L60
+	ldr	r2, [r6, #4]
+	add	r2, r2, #1
+	cmp	r2, #20
+	movgt	r2, #0
+	strle	r2, [r6, #4]
+	strgt	r2, [r6, #4]
+	strgt	r2, [r4, #32]
+.L60:
+	ldr	r7, .L85+12
+	cmp	r3, #150
+	ldr	r1, [r7]
+	ldr	r2, [r4, #28]
+	ble	.L63
+	cmp	r1, #2
+	bgt	.L64
+	cmp	r2, #0
+	beq	.L80
+.L65:
+	ldr	r6, .L85+16
+	cmp	r3, #240
+	ldr	r3, [r6]
+	bgt	.L81
+.L70:
+	cmp	r3, #2
+	bgt	.L71
+.L72:
+	cmp	r2, #0
+	beq	.L82
+.L57:
+	pop	{r4, r5, r6, r7, r8, lr}
+	bx	lr
+.L80:
+	add	r1, r1, #1
+	ldr	r3, .L85+20
+	str	r1, [r7]
+	str	r2, [r5]
+	mov	lr, pc
+	bx	r3
+	mov	r3, #113
+	cmp	r0, #0
+	and	r0, r0, #1
+	mov	r2, r0
+	rsblt	r2, r0, #0
+	cmp	r0, #0
+	str	r3, [r4, #8]
+	movne	r3, #17
+	moveq	r3, #192
+	str	r2, [r4, #36]
+	str	r3, [r4, #4]
+	ldr	r1, [r7]
+	ldr	r3, [r5]
+	ldr	r2, [r4, #28]
+.L63:
+	cmp	r1, #2
+	ble	.L65
+.L64:
+	cmp	r2, #0
+	bne	.L65
+	mov	lr, #1
+	ldr	r1, .L85+24
+	cmp	r3, #240
+	ldr	r3, [r1]
+	ldr	ip, .L85+28
+	ldr	r0, .L85+32
+	add	r3, r3, lr
+	str	r2, [r7]
+	str	r3, [r1]
+	ldr	r2, [ip]
+	ldr	r3, [r0]
+	ldr	r6, .L85+16
+	str	r3, [r4, #4]
+	str	r2, [r4, #8]
+	str	lr, [r4, #28]
+	ldr	r3, [r6]
+	ble	.L67
+	cmp	r3, #2
+	bgt	.L69
+.L68:
+	ldr	r2, [r1]
+	add	r3, r3, #1
+	cmp	r2, #0
+	movle	r2, #0
+	movgt	r2, #1
+	cmp	r3, #1
+	mov	r1, #0
+	movne	r2, #0
+	cmp	r2, r1
+	str	r3, [r6]
+	str	r1, [r5]
+	bne	.L83
+	bl	spawnLettuce
+	ldr	r3, [r6]
+	ldr	r2, [r4, #28]
+	b	.L70
+.L81:
+	cmp	r3, #2
+	bgt	.L71
+	cmp	r2, #1
+	bne	.L72
+	ldr	r1, .L85+24
+	b	.L68
+.L71:
+	cmp	r2, #1
+	bne	.L72
+	ldr	ip, .L85+28
+	ldr	r0, .L85+32
+	b	.L69
+.L82:
+	ldr	r2, [r4, #4]
+.L74:
+	ldr	r1, [r7]
+	ldr	r3, [r4, #36]
+	cmp	r1, #0
+	lsl	r3, r3, #1
+	ldr	r1, [r5]
+	sub	r3, r3, #1
+	beq	.L84
+	cmp	r1, #14
+	addle	r3, r3, r2
+	addgt	r3, r2, r3, lsl #1
+	str	r3, [r4, #4]
+	pop	{r4, r5, r6, r7, r8, lr}
+	bx	lr
+.L79:
+	mov	r1, #1
+	ldr	r2, .L85+36
+	ldr	r3, [r2]
+	add	r3, r3, r1
+	str	r3, [r2]
+	ldr	r3, .L85+40
+	str	r1, [r4, #40]
+	mov	lr, pc
+	bx	r3
+	ldr	r3, [r5]
+	b	.L58
+.L67:
+	cmp	r3, #2
+	ble	.L57
+.L69:
+	mov	r3, #0
+	ldr	r1, [ip]
+	ldr	r2, [r0]
+	str	r1, [r4, #8]
+	str	r3, [r6]
+	str	r3, [r4, #28]
+	b	.L74
+.L84:
+	add	r3, r2, r3, lsl #1
+	add	r1, r1, #1
+	str	r3, [r4, #4]
+	str	r1, [r5]
+	pop	{r4, r5, r6, r7, r8, lr}
+	bx	lr
+.L83:
+	bl	spawnBigLettuce
+	ldr	r3, [r6]
+	ldr	r2, [r4, #28]
+	b	.L70
+.L86:
+	.align	2
+.L85:
+	.word	timer
+	.word	.LANCHOR0
+	.word	boss
+	.word	rollCounter
+	.word	hoverCounter
+	.word	rand
+	.word	roundCounter
+	.word	hoverY
+	.word	hoverX
+	.word	currMap
+	.word	initGame
+	.size	updateBoss1, .-updateBoss1
 	.comm	currentState,4,4
 	.global	currentFrame
-	.global	pikachuFrames
-	.global	pikachuFramecount
 	.global	time
-	.comm	boss,36,4
+	.comm	boss,48,4
 	.global	SHADOW_OAM_AFF
 	.comm	hoverY,4,4
 	.comm	hoverX,4,4
-	.comm	beginning,4,4
+	.comm	hoverCounter,4,4
+	.comm	rollCounter,4,4
+	.comm	roundCounter,4,4
+	.global	damageTimer
 	.comm	timer,4,4
 	.global	sin_lut_fixed8
 	.section	.rodata
@@ -848,25 +973,16 @@ sin_lut_fixed8:
 	.size	SHADOW_OAM_AFF, 4
 SHADOW_OAM_AFF:
 	.word	shadowOAM
-	.type	pikachuFramecount, %object
-	.size	pikachuFramecount, 4
-pikachuFramecount:
-	.word	6
-	.type	pikachuFrames, %object
-	.size	pikachuFrames, 24
-pikachuFrames:
-	.word	0
-	.word	8
-	.word	16
-	.word	24
-	.word	256
-	.word	264
 	.bss
 	.align	2
 	.set	.LANCHOR0,. + 0
 	.type	time, %object
 	.size	time, 4
 time:
+	.space	4
+	.type	damageTimer, %object
+	.size	damageTimer, 4
+damageTimer:
 	.space	4
 	.type	currentFrame, %object
 	.size	currentFrame, 4
