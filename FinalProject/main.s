@@ -65,9 +65,10 @@ startGame:
 	mov	r3, #67108864
 	mov	r2, #5632
 	mov	r0, #22528
-	push	{r4, lr}
-	ldr	r1, .L8
+	push	{r4, r5, r6, lr}
+	mov	r5, #1
 	strh	r2, [r3]	@ movhi
+	ldr	r1, .L8
 	ldr	r2, .L8+4
 	strh	r0, [r3, #10]	@ movhi
 	strh	r1, [r3, #12]	@ movhi
@@ -83,67 +84,50 @@ startGame:
 	mov	lr, pc
 	bx	r3
 	ldr	r3, .L8+20
-	ldr	r4, .L8+24
 	mov	lr, pc
 	bx	r3
-	mov	r3, #48
-	mov	r2, #83886080
+	ldr	r4, .L8+24
+	mov	r3, #3904
 	mov	r0, #3
-	ldr	r1, .L8+28
-	mov	lr, pc
-	bx	r4
-	mov	r3, #752
-	mov	r2, #100663296
-	mov	r0, #3
+	ldr	r2, .L8+28
 	ldr	r1, .L8+32
 	mov	lr, pc
 	bx	r4
-	mov	r3, #8192
+	mov	r3, #1024
 	mov	r0, #3
 	ldr	r2, .L8+36
 	ldr	r1, .L8+40
 	mov	lr, pc
 	bx	r4
-	mov	r3, #3904
+	mov	r3, #256
 	mov	r0, #3
 	ldr	r2, .L8+44
 	ldr	r1, .L8+48
 	mov	lr, pc
 	bx	r4
-	mov	r3, #1024
 	mov	r0, #3
 	ldr	r2, .L8+52
 	ldr	r1, .L8+56
-	mov	lr, pc
-	bx	r4
-	mov	r3, #256
-	mov	r0, #3
-	ldr	r2, .L8+60
-	ldr	r1, .L8+64
-	mov	lr, pc
-	bx	r4
-	mov	r0, #3
-	ldr	r2, .L8+68
-	ldr	r1, .L8+72
 	mov	r3, #16384
 	mov	lr, pc
 	bx	r4
-	ldr	r3, .L8+76
+	ldr	r3, .L8+60
 	mov	lr, pc
 	bx	r3
-	mov	r2, #117440512
 	mov	r3, #512
+	mov	r2, #117440512
 	mov	r0, #3
-	ldr	r1, .L8+80
+	ldr	r1, .L8+64
 	mov	lr, pc
 	bx	r4
-	ldr	r3, .L8+84
+	ldr	r2, .L8+68
+	ldr	r3, .L8+72
+	str	r5, [r2]
 	mov	lr, pc
 	bx	r3
-	mov	r2, #1
-	ldr	r3, .L8+88
-	pop	{r4, lr}
-	str	r2, [r3]
+	ldr	r3, .L8+76
+	str	r5, [r3]
+	pop	{r4, r5, r6, lr}
 	bx	lr
 .L9:
 	.align	2
@@ -155,10 +139,6 @@ startGame:
 	.word	srand
 	.word	waitForVBlank
 	.word	DMANow
-	.word	map1Pal
-	.word	map1Tiles
-	.word	100712448
-	.word	map1Map
 	.word	100696064
 	.word	parallaxBGTiles
 	.word	100708352
@@ -169,6 +149,7 @@ startGame:
 	.word	spritesheetTiles
 	.word	hideSprites
 	.word	shadowOAM
+	.word	currMap
 	.word	initGame
 	.word	state
 	.size	startGame, .-startGame

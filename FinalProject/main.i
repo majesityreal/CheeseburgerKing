@@ -1412,10 +1412,11 @@ typedef struct {
 # 27 "game.h"
 typedef struct {
     int index;
-    unsigned char* collisionMap;
     unsigned char* map;
-    int startingXPos;
-    int startingYPos;
+    unsigned char* palette;
+    unsigned char* tiles;
+    int startingHOff;
+    int startingVOff;
     int doorX;
     int doorY;
     int doorWidth;
@@ -1487,6 +1488,9 @@ extern int level;
 extern int dead;
 
 
+extern int currMap;
+
+
 void initGame();
 
 void initMaps();
@@ -1540,18 +1544,6 @@ extern const unsigned short spritesheetPal[256];
 # 9 "main.c" 2
 
 
-# 1 "map1.h" 1
-# 22 "map1.h"
-extern const unsigned short map1Tiles[752];
-
-
-extern const unsigned short map1Map[8192];
-
-
-extern const unsigned short map1Pal[256];
-# 12 "main.c" 2
-
-
 # 1 "parallaxBG.h" 1
 # 22 "parallaxBG.h"
 extern const unsigned short parallaxBGTiles[3904];
@@ -1561,8 +1553,8 @@ extern const unsigned short parallaxBGMap[1024];
 
 
 extern const unsigned short parallaxBGPal[256];
-# 15 "main.c" 2
-# 30 "main.c"
+# 12 "main.c" 2
+# 27 "main.c"
 void initialize();
 
 
@@ -1681,11 +1673,7 @@ void startGame() {
     srand(timer);
 
     waitForVBlank();
-
-    DMANow(3, map1Pal, ((unsigned short *)0x5000000), 48);
-    DMANow(3, map1Tiles, &((charblock *)0x6000000)[0], 1504 / 2);
-    DMANow(3, map1Map, &((screenblock *)0x6000000)[24], 16384 / 2);
-# 167 "main.c"
+# 160 "main.c"
     DMANow(3, parallaxBGTiles, &((charblock *)0x6000000)[2], 7808 / 2);
     DMANow(3, parallaxBGMap, &((screenblock *)0x6000000)[22], 2048 / 2);
 
@@ -1708,6 +1696,7 @@ void startGame() {
 
     DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
 
+    currMap = 1;
     initGame();
 
     state = GAME;
@@ -1727,7 +1716,7 @@ void game() {
 
 
 }
-# 226 "main.c"
+# 220 "main.c"
 void goToPause() {
     state = PAUSE;
 }

@@ -1660,10 +1660,11 @@ typedef struct {
 # 27 "game.h"
 typedef struct {
     int index;
-    unsigned char* collisionMap;
     unsigned char* map;
-    int startingXPos;
-    int startingYPos;
+    unsigned char* palette;
+    unsigned char* tiles;
+    int startingHOff;
+    int startingVOff;
     int doorX;
     int doorY;
     int doorWidth;
@@ -1735,6 +1736,9 @@ extern int level;
 extern int dead;
 
 
+extern int currMap;
+
+
 void initGame();
 
 void initMaps();
@@ -1781,7 +1785,25 @@ extern const unsigned short map1CollisionBitmap[262144];
 
 extern const unsigned short map1CollisionPal[256];
 # 7 "game.c" 2
-# 21 "game.c"
+
+# 1 "boss1.h" 1
+# 22 "boss1.h"
+extern const unsigned short boss1Tiles[400];
+
+
+extern const unsigned short boss1Map[8192];
+
+
+extern const unsigned short boss1Pal[256];
+# 9 "game.c" 2
+# 1 "boss1Collision.h" 1
+# 21 "boss1Collision.h"
+extern const unsigned short boss1CollisionBitmap[262144];
+
+
+extern const unsigned short boss1CollisionPal[256];
+# 10 "game.c" 2
+# 24 "game.c"
 OBJ_ATTR shadowOAM[128];
 PLAYER player;
 SLASH slash;
@@ -1793,7 +1815,7 @@ BL_BULLET bl_bullets[6 * 2];
 int shadowOAMIndex = 0;
 
 
-unsigned char* collisionMap = map1CollisionBitmap;
+unsigned char* collisionMap;
 
 int score = 0;
 
@@ -1834,7 +1856,10 @@ int pMapPos;
 
 
 int bgIndex;
-# 81 "game.c"
+
+
+
+
 MAP maps[4];
 
 int dead = 0;
@@ -1845,14 +1870,15 @@ enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP };
 
 
 void initGame() {
+    initMaps();
     initPlayer();
     initSlash();
     initEnemies();
-    initMaps();
     gTimer = 0;
     shadowOAMIndex = 0;
-    hOff = 0;
-    vOff = 60;
+
+    hOff = maps[currMap].startingHOff;
+    vOff = maps[currMap].startingVOff;
 }
 
 
@@ -1865,8 +1891,6 @@ void initPlayer() {
     player.movementCycle = 2;
 
 
-    player.worldRow = 159;
-    player.worldCol = 35;
     player.aniCounter = 0;
     player.curFrame = 0;
     player.numFrames = 6;
@@ -1878,6 +1902,21 @@ void initPlayer() {
     player.hearts = 3;
     player.damaged = 0;
     player.damageCounter = 0;
+
+    switch (currMap)
+    {
+    case 0:
+        player.worldRow = 159;
+        player.worldCol = 35;
+        break;
+    case 1:
+        player.worldRow = 80;
+        player.worldCol = 120;
+    default:
+        break;
+    }
+
+
 }
 
 void initSlash() {
@@ -2019,9 +2058,40 @@ void initEnemies() {
 }
 
 void initMaps() {
-    currMap = 0;
     bgIndex = 0;
-# 278 "game.c"
+    (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((24) << 8) | (1 << 14) | (0 << 7);
+    switch (currMap)
+    {
+    case 0:
+        maps[currMap].startingHOff = 0;
+        maps[currMap].startingVOff = 60;
+
+        collisionMap = map1CollisionBitmap;
+        maps[currMap].map = map1Map;
+        maps[currMap].palette = map1Pal;
+        maps[currMap].tiles = map1Tiles;
+        break;
+    case 1:
+        maps[currMap].startingHOff = 0;
+        maps[currMap].startingVOff = 0;
+
+        collisionMap = boss1CollisionBitmap;
+        maps[currMap].map = boss1Map;
+        maps[currMap].palette = boss1Pal;
+        maps[currMap].tiles = boss1Tiles;
+
+    default:
+        break;
+    }
+
+        waitForVBlank();
+
+
+        DMANow(3, maps[currMap].map, &((screenblock *)0x6000000)[24], (16384 / 2));
+
+        DMANow(3, maps[currMap].palette, ((unsigned short *)0x5000000), 48);
+        DMANow(3, maps[currMap].tiles, &((charblock *)0x6000000)[0], 1504 / 2);
+
 }
 
 
@@ -2075,24 +2145,13 @@ void updateMap() {
 
     if (collision(pMapPos, player.worldRow, player.width, player.height, temp.doorX, temp.doorY, temp.doorWidth, temp.doorHeight)) {
 
+
+
+
         currMap++;
 
+        initGame();
 
-        DMANow(3, maps[currMap].map, &((screenblock *)0x6000000)[24], (16384 / 2));
-
-
-        collisionMap = maps[currMap].collisionMap;
-
-
-        player.worldCol = temp.startingXPos;
-        player.worldRow = temp.startingYPos;
-
-
-        hOff = 0;
-        vOff = 0;
-
-
-        initEnemies();
     }
 }
 
@@ -2334,8 +2393,6 @@ void updatePlayer() {
                     lettuce[g].lives--;
 
                     if (lettuce[g].lives < 0) {
-
-
                         lettuce[g].active = 0;
                     }
                 }
@@ -2349,8 +2406,6 @@ void updatePlayer() {
                     big_lettuce[j].lives--;
 
                     if (big_lettuce[j].lives < 0) {
-
-
                         big_lettuce[j].active = 0;
                     }
                 }
@@ -2374,7 +2429,6 @@ void updatePlayer() {
         slash.curFrame = 0;
 
         slash.aniCounter = 0;
-
     }
 
 
@@ -2395,7 +2449,6 @@ void updateEnemies() {
             lettuce[g].onScreen = 0;
         }
 
-
         if (!lettuce[g].active || !lettuce[g].onScreen) {
             continue;
         }
@@ -2403,8 +2456,6 @@ void updateEnemies() {
 
         if (lettuce[g].damaged && !player.attacking) {
             lettuce[g].damaged = 0;
-
-
         }
 
 
@@ -2478,8 +2529,6 @@ void updateEnemies() {
 
         if (big_lettuce[j].damaged && !player.attacking) {
             big_lettuce[j].damaged = 0;
-
-
         }
 
 
@@ -2520,7 +2569,6 @@ void updateEnemies() {
                     if (big_lettuce[j].shootTimer > 40) {
                         big_lettuce[j].shooting = 0;
                         big_lettuce[j].shootTimer = 0;
-
                         for (int i = 0; i < 6 * 2; i++) {
                             if (!bl_bullets[i].active) {
                                 bl_bullets[i].direction = (big_lettuce[j].direction * 2 - 1);
@@ -2631,7 +2679,6 @@ void drawPlayer() {
     shadowOAMIndex++;
 }
 
-
 void drawEnemies() {
 
     for (int g = 0; g < 7; g++) {
@@ -2738,7 +2785,6 @@ void drawSlash() {
     }
     shadowOAMIndex++;
 }
-
 
 
 
@@ -2892,8 +2938,6 @@ int eCheckCollision(int col, int row) {
         }
     return 0;
 }
-
-
 
 
 void drawFont() {

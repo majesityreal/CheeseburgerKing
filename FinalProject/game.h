@@ -26,10 +26,11 @@
     
 typedef struct {
     int index;
-    unsigned char* collisionMap;
     unsigned char* map;
-    int startingXPos;
-    int startingYPos;
+    unsigned char* palette;
+    unsigned char* tiles;
+    int startingHOff;
+    int startingVOff;
     int doorX;
     int doorY;
     int doorWidth;
@@ -99,6 +100,9 @@ extern int level;
 
 // int to track whether player has died yet
 extern int dead;
+
+// keeps track of map to play, used for level selection
+extern int currMap;
 
 // Prototypes
 void initGame();

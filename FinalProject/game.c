@@ -5,6 +5,9 @@
 #include "map1.h"
 #include "map1Collision.h"
 
+#include "boss1.h"
+#include "boss1Collision.h"
+
 /*
 
 
@@ -29,7 +32,7 @@ BL_BULLET bl_bullets[BIGLETTUCECOUNT * 2];
 int shadowOAMIndex = 0;
 
 // gets the collision map set up
-unsigned char* collisionMap = map1CollisionBitmap;
+unsigned char* collisionMap;
 
 int score = 0;
 
@@ -68,12 +71,8 @@ int currMap;
 // player position in current map. DO NOT CHANGE - only used to calculate enemy positions and such
 int pMapPos;
 
-// background index
+// for loading in the backgrounds (camera controls)
 int bgIndex;
-
-// counts the total amount of times that the hScreen has been changed (256x256 maps)
-// int hScreenCounter = 0;
-// int currentScreenblock = 28;
 
 // offset counter for 256 / 512 conversions mid map
 // int offSet = 0;
@@ -88,14 +87,15 @@ enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP };
 // Initialize the game
 // #region init
 void initGame() {
+    initMaps();
     initPlayer();
     initSlash();
     initEnemies();
-    initMaps();
     gTimer = 0;
     shadowOAMIndex = 0;
-    hOff = 0;
-    vOff = 60;
+    // changes per which map to load in!
+    hOff = maps[currMap].startingHOff;
+    vOff = maps[currMap].startingVOff;
 }
 
 // Initialize the player
@@ -107,9 +107,7 @@ void initPlayer() {
     player.cdel = 3;
     player.movementCycle = 2;
 
-    // Place in the middle of the screen in the world location chosen earlier
-    player.worldRow = 159;
-    player.worldCol = 35;
+
     player.aniCounter = 0;
     player.curFrame = 0;
     player.numFrames = 6;
@@ -121,6 +119,20 @@ void initPlayer() {
     player.hearts = 3;
     player.damaged = 0;
     player.damageCounter = 0;
+
+    switch (currMap)
+    {
+    case 0:
+        player.worldRow = 159;
+        player.worldCol = 35;
+        break;
+    case 1:
+        player.worldRow = 80;
+        player.worldCol = 120;
+    default:
+        break;
+    }
+
 }
 
 void initSlash() {
@@ -262,19 +274,40 @@ void initEnemies() {
 }
 
 void initMaps() {
-    currMap = 0;
     bgIndex = 0;
-    // maps[0].collisionMap = map2CollisionBitmap;
-    // maps[0].map = map2Map;
+    REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(24) | BG_SIZE_WIDE | BG_4BPP;
+    switch (currMap)
+    {
+    case 0:
+        maps[currMap].startingHOff = 0;
+        maps[currMap].startingVOff = 60;
 
-    // maps[1].collisionMap = map1CollisionBitmap;
-    // maps[1].map = map1Map;
+        collisionMap = map1CollisionBitmap;
+        maps[currMap].map = map1Map;
+        maps[currMap].palette = map1Pal;
+        maps[currMap].tiles = map1Tiles;
+        break;
+    case 1:
+        maps[currMap].startingHOff = 0;
+        maps[currMap].startingVOff = 0;
 
-    // maps[2].collisionMap = map2CollisionBitmap;
-    // maps[2].map = map2Map;
+        collisionMap = boss1CollisionBitmap;
+        maps[currMap].map = boss1Map;
+        maps[currMap].palette = boss1Pal;
+        maps[currMap].tiles = boss1Tiles;
 
-    // maps[3].collisionMap = map1CollisionBitmap;
-    // maps[3].map = map1Map;
+    default:
+        break;
+    }
+
+        waitForVBlank();
+
+        // FIXME TODO load in new map here buddy!!!
+        DMANow(3, maps[currMap].map, &SCREENBLOCK[24], (16384 / 2)); 
+        // might not need this one if use the same tileset for every level
+        DMANow(3, maps[currMap].palette, PALETTE, 48);
+        DMANow(3, maps[currMap].tiles, &CHARBLOCK[0], map1TilesLen / 2);
+
 }
 
 // #endregion
@@ -327,25 +360,14 @@ void updateMap() {
     MAP temp = maps[currMap];
     // check for player collision with doors - uses pMapPos because it needs world col
     if (collision(pMapPos, player.worldRow, player.width, player.height, temp.doorX, temp.doorY, temp.doorWidth, temp.doorHeight)) {
+
+        // FIXME load in the next level here! Decide what you want to do here
+
         // increment current map index
         currMap++;
 
-        // FIXME TODO load in new map here buddy!!!
-        DMANow(3, maps[currMap].map, &SCREENBLOCK[24], (16384 / 2)); 
+        initGame();
 
-        // update collision map
-        collisionMap = maps[currMap].collisionMap;
-
-        // teleport player
-        player.worldCol = temp.startingXPos;
-        player.worldRow = temp.startingYPos;
-
-        // reset camera stuff?
-        hOff = 0;
-        vOff = 0;
-
-        // set enemies in new map
-        initEnemies();
     }
 }
 
@@ -576,7 +598,7 @@ void updatePlayer() {
     slash.worldCol = player.worldCol + (slash.cdel * ((player.direction * -2) + 1));
     slash.worldRow = player.worldRow;
     animateSlash();
-    // ATTACKING - this handles damaging enemies while doing the slash TODO - maybe make it into its own separate method
+    // ATTACKING - this handles damaging enemies while doing the slash - maybe make it into its own separate method
     if (player.attackTimer > 0) {
         // go through all the enemies
         for (int g = 0; g < LETTUCECOUNT; g++) {
@@ -587,8 +609,6 @@ void updatePlayer() {
                     lettuce[g].lives--;
                     // TODO - add in death animation
                     if (lettuce[g].lives < 0) {
-                        // TODO FIXME - potential future issue with loading in sprite. make it 'dead' and not just inactive
-                        // maybe make it so goblins are instantiated when camera crosses certain set of positions?
                         lettuce[g].active = 0;
                     }
                 }
@@ -602,8 +622,6 @@ void updatePlayer() {
                     big_lettuce[j].lives--;
                     // TODO - add in death animation
                     if (big_lettuce[j].lives < 0) {
-                        // TODO FIXME - potential future issue with loading in sprite. make it 'dead' and not just inactive
-                        // maybe make it so goblins are instantiated when camera crosses certain set of positions?
                         big_lettuce[j].active = 0;
                     }
                 }
@@ -627,7 +645,6 @@ void updatePlayer() {
         slash.curFrame = 0;
         // I am setting to 0 because I am controlling individual frames of attack
         slash.aniCounter = 0;
-        // TODO - add in extra stuff, movement restirction?
     }
 
     // update the gravity check timer, so gravity is more smooth
@@ -648,7 +665,6 @@ void updateEnemies() {
             lettuce[g].onScreen = 0;
         }
 
-        // TODO - add future implementation with this
         if (!lettuce[g].active || !lettuce[g].onScreen) {
             continue;
         }
@@ -656,8 +672,6 @@ void updateEnemies() {
         // wait until the player is done attacking to apply damage
         if (lettuce[g].damaged && !player.attacking) {
             lettuce[g].damaged = 0;
-                // TODO FIXME - potential future issue with loading in sprite. make it 'dead' and not just inactive
-                // maybe make it so lettuce are instantiated when camera crosses certain set of positions?
         }
 
         // checks for collision with player
@@ -731,8 +745,6 @@ void updateEnemies() {
         // wait until the player is done attacking to apply damage
         if (big_lettuce[j].damaged && !player.attacking) {
             big_lettuce[j].damaged = 0;
-                // TODO FIXME - potential future issue with loading in sprite. make it 'dead' and not just inactive
-                // maybe make it so big_lettuce are instantiated when camera crosses certain set of positions?
         }
 
         // checks for collision with player
@@ -773,7 +785,6 @@ void updateEnemies() {
                     if (big_lettuce[j].shootTimer > 40) {
                         big_lettuce[j].shooting = 0;
                         big_lettuce[j].shootTimer = 0;
-                        // TODO instantiate the bullet 
                         for (int i = 0; i < BIGLETTUCECOUNT * 2; i++) {
                             if (!bl_bullets[i].active) {
                                 bl_bullets[i].direction = (big_lettuce[j].direction * 2 - 1);
@@ -831,7 +842,7 @@ void updateBullets() {
                 player.damaged = 1;
             }
             bl_bullets[g].active = 0;
-            // TODO - maybe play sound here?
+            // SOUND - maybe play sound here?
         }
 
         
@@ -884,7 +895,6 @@ void drawPlayer() {
     shadowOAMIndex++;
 }
 
-// TODO FIXME - the drawing of sprites needs fixing for the changing of worlds
 void drawEnemies() {
     // go through all the lettuce
     for (int g = 0; g < LETTUCECOUNT; g++) {
@@ -996,7 +1006,6 @@ void drawSlash() {
 
 // #region animateGame
 
-// TODO - fix up for player animation states (attack, move left/right, jump)
 // Handle player animation states
 void animatePlayer() {
 
@@ -1145,8 +1154,6 @@ int eCheckCollision(int col, int row) {
         }
     return 0;
 }
-
-// TODO - add a specific color collision check
 
 // i am using this for debugging
 void drawFont() {

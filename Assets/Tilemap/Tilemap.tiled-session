@@ -20,6 +20,14 @@
             "scaleInDock": 3,
             "scaleInEditor": 5.5
         },
+        "boss1.tmx": {
+            "scale": 4,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 112.125,
+                "y": 83.75
+            }
+        },
         "hugeMap.tmx": {
             "scale": 0.5,
             "selectedLayer": 0,
@@ -36,8 +44,8 @@
             "scale": 0.33,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 992.4242424242424,
-                "y": 521.2121212121212
+                "x": 818.1818181818181,
+                "y": 121.21212121212125
             }
         },
         "map2.tmx": {
@@ -69,8 +77,10 @@
             }
         }
     },
+    "last.exportedFilePath": "C:/Users/Carson/Documents/CS2261/CheeseburgerKing/Assets/Tilemap",
     "last.imagePath": "C:/Users/Carson/Documents/CS2261/CheeseburgerKing/Assets",
     "map.height": 16,
+    "map.lastUsedExportFilter": "All Files (*)",
     "map.lastUsedFormat": "tmx",
     "map.tileHeight": 16,
     "map.tileWidth": 16,
@@ -82,6 +92,7 @@
     ],
     "project": "Tilemap.tiled-project",
     "recentFiles": [
+        "boss1.tmx",
         "hugeMap.tmx",
         "wideMap.tmx",
         "map2.tmx",

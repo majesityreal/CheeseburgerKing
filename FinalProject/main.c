@@ -7,24 +7,8 @@
 #include "titlescreen.h"
 #include "spritesheet.h"
 
-// maps in order
-#include "map1.h"
-
 // parallax background
 #include "parallaxBG.h"
-
-/*
-
-have variables to keep track of shadowOAM entries, increment every time you use it
-
-comment on shit
-
-
-
-
-
-*/
-
 
 // Prototypes
 void initialize();
@@ -146,10 +130,6 @@ void startGame() {
 
     waitForVBlank();
 
-    DMANow(3, map1Pal, PALETTE, 48);
-    DMANow(3, map1Tiles, &CHARBLOCK[0], map1TilesLen / 2);
-    DMANow(3, map1Map, &SCREENBLOCK[24], map1MapLen / 2);
-
 
     // adding temp mario map
     // DMANow(3, map1Pal, PALETTE, 48);
@@ -186,6 +166,7 @@ void startGame() {
     // spooky scary shadowOAM
     DMANow(3, shadowOAM, OAM, 128 * 4);
 
+    currMap = 1;
     initGame();
 
     state = GAME;
