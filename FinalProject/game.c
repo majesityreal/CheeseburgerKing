@@ -296,7 +296,7 @@ void initMaps() {
     {
     case 0:
 
-        // playSoundA(map1Song_data, map1Song_length, 1);
+        playSoundA(map1Song_data, map1Song_length, 1);
 
         cameraLock = 0;
         maps[currMap].startingHOff = 0;
@@ -567,7 +567,7 @@ void updatePlayer() {
     player.worldRow += yVel;
 
     // moves camera down if player is moving down
-    if (vOff < 256 - SCREENHEIGHT && (player.worldRow - vOff >= SCREENHEIGHT / 2) && (yVel > 0)) {
+    if (vOff < 254 - SCREENHEIGHT && (player.worldRow - vOff >= SCREENHEIGHT / 2) && (yVel > 0)) {
         if (!cameraLock) {
             vOff += yVel;
         }
@@ -575,7 +575,7 @@ void updatePlayer() {
     }
     
     // moves camera up if player is moving up
-    if (vOff > 0 && (player.worldRow - vOff <= SCREENHEIGHT / 2) && (yVel < 0)) {
+    if (vOff > 3 && (player.worldRow - vOff <= SCREENHEIGHT / 2) && (yVel < 0)) {
         if (!cameraLock) {
             vOff += yVel;
         }
@@ -626,7 +626,7 @@ void updatePlayer() {
             if (player.worldCol >= 0) {
                 player.worldCol -= player.cdel;
                 if (!cameraLock) {
-                    if (hOff >= 0 && (player.worldCol - hOff < (SCREENWIDTH / 2))) {
+                    if (hOff > 0 && (player.worldCol - hOff < (SCREENWIDTH / 2))) {
                         // Update background offset variable if the above is true
                         hOff-= player.cdel;
                     }

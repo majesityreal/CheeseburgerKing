@@ -23,9 +23,27 @@ SOUND menuSong;
 
 /*
 
-// how are the iFrames after being damaged? More / less?
+What I want to highlight:
+    - Affine sprites: The LETHARGIC LETTUCE uses affine sprites when rolling.
+        See: boss1AI.c, line 177 - 183 ish in the drawBoss1() method, 
+    - LARGE MAP (1024 x 256) I use multiple screen blocks to load in multiple maps
+        See: game.c, line 635 for left motion and 661 for right motion (updatePlayer method)
 
-// Lethargic Lettuce - is it balanced?
+What is finished:
+    - ALL mechanics (double jump, dash, attack)
+    - Enemies: Big lettuce (projectile shooter), small lettuce, and the LETHARGIC LETTUUCE (boss)
+    - Level 1
+    - Boss fight (Level 2)
+
+What I'm planning:
+    - An intro level (level 0) to introduce mechanics / allow players to get used to movement.
+        from testing, people found it really hard at first
+    - Level 3 with !!knife throwers!!
+    - Tangy Tomato boss
+
+Feedback Questions:
+// how are the i-frames after being damaged? More / less?
+// Lethargic Lettuce - is it balanced? Too hard?
 
 KNOWN BUGS:
     FIXED, YAY! - The lettuce projectiles will ocassionaly freeze
@@ -324,15 +342,15 @@ void drawButtons() {
     else {
         shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (selector.yLocation - 4)) | ATTR0_WIDE;
         shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (selector.xLocation + 8)) | ATTR1_MEDIUM;
-        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((6), (12));
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(4) | ATTR2_TILEID((6), (12));
         shadowOAMIndex++;
         shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (selector.yLocation + 12)) | ATTR0_WIDE;
         shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (selector.xLocation + 8)) | ATTR1_MEDIUM;
-        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((6), (14));
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(4) | ATTR2_TILEID((6), (14));
         shadowOAMIndex++;
         shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (selector.yLocation + 28)) | ATTR0_WIDE;
         shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (selector.xLocation + 8)) | ATTR1_MEDIUM;
-        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((6), (16));
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(4) | ATTR2_TILEID((6), (16));
         shadowOAMIndex++;
     }
 }

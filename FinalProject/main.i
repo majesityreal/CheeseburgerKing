@@ -1628,7 +1628,7 @@ extern const signed char sfx_jump1_data[];
 # 21 "main.c" 2
 
 SOUND menuSong;
-# 39 "main.c"
+# 57 "main.c"
 void initialize();
 
 
@@ -1917,15 +1917,15 @@ void drawButtons() {
     else {
         shadowOAM[shadowOAMIndex].attr0 = (0xFF & (selector.yLocation - 4)) | (1 << 14);
         shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (selector.xLocation + 8)) | (2 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((12))*32 + ((6)));
+        shadowOAM[shadowOAMIndex].attr2 = ((4) << 12) | (((12))*32 + ((6)));
         shadowOAMIndex++;
         shadowOAM[shadowOAMIndex].attr0 = (0xFF & (selector.yLocation + 12)) | (1 << 14);
         shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (selector.xLocation + 8)) | (2 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((14))*32 + ((6)));
+        shadowOAM[shadowOAMIndex].attr2 = ((4) << 12) | (((14))*32 + ((6)));
         shadowOAMIndex++;
         shadowOAM[shadowOAMIndex].attr0 = (0xFF & (selector.yLocation + 28)) | (1 << 14);
         shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (selector.xLocation + 8)) | (2 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((16))*32 + ((6)));
+        shadowOAM[shadowOAMIndex].attr2 = ((4) << 12) | (((16))*32 + ((6)));
         shadowOAMIndex++;
     }
 }
@@ -1985,7 +1985,7 @@ void startGame() {
     srand(timer);
 
     waitForVBlank();
-# 410 "main.c"
+# 428 "main.c"
     DMANow(3, parallaxBGTiles, &((charblock *)0x6000000)[2], 7808 / 2);
     DMANow(3, parallaxBGMap, &((screenblock *)0x6000000)[22], 2048 / 2);
 
@@ -2048,7 +2048,7 @@ void goToPause() {
 
 
 void pause() {
-# 492 "main.c"
+# 510 "main.c"
     if ((!(~(oldButtons) & ((1 << 0))) && (~buttons & ((1 << 0)))) | (!(~(oldButtons) & ((1 << 1))) && (~buttons & ((1 << 1)))) | (!(~(oldButtons) & ((1 << 3))) && (~buttons & ((1 << 3)))) | (!(~(oldButtons) & ((1 << 2))) && (~buttons & ((1 << 2))))) {
         pauseVar = 0;
 

@@ -2201,7 +2201,7 @@ void initMaps() {
     {
     case 0:
 
-
+        playSoundA(map1Song_data, map1Song_length, 1);
 
         cameraLock = 0;
         maps[currMap].startingHOff = 0;
@@ -2472,7 +2472,7 @@ void updatePlayer() {
     player.worldRow += yVel;
 
 
-    if (vOff < 256 - 160 && (player.worldRow - vOff >= 160 / 2) && (yVel > 0)) {
+    if (vOff < 254 - 160 && (player.worldRow - vOff >= 160 / 2) && (yVel > 0)) {
         if (!cameraLock) {
             vOff += yVel;
         }
@@ -2480,7 +2480,7 @@ void updatePlayer() {
     }
 
 
-    if (vOff > 0 && (player.worldRow - vOff <= 160 / 2) && (yVel < 0)) {
+    if (vOff > 3 && (player.worldRow - vOff <= 160 / 2) && (yVel < 0)) {
         if (!cameraLock) {
             vOff += yVel;
         }
@@ -2531,7 +2531,7 @@ void updatePlayer() {
             if (player.worldCol >= 0) {
                 player.worldCol -= player.cdel;
                 if (!cameraLock) {
-                    if (hOff >= 0 && (player.worldCol - hOff < (240 / 2))) {
+                    if (hOff > 0 && (player.worldCol - hOff < (240 / 2))) {
 
                         hOff-= player.cdel;
                     }

@@ -312,9 +312,9 @@ drawButtons:
 	orr	r1, r1, #16384
 	lsl	r3, r4, #3
 	strh	r1, [ip, r3]	@ movhi
-	ldr	r7, .L26+16
-	ldr	r6, .L26+20
-	ldr	r1, .L26+24
+	ldr	r7, .L26+28
+	ldr	r6, .L26+32
+	ldr	r1, .L26+36
 	add	r5, ip, r5, lsl #3
 	add	r4, ip, r4, lsl #3
 	orr	r2, r2, #32768
@@ -330,8 +330,8 @@ drawButtons:
 	pop	{r4, r5, r6, r7, r8, lr}
 	bx	lr
 .L25:
-	ldr	r1, .L26+28
-	ldr	r6, .L26+32
+	ldr	r1, .L26+40
+	ldr	r6, .L26+44
 	orr	r2, r2, #16384
 	add	ip, ip, r0, lsl #3
 .L22:
@@ -362,6 +362,9 @@ drawButtons:
 	.word	390
 	.word	454
 	.word	518
+	.word	16774
+	.word	16838
+	.word	16902
 	.word	582
 	.word	902
 	.size	drawButtons, .-drawButtons
