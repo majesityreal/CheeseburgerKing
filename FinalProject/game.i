@@ -1957,7 +1957,7 @@ void initPlayer() {
     player.direction = 0;
     player.attacking = 0;
     player.attackTimer = 0;
-    player.hearts = 3;
+    player.hearts = 4;
     player.damaged = 0;
     player.damageCounter = 0;
 
@@ -3044,61 +3044,7 @@ int eCheckCollision(int col, int row) {
 
 
 void drawFont() {
-
-
-
-
-
-
-
-    int d3 = hOff / 100;
-    int d2 = (hOff % 100) / 10;
-    int d1 = hOff % 10;
-        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (48)) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + d3)));
-        shadowOAMIndex++;
-        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (56)) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + d2)));
-        shadowOAMIndex++;
-        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (64)) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + d1)));
-        shadowOAMIndex++;
-
-    int c3 = player.worldRow / 100;
-    int c2 = (player.worldRow % 100) / 10;
-    int c1 = player.worldRow % 10;
-        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (148)) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + c3)));
-        shadowOAMIndex++;
-        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (156)) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + c2)));
-        shadowOAMIndex++;
-        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (164)) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + c1)));
-        shadowOAMIndex++;
-
-    int e3 = pMapPos / 100;
-    int e2 = (pMapPos % 100) / 10;
-    int e1 = pMapPos % 10;
-        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (82)) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + e3)));
-        shadowOAMIndex++;
-        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (90)) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + e2)));
-        shadowOAMIndex++;
-        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (98)) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + e1)));
-        shadowOAMIndex++;
-
+# 1261 "game.c"
 }
 
 void drawHUD() {
@@ -3118,6 +3064,12 @@ void drawHUD() {
         if (player.hearts >= 3) {
             shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
             shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (32)) | (1 << 14);
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((6)*32 + (6));
+            shadowOAMIndex++;
+        }
+        if (player.hearts >= 4) {
+            shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (48)) | (1 << 14);
             shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((6)*32 + (6));
             shadowOAMIndex++;
         }

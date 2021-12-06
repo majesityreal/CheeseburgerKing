@@ -1729,18 +1729,21 @@ void titleScreen() {
                 currMap = 0;
                 initGame();
             break;
-            case 2:
-                setupLevelSelect();
-            break;
             case 1:
                 setupCredits();
             break;
+            case 2:
+                setupLevelSelect();
+            break;
+
         }
     }
     waitForVBlank();
+    if (state != CREDITS) {
+        drawSelector();
+        drawButtons();
+    }
 
-    drawSelector();
-    drawButtons();
 
     DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
 }
@@ -1857,7 +1860,7 @@ void startGame() {
     srand(timer);
 
     waitForVBlank();
-# 322 "main.c"
+# 325 "main.c"
     DMANow(3, parallaxBGTiles, &((charblock *)0x6000000)[2], 7808 / 2);
     DMANow(3, parallaxBGMap, &((screenblock *)0x6000000)[22], 2048 / 2);
 
@@ -1904,7 +1907,7 @@ void game() {
 
 
 }
-# 386 "main.c"
+# 389 "main.c"
 void goToPause() {
     state = PAUSE;
 }

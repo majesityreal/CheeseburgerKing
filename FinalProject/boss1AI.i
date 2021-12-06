@@ -2003,6 +2003,13 @@ void updateBoss1() {
         initGame();
     }
 
+    if (collision(boss.worldCol, boss.worldRow, boss.width, boss.height, player.worldCol, player.worldRow, player.width, player.height)) {
+        if (!player.damaged) {
+            player.damaged = 1;
+            player.hearts--;
+        }
+    }
+
     if (boss.damaged) {
         damageTimer++;
         if (damageTimer > 20) {
@@ -2033,7 +2040,7 @@ void updateBoss1() {
         boss.worldCol = hoverX;
     }
 
-    if (timer > 240 && hoverCounter <= 2 && boss.state == HOVERING) {
+    if (timer > 250 && hoverCounter <= 2 && boss.state == HOVERING) {
         timer = 0;
         hoverCounter++;
         if (roundCounter > 0 && hoverCounter == 1) {

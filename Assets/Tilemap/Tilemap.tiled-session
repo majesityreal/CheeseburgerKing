@@ -20,12 +20,36 @@
             "scaleInDock": 3,
             "scaleInEditor": 5.5
         },
-        "boss1.tmx": {
-            "scale": 4,
+        "OLDmap1.tmx": {
+            "scale": 1.8740234375,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 112.125,
-                "y": 83.75
+                "x": 256.13340281396563,
+                "y": 128.0667014069828
+            }
+        },
+        "OLDmap2.tmx": {
+            "scale": 1.8740234375,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 256.13340281396563,
+                "y": 128.0667014069828
+            }
+        },
+        "OLDwideMap.tmx": {
+            "scale": 0.93701171875,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 512.2668056279313,
+                "y": 128.06670140698276
+            }
+        },
+        "boss1.tmx": {
+            "scale": 2,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 206,
+                "y": 124.5
             }
         },
         "hugeMap.tmx": {

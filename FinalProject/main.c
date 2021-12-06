@@ -176,18 +176,21 @@ void titleScreen() {
                 currMap = 0;
                 initGame();
             break;
-            case 2:
-                setupLevelSelect();
-            break;
             case 1:
                 setupCredits();
             break;
+            case 2:
+                setupLevelSelect();
+            break;
+
         }
     }
     waitForVBlank();
+    if (state != CREDITS) {
+        drawSelector();
+        drawButtons();
+    }
 
-    drawSelector();
-    drawButtons();
 
     DMANow(3, shadowOAM, OAM, 128 * 4);
 }
