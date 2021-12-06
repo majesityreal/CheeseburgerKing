@@ -213,7 +213,7 @@ void drawHealthBar() {
         shadowOAMIndex++;
     }
 
-    for (int i = 1; i < 11; i++) {
+    for (int i = 1; i < 8; i++) {
         // puts full middle bar
         if (boss.lives >= 2 * (i + 1)) {
             shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (15)) | ATTR0_SQUARE;
@@ -304,14 +304,16 @@ void spawnLettuce() {
                 lettuce[g].active = 1;
                 lettuce[g].worldRow = 80;
                 lettuce[g].worldCol = 40;
-                lettuce[g].lives = 1;
+                lettuce[g].aniState = 1;
+                lettuce[g].lives = 0;
                 return;
             }
             else {
                 lettuce[g].active = 1;
                 lettuce[g].worldRow = 80;
                 lettuce[g].worldCol = 200;
-                lettuce[g].lives = 1;
+                lettuce[g].aniState = 1;
+                lettuce[g].lives = 0;
                 counter++;
             }
         }

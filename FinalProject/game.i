@@ -1655,14 +1655,14 @@ typedef struct {
     void animateEnemies();
     void updateEnemies();
 # 5 "game.h" 2
-# 22 "game.h"
+# 24 "game.h"
 typedef struct {
     int currFrame;
     int totalFrames;
     int xLocation;
     int yLocation;
 } SELECTOR;
-# 36 "game.h"
+# 38 "game.h"
 typedef struct {
     int index;
     unsigned char* map;
@@ -1736,13 +1736,15 @@ extern SLASH slash;
 
 extern LETTUCE lettuce[7];
 extern BIG_LETTUCE big_lettuce[6];
-extern BL_BULLET bl_bullets[6 * 2];
+extern BL_BULLET bl_bullets[6];
 
 extern int pauseVar;
 extern int level;
 
 
 extern int dead;
+
+extern int dying;
 
 
 extern int currMap;
@@ -1861,7 +1863,7 @@ SLASH slash;
 
 LETTUCE lettuce[7];
 BIG_LETTUCE big_lettuce[6];
-BL_BULLET bl_bullets[6 * 2];
+BL_BULLET bl_bullets[6];
 
 int shadowOAMIndex = 0;
 
@@ -1885,6 +1887,9 @@ int jumping = 0;
 
 int doubleJumping = 0;
 
+
+int dying = 0;
+
 int dashing = 0;
 int dashingTimer = 0;
 int dashed = 0;
@@ -1895,6 +1900,7 @@ int jumpThud = 0;
 
 int yVel = 0;
 int framesInAir = 0;
+int coyoteTimer = 0;
 
 
 int gTimer = 0;
@@ -1919,7 +1925,7 @@ int dead = 0;
 int cameraLock = 0;
 
 
-enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP };
+enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP, DYING };
 
 
 
@@ -1986,7 +1992,7 @@ void initSlash() {
 
 
 
-    slash.hitboxCDel = -2;
+    slash.hitboxCDel = -3;
 
 
     slash.worldRow = 0;
@@ -2008,9 +2014,9 @@ void initEnemies() {
         lettuce[g].height = 15;
 
         lettuce[g].aniCounter = 0;
+        lettuce[g].aniState = 0;
         lettuce[g].curFrame = 0;
         lettuce[g].numFrames = 4;
-        lettuce[g].aniState = IDLE;
 
         lettuce[g].direction = 0;
         lettuce[g].xRange = 128;
@@ -2029,7 +2035,7 @@ void initEnemies() {
         big_lettuce[g].aniCounter = 0;
         big_lettuce[g].curFrame = 0;
         big_lettuce[g].numFrames = 4;
-        big_lettuce[g].aniState = IDLE;
+        big_lettuce[g].aniState = 0;
 
         big_lettuce[g].direction = 0;
         big_lettuce[g].xRange = 240;
@@ -2040,10 +2046,10 @@ void initEnemies() {
     }
 
 
-    for (int g = 0; g < 6 * 2; g++) {
+    for (int g = 0; g < 6; g++) {
         bl_bullets[g].active = 0;
-        bl_bullets[g].width = 13;
-        bl_bullets[g].height = 15;
+        bl_bullets[g].width = 8;
+        bl_bullets[g].height = 8;
 
         bl_bullets[g].aniCounter = 0;
         bl_bullets[g].curFrame = 0;
@@ -2175,8 +2181,8 @@ void updateGame() {
 
  updatePlayer();
 
-    updateEnemies();
     updateBullets();
+    updateEnemies();
     updateMap();
 
     if (currMap == 1) {
@@ -2184,7 +2190,12 @@ void updateGame() {
     }
 
 
-    if (player.hearts < 1 || player.worldRow > 240) {
+    if (player.hearts < 1 || player.worldRow > 238) {
+        if (!dying) {
+            player.curFrame = 0;
+
+            player.aniCounter = 1;
+        }
         gameOver();
     }
 
@@ -2242,6 +2253,11 @@ void updateMap() {
 void updatePlayer() {
 
 
+    if (dying) {
+        animatePlayer();
+        return;
+    }
+
 
     grounded = groundCheck(player.worldCol, player.worldRow, player.width, player.height);
 
@@ -2249,11 +2265,12 @@ void updatePlayer() {
         jumpThud = 0;
         doubleJumping = 0;
         dashed = 0;
+        coyoteTimer = 0;
     }
 
 
 
-    if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && !doubleJumping && ((jumping || !grounded))) {
+    if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && !doubleJumping && ((jumping || (!grounded && coyoteTimer >= 8)))) {
         doubleJumping = 1;
         yVel = -5;
         framesInAir = 0;
@@ -2266,11 +2283,12 @@ void updatePlayer() {
     }
 
 
-    if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && grounded && !dashing
+    if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && (grounded || (!grounded && coyoteTimer < 8)) && !dashing
         && !pCheckCollision(player.worldCol, player.worldRow - 1)
         && !pCheckCollision(player.worldCol + player.width, player.worldRow - 1)) {
 
             yVel = -5;
+            framesInAir = 0;
 
             grounded = 0;
             jumping = 1;
@@ -2350,6 +2368,8 @@ void updatePlayer() {
         if (gTimer % 4 == 0) {
             framesInAir++;
         }
+
+        coyoteTimer++;
 
 
     }
@@ -2493,7 +2513,7 @@ void updatePlayer() {
             }
         }
         for (int j = 0; j < 6; j++) {
-            if (collision(slash.worldCol + (256 * bgIndex) + slash.hitboxCDel, slash.worldRow, slash.width - slash.hitboxCDel, slash.height, big_lettuce[j].worldCol, big_lettuce[j].worldRow, big_lettuce[j].width, big_lettuce[j].height)) {
+            if (collision(slash.worldCol + (256 * bgIndex) + slash.hitboxCDel, slash.worldRow, slash.width - slash.hitboxCDel, slash.height, big_lettuce[j].worldCol, big_lettuce[j].worldRow, big_lettuce[j].width + 2, big_lettuce[j].height)) {
 
                 if (!big_lettuce[j].damaged) {
                     big_lettuce[j].damaged = 1;
@@ -2562,7 +2582,7 @@ void updateEnemies() {
         }
 
 
-        if (collision(lettuce[g].worldCol, lettuce[g].worldRow, lettuce[g].width, lettuce[g].height, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
+        if (collision(lettuce[g].worldCol, lettuce[g].worldRow + 3, lettuce[g].width, lettuce[g].height - 2, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
             player.damaged = 1;
             player.hearts--;
             if (player.hearts < 1) {
@@ -2635,7 +2655,7 @@ void updateEnemies() {
         }
 
 
-        if (collision(big_lettuce[j].worldCol, big_lettuce[j].worldRow, big_lettuce[j].width, big_lettuce[j].height, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
+        if (collision(big_lettuce[j].worldCol + 1, big_lettuce[j].worldRow + 1, big_lettuce[j].width, big_lettuce[j].height, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
             player.damaged = 1;
             player.hearts--;
             if (player.hearts < 1) {
@@ -2645,7 +2665,6 @@ void updateEnemies() {
 
         int xDif = pMapPos - big_lettuce[j].worldCol;
         int yDif = player.worldRow - big_lettuce[j].worldRow;
-
 
 
         if (abs(xDif) < big_lettuce[j].xRange && abs(yDif) < big_lettuce[j].yRange) {
@@ -2672,8 +2691,8 @@ void updateEnemies() {
                     if (big_lettuce[j].shootTimer > 40) {
                         big_lettuce[j].shooting = 0;
                         big_lettuce[j].shootTimer = 0;
-                        for (int i = 0; i < 6 * 2; i++) {
-                            if (!bl_bullets[i].active) {
+                        for (int i = 0; i < 6; i++) {
+                            if (!bl_bullets[i].active || !bl_bullets[i].onScreen) {
                                 bl_bullets[i].direction = (big_lettuce[j].direction * 2 - 1);
                                 bl_bullets[i].worldCol = big_lettuce[j].worldCol;
                                 bl_bullets[i].worldRow = big_lettuce[j].worldRow + 8;
@@ -2694,7 +2713,7 @@ void updateEnemies() {
 }
 
 void updateBullets() {
-    for (int g = 0; g < 6 * 2; g++) {
+    for (int g = 0; g < 6; g++) {
         if (!bl_bullets[g].active) {
             return;
         }
@@ -2711,8 +2730,10 @@ void updateBullets() {
         bl_bullets[g].worldCol += (bl_bullets[g].direction * bl_bullets[g].speed);
 
 
-        if (!(bl_bullets[g].worldCol + bl_bullets[g].width > (pMapPos - 480) && bl_bullets[g].worldCol < (pMapPos + 480))) {
+        if (!( (bl_bullets[g].worldCol + bl_bullets[g].width > (pMapPos - 480) && bl_bullets[g].worldCol < (pMapPos + 480 ) ) )
+            && bl_bullets[g].onScreen == 0) {
             bl_bullets[g].active = 0;
+            bl_bullets[g].onScreen = 0;
             return;
         }
 
@@ -2722,13 +2743,13 @@ void updateBullets() {
 
 
 
-        if (collision(bl_bullets[g].worldCol, bl_bullets[g].worldRow, bl_bullets[g].width, bl_bullets[g].height, pMapPos, player.worldRow, player.width, player.height)
+        if (collision(bl_bullets[g].worldCol + 3, bl_bullets[g].worldRow + 4, bl_bullets[g].width, bl_bullets[g].height, pMapPos, player.worldRow, player.width, player.height)
          && bl_bullets[g].onScreen) {
             if (!player.damaged) {
                 player.hearts--;
                 player.damaged = 1;
+                bl_bullets[g].active = 0;
             }
-            bl_bullets[g].active = 0;
 
         }
 
@@ -2774,6 +2795,9 @@ void drawPlayer() {
             case DAMAGED:
             shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((player.aniState + 1) * 2)*32 + ((player.curFrame % 3 * 2)));
             break;
+            case DYING:
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((0)*32 + ((14 + (player.curFrame * 2))));
+            break;
             default:
             shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((player.aniState * 2)*32 + ((player.curFrame * 2)));
             break;
@@ -2802,7 +2826,7 @@ void drawEnemies() {
                 shadowOAM[shadowOAMIndex].attr2 = ((1) << 12) | ((4)*32 + (((lettuce[g].curFrame % 2) + 9))) * 2;
             }
             else {
-                shadowOAM[shadowOAMIndex].attr2 = ((1) << 12) | ((2)*32 + ((lettuce[g].curFrame + 9))) * 2;
+                shadowOAM[shadowOAMIndex].attr2 = ((1) << 12) | (((2 + lettuce[g].aniState))*32 + ((lettuce[g].curFrame + 9))) * 2;
             }
         }
         shadowOAMIndex++;
@@ -2836,30 +2860,31 @@ void drawEnemies() {
 }
 
 void drawBullets() {
-    for (int i = 0; i < 6 * 2; i++) {
-        if (!bl_bullets[i].active || !bl_bullets[i].onScreen) {
+    for (int i = 0; i < 6; i++) {
+        if (!(bl_bullets[i].active) || !(bl_bullets[i].onScreen)) {
             shadowOAM[shadowOAMIndex].attr0 |= (2 << 8);
+            shadowOAMIndex++;
         }
         else {
             int xCol = (bl_bullets[i].worldCol - (hOff + (256 * bgIndex)));
 
-        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (bl_bullets[i].worldRow - vOff)) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (xCol)) | (1 << 14);
+            shadowOAM[shadowOAMIndex].attr0 = (0xFF & (bl_bullets[i].worldRow - vOff)) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (xCol)) | (1 << 14);
 
-        switch (bl_bullets[i].curFrame) {
-            case 1:
-            shadowOAM[shadowOAMIndex].attr1 |= (1 << 12);
-            break;
-            case 2:
-            shadowOAM[shadowOAMIndex].attr1 |= (1 << 12);
-            shadowOAM[shadowOAMIndex].attr1 |= (1 << 13);
-            break;
-            case 3:
-            shadowOAM[shadowOAMIndex].attr1 |= (1 << 13);
-            break;
-            default:
-            break;
-        }
+            switch (bl_bullets[i].curFrame) {
+                case 1:
+                shadowOAM[shadowOAMIndex].attr1 |= (1 << 12);
+                break;
+                case 2:
+                shadowOAM[shadowOAMIndex].attr1 |= (1 << 12);
+                shadowOAM[shadowOAMIndex].attr1 |= (1 << 13);
+                break;
+                case 3:
+                shadowOAM[shadowOAMIndex].attr1 |= (1 << 13);
+                break;
+                default:
+                break;
+            }
         shadowOAM[shadowOAMIndex].attr2 = ((1) << 12) | ((6)*32 + ((10))) * 2;
         shadowOAMIndex++;
         bl_bullets[i].aniCounter++;
@@ -2921,33 +2946,61 @@ void animatePlayer() {
     if (player.attacking) {
         player.aniState = ATTACK;
     }
-    if (player.damaged) {
+    if (player.damaged && player.damageCounter <= 8) {
         player.aniState = DAMAGED;
     }
     if (dashing && grounded) {
         player.aniState = DOUBLEJUMP;
     }
+    if (dying) {
+        player.aniState = DYING;
+    }
 
 
-    if(player.aniCounter % 10 == 0 && player.aniState == ATTACK) {
-        player.curFrame = (player.curFrame + 1) % player.numFrames;
-    }
-    else if (player.aniCounter % 5 == 0 && player.aniState == RUNNING) {
-        player.curFrame = (player.curFrame + 1) % player.numFrames;
-    }
-    else if (player.aniCounter % 5 == 0 && player.aniState == DOUBLEJUMP) {
-        player.curFrame = (player.curFrame + 1) % player.numFrames;
-    }
-    else if (player.aniCounter % 5 == 0 && player.aniState == DAMAGED) {
-        player.curFrame = (player.curFrame + 1) % player.numFrames;
-        player.damageCounter++;
-        if (player.damageCounter > 8) {
-            player.damaged = 0;
-            player.damageCounter = 0;
+    if (!dying) {
+        if(player.aniCounter % 10 == 0 && player.aniState == ATTACK) {
+            player.curFrame = (player.curFrame + 1) % player.numFrames;
+        }
+        else if (player.aniCounter % 5 == 0 && player.aniState == RUNNING) {
+            player.curFrame = (player.curFrame + 1) % player.numFrames;
+        }
+        else if (player.aniCounter % 5 == 0 && player.aniState == DOUBLEJUMP) {
+            player.curFrame = (player.curFrame + 1) % player.numFrames;
+        }
+        else if (player.aniCounter % 5 == 0 && player.damaged && !dying) {
+            if (player.aniState == DAMAGED) {
+                player.curFrame = (player.curFrame + 1) % player.numFrames;
+            }
+            player.damageCounter++;
+            if (player.damageCounter > 12) {
+                player.damaged = 0;
+                player.damageCounter = 0;
+            }
+        }
+        else if (player.aniCounter % 10 == 0) {
+            player.curFrame = (player.curFrame + 1) % player.numFrames;
         }
     }
-    else if (player.aniCounter % 10 == 0) {
-        player.curFrame = (player.curFrame + 1) % player.numFrames;
+
+    else if (player.curFrame < 2) {
+        if (player.aniCounter % 8 == 0) {
+            player.curFrame++;
+        }
+    }
+    else if (player.curFrame == 2) {
+        if (player.aniCounter % 12 == 0) {
+            player.curFrame++;
+        }
+    }
+    else if (player.curFrame <= (player.numFrames + 1)){
+        if (player.aniCounter % 10 == 0) {
+            player.curFrame++;
+        }
+    }
+    else {
+        if (player.aniCounter % 30 == 0) {
+            dead = 1;
+        }
     }
 
     player.aniCounter++;
@@ -2960,24 +3013,12 @@ void animateEnemies() {
         if (lettuce[g].aniCounter % 10 == 0) {
             lettuce[g].curFrame = (lettuce[g].curFrame + 1) % lettuce[g].numFrames;
         }
-        if (lettuce[g].damaged) {
-            lettuce[g].aniState = 1;
-        }
-        else {
-            lettuce[g].aniState = 0;
-        }
         lettuce[g].aniCounter++;
     }
 
     for (int g = 0; g < 6; g++) {
         if (big_lettuce[g].aniCounter % 10 == 0) {
             big_lettuce[g].curFrame = (big_lettuce[g].curFrame + 1) % big_lettuce[g].numFrames;
-        }
-        if (big_lettuce[g].damaged) {
-            big_lettuce[g].aniState = 1;
-        }
-        else {
-            big_lettuce[g].aniState = 0;
         }
         big_lettuce[g].aniCounter++;
     }
@@ -3044,7 +3085,7 @@ int eCheckCollision(int col, int row) {
 
 
 void drawFont() {
-# 1261 "game.c"
+# 1300 "game.c"
 }
 
 void drawHUD() {
@@ -3098,5 +3139,11 @@ void drawHUD() {
 
 
 void gameOver() {
-    dead = 1;
+    if (!dying) {
+
+        dying = 1;
+        player.aniState = DYING;
+        player.curFrame = 0;
+        cameraLock = 1;
+    }
 }

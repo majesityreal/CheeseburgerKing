@@ -1412,14 +1412,14 @@ typedef struct {
     void animateEnemies();
     void updateEnemies();
 # 5 "game.h" 2
-# 22 "game.h"
+# 24 "game.h"
 typedef struct {
     int currFrame;
     int totalFrames;
     int xLocation;
     int yLocation;
 } SELECTOR;
-# 36 "game.h"
+# 38 "game.h"
 typedef struct {
     int index;
     unsigned char* map;
@@ -1975,7 +1975,7 @@ int currentState;
 
 void initBoss1() {
     timer = 0;
-    boss.lives = 24;
+    boss.lives = 18;
     hoverX = 104;
     hoverY = 45;
     boss.worldRow = hoverY;
@@ -2145,7 +2145,7 @@ void drawHealthBar() {
         shadowOAMIndex++;
     }
 
-    for (int i = 1; i < 11; i++) {
+    for (int i = 1; i < 8; i++) {
 
         if (boss.lives >= 2 * (i + 1)) {
             shadowOAM[shadowOAMIndex].attr0 = (0xFF & (15)) | (0 << 14);
@@ -2170,16 +2170,16 @@ void drawHealthBar() {
 
     }
 
-    int end = (24 / 2) - 1;
+    int end = (18 / 2) - 1;
 
 
-    if (boss.lives == 24) {
+    if (boss.lives == 18) {
         shadowOAM[shadowOAMIndex].attr0 = (0xFF & (15)) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (startingCol + (8 * end))) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((6)*32 + ((12)));
         shadowOAMIndex++;
     }
-    else if (boss.lives == 24 - 1) {
+    else if (boss.lives == 18 - 1) {
         shadowOAM[shadowOAMIndex].attr0 = (0xFF & (15)) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (startingCol + (8 * end))) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((6)*32 + ((14)));
@@ -2236,14 +2236,16 @@ void spawnLettuce() {
                 lettuce[g].active = 1;
                 lettuce[g].worldRow = 80;
                 lettuce[g].worldCol = 40;
-                lettuce[g].lives = 1;
+                lettuce[g].aniState = 1;
+                lettuce[g].lives = 0;
                 return;
             }
             else {
                 lettuce[g].active = 1;
                 lettuce[g].worldRow = 80;
                 lettuce[g].worldCol = 200;
-                lettuce[g].lives = 1;
+                lettuce[g].aniState = 1;
+                lettuce[g].lives = 0;
                 counter++;
             }
         }

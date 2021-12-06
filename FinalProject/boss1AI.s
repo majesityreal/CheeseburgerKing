@@ -24,7 +24,7 @@ initBoss1:
 	mov	r2, #0
 	push	{r4, r5, r6, lr}
 	mov	lr, #6
-	mov	r6, #24
+	mov	r6, #18
 	mov	r5, #8
 	mov	r4, #1
 	mov	ip, #45
@@ -76,71 +76,69 @@ drawHealthBar:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
-	ldr	r9, .L20
-	ldr	r0, [r9]
+	push	{r4, r5, r6, r7, r8, r9, r10, lr}
+	ldr	r6, .L20
+	ldr	r0, [r6]
 	cmp	r0, #0
 	ble	.L6
 	mov	r3, #15
 	cmp	r0, #1
+	mov	ip, #72
 	moveq	r1, #237
 	movne	r1, #202
-	ldr	r10, .L20+4
-	ldr	r5, [r10]
-	ldr	r7, .L20+8
-	lsl	r2, r5, #3
-	mov	ip, #72
-	strh	r3, [r7, r2]	@ movhi
-	add	r3, r7, r5, lsl #3
-	strh	r1, [r3, #4]	@ movhi
-	mov	r4, #15
-	mov	r1, #4
-	mov	r8, #235
-	mov	fp, #205
-	mov	r6, #203
-	add	r2, r7, r2
-	lsl	lr, r2, #16
-	lsr	lr, lr, #16
+	ldr	r8, .L20+4
+	ldr	lr, [r8]
+	ldr	r4, .L20+8
+	lsl	r2, lr, #3
+	strh	r3, [r4, r2]	@ movhi
+	add	r3, r4, lr, lsl #3
 	strh	ip, [r3, #2]	@ movhi
-	rsb	lr, lr, #80
+	strh	r1, [r3, #4]	@ movhi
+	mov	ip, #15
+	mov	r3, #80
+	mov	r1, #4
+	mov	r7, #235
+	mov	r9, #205
+	mov	r5, #203
+	add	r2, r4, r2
 .L13:
-	add	r3, lr, r2
-	lsl	r3, r3, #16
 	cmp	r0, r1
-	lsr	r3, r3, #16
-	strh	r4, [r2, #8]	@ movhi
+	strh	ip, [r2, #8]	@ movhi
 	strh	r3, [r2, #10]	@ movhi
-	strhge	r6, [r2, #12]	@ movhi
-	sub	ip, r1, #1
+	strhge	r5, [r2, #12]	@ movhi
+	sub	r10, r1, #1
 	bge	.L11
-	cmp	r0, ip
-	strheq	fp, [r2, #12]	@ movhi
-	strhne	r8, [r2, #12]	@ movhi
+	cmp	r0, r10
+	strheq	r9, [r2, #12]	@ movhi
+	strhne	r7, [r2, #12]	@ movhi
 .L11:
+	add	r3, r3, #8
 	add	r1, r1, #2
-	cmp	r1, #24
+	lsl	r3, r3, #16
+	cmp	r1, #18
+	lsr	r3, r3, #16
 	add	r2, r2, #8
 	bne	.L13
-	ldr	r2, [r9]
-	cmp	r2, #24
+	ldr	r2, [r6]
+	cmp	r2, #18
 	mov	ip, #15
-	mov	r1, #160
+	mov	r1, #136
 	moveq	r2, #204
-	add	r3, r5, #11
+	add	r3, lr, #8
 	beq	.L19
-	cmp	r2, #23
+	cmp	r2, #17
 	moveq	r2, #206
 	movne	r2, #236
 .L19:
 	lsl	r0, r3, #3
-	add	r5, r5, #12
-	add	r3, r7, r3, lsl #3
-	str	r5, [r10]
-	strh	ip, [r7, r0]	@ movhi
+	add	lr, lr, #9
+	add	r3, r4, r3, lsl #3
+	str	lr, [r8]
+	strh	ip, [r4, r0]	@ movhi
 	strh	r1, [r3, #2]	@ movhi
 	strh	r2, [r3, #4]	@ movhi
 .L6:
-	pop	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+	pop	{r4, r5, r6, r7, r8, r9, r10, lr}
 	bx	lr
 .L21:
 	.align	2
@@ -378,53 +376,56 @@ spawnLettuce:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	mov	r3, #0
-	push	{r4, r5, r6, lr}
-	mov	ip, #1
-	mov	r4, r3
-	mov	r6, #80
-	mov	r5, #200
-	ldr	r2, .L56
+	push	{r4, r5, r6, r7, lr}
+	mov	lr, #1
+	mov	r5, r3
+	mov	r7, #80
+	mov	r6, #200
+	ldr	r1, .L56
 .L46:
-	add	r1, r3, r3, lsl #3
-	ldr	r0, [r2, r1, lsl #3]
-	cmp	r0, #0
-	lsl	lr, r3, #3
-	add	r0, r2, r1, lsl #3
+	add	r0, r3, r3, lsl #3
+	ldr	ip, [r1, r0, lsl #3]
+	cmp	ip, #0
+	add	r2, r1, r0, lsl #3
+	lsl	r4, r3, #3
 	bne	.L41
-	cmp	r4, #1
+	cmp	r5, #1
 	beq	.L45
 	add	r3, r3, #1
 	cmp	r3, #7
-	str	ip, [r2, r1, lsl #3]
-	str	r6, [r0, #8]
-	str	r5, [r0, #12]
-	str	ip, [r0, #48]
-	add	lr, r3, r3, lsl #3
+	str	lr, [r1, r0, lsl #3]
+	str	r7, [r2, #8]
+	str	r6, [r2, #12]
+	str	lr, [r2, #28]
+	str	ip, [r2, #48]
+	add	r4, r3, r3, lsl #3
 	beq	.L40
-	ldr	r1, [r2, lr, lsl #3]
-	cmp	r1, #0
-	lsl	lr, r3, #3
+	ldr	r2, [r1, r4, lsl #3]
+	cmp	r2, #0
+	lsl	r4, r3, #3
 	bne	.L55
 .L45:
 	mov	r0, #1
-	mov	r4, #80
-	mov	ip, #40
-	add	r3, lr, r3
-	add	r1, r2, r3, lsl #3
-	str	r4, [r1, #8]
-	str	ip, [r1, #12]
-	str	r0, [r1, #48]
-	str	r0, [r2, r3, lsl #3]
+	mov	r5, #80
+	mov	lr, #40
+	mov	ip, #0
+	add	r3, r4, r3
+	add	r2, r1, r3, lsl #3
+	str	r5, [r2, #8]
+	str	lr, [r2, #12]
+	str	ip, [r2, #48]
+	str	r0, [r2, #28]
+	str	r0, [r1, r3, lsl #3]
 .L40:
-	pop	{r4, r5, r6, lr}
+	pop	{r4, r5, r6, r7, lr}
 	bx	lr
 .L55:
-	mov	r4, #1
+	mov	r5, #1
 .L41:
 	add	r3, r3, #1
 	cmp	r3, #7
 	bne	.L46
-	pop	{r4, r5, r6, lr}
+	pop	{r4, r5, r6, r7, lr}
 	bx	lr
 .L57:
 	.align	2

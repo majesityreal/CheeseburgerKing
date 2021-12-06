@@ -668,8 +668,8 @@ game:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	ldr	r3, .L100
-	ldr	r3, [r3]
-	cmp	r3, #0
+	ldr	r2, [r3]
+	cmp	r2, #0
 	bne	.L99
 	ldr	r3, .L100+4
 	ldr	r3, [r3]
@@ -687,11 +687,14 @@ game:
 	pop	{r4, lr}
 	bx	lr
 .L99:
-	mov	r3, #0
-	ldr	r1, .L100+20
-	ldr	r2, .L100+24
-	str	r3, [r1]
-	str	r3, [r2]
+	mov	r2, #0
+	ldr	ip, .L100+20
+	ldr	r0, .L100+24
+	ldr	r1, .L100+28
+	str	r2, [r3]
+	str	r2, [ip]
+	str	r2, [r0]
+	str	r2, [r1]
 	b	setupTitleScreen
 .L101:
 	.align	2
@@ -703,6 +706,7 @@ game:
 	.word	drawGame
 	.word	hOff
 	.word	vOff
+	.word	dying
 	.size	game, .-game
 	.align	2
 	.global	goToPause

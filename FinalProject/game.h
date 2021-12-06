@@ -11,6 +11,8 @@
 #define JUMPVEL -5
 #define PARALLAXFACTOR 3
 
+#define COYOTE_TIME 8
+
 // number of frames the attack is
 #define ATTACK_DURATION 20
 #define ATTACK_SPEED 10
@@ -106,13 +108,15 @@ extern SLASH slash;
 
 extern LETTUCE lettuce[LETTUCECOUNT];
 extern BIG_LETTUCE big_lettuce[BIGLETTUCECOUNT];
-extern BL_BULLET bl_bullets[BIGLETTUCECOUNT * 2];
+extern BL_BULLET bl_bullets[BIGLETTUCECOUNT];
 
 extern int pauseVar;
 extern int level;
 
 // int to track whether player has died yet
 extern int dead;
+// for the death animation
+extern int dying;
 
 // keeps track of map to play, used for level selection
 extern int currMap;

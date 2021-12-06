@@ -14,7 +14,9 @@
 
 /*
 
-// which UI Button do you like better? 1,2,3?
+// how are the iFrames after being damaged? More / less?
+
+// Lethargic Lettuce - is it balanced?
 
 // How do I prevent the camera from overlapping itself? When at the bottom, I start to see the top of the map
 
@@ -356,6 +358,9 @@ void game() {
     if (dead) {
         hOff = 0;
         vOff = 0;
+        dead = 0;
+        // if we don't set dying here, when playing the player will go in an infinite death loop!
+        dying = 0;
         setupTitleScreen();
         return;
     }

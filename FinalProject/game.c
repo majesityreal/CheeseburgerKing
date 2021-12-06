@@ -20,7 +20,7 @@ SLASH slash;
 
 LETTUCE lettuce[LETTUCECOUNT];
 BIG_LETTUCE big_lettuce[BIGLETTUCECOUNT];
-BL_BULLET bl_bullets[BIGLETTUCECOUNT * 2];
+BL_BULLET bl_bullets[BIGLETTUCECOUNT];
 
 int shadowOAMIndex = 0;
 
@@ -44,6 +44,9 @@ int jumping = 0;
 // check for player double jump
 int doubleJumping = 0;
 
+// if player is dying
+int dying = 0;
+
 int dashing = 0;
 int dashingTimer = 0;
 int dashed = 0; // keeps track of whether or not you have dashed in the air (1 per airtime)
@@ -54,6 +57,7 @@ int jumpThud = 0;
 // velocity in the y axis
 int yVel = 0;
 int framesInAir = 0;
+int coyoteTimer = 0;
 
 // gravity timer, for falling velocity
 int gTimer = 0;
@@ -78,7 +82,7 @@ int dead = 0;
 int cameraLock = 0;
 
 // Player animation states for aniState
-enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP };
+enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP, DYING };
 
 // Initialize the game
 // #region init
@@ -145,7 +149,7 @@ void initSlash() {
 
     // making this (-) makes hitbox wider than sprite
     // making this (+) makes hitbox thinner than sprite
-    slash.hitboxCDel = -2;
+    slash.hitboxCDel = -3;
 
     // 0,0 by default
     slash.worldRow = 0;
@@ -167,9 +171,9 @@ void initEnemies() {
         lettuce[g].height = 15;
 
         lettuce[g].aniCounter = 0;
+        lettuce[g].aniState = 0;
         lettuce[g].curFrame = 0;
         lettuce[g].numFrames = 4;
-        lettuce[g].aniState = IDLE;
         // ai
         lettuce[g].direction = 0;
         lettuce[g].xRange = 128;
@@ -188,7 +192,7 @@ void initEnemies() {
         big_lettuce[g].aniCounter = 0;
         big_lettuce[g].curFrame = 0;
         big_lettuce[g].numFrames = 4;
-        big_lettuce[g].aniState = IDLE;
+        big_lettuce[g].aniState = 0;
         // ai
         big_lettuce[g].direction = 0;
         big_lettuce[g].xRange = 240;
@@ -199,10 +203,10 @@ void initEnemies() {
     }
 
     // sets up BL Bullets
-    for (int g = 0; g < BIGLETTUCECOUNT * 2; g++) {
+    for (int g = 0; g < BIGLETTUCECOUNT; g++) {
         bl_bullets[g].active = 0;
-        bl_bullets[g].width = 13;
-        bl_bullets[g].height = 15;
+        bl_bullets[g].width = 8;
+        bl_bullets[g].height = 8;
 
         bl_bullets[g].aniCounter = 0;
         bl_bullets[g].curFrame = 0;
@@ -334,8 +338,8 @@ void updateGame() {
 
 	updatePlayer();
     // ^^ update slash is a part of update player, since it is so minor
-    updateEnemies();
     updateBullets();
+    updateEnemies();
     updateMap();
 
     if (currMap == 1) {
@@ -343,7 +347,12 @@ void updateGame() {
     }
 
     // this determines lose conditions
-    if (player.hearts < 1 || player.worldRow > 240) {
+    if (player.hearts < 1 || player.worldRow > 238) {
+        if (!dying) {
+            player.curFrame = 0;
+            // this ensures that it starts the death animation on the first frame
+            player.aniCounter = 1;
+        }
         gameOver();
     }
 
@@ -399,7 +408,12 @@ void updateMap() {
 
 // Handle every-frame actions of the player
 void updatePlayer() {
-    // FIXME jumps are random?
+
+    // allows for playing the death animation, but locking all other player motion
+    if (dying) {
+        animatePlayer();
+        return;
+    }
 
     // #region yVel + jumping
     grounded = groundCheck(player.worldCol, player.worldRow, player.width, player.height);
@@ -408,11 +422,12 @@ void updatePlayer() {
         jumpThud = 0;
         doubleJumping = 0;
         dashed = 0;
+        coyoteTimer = 0;
     }
 
     // the check for double jumping - must go before regular jumping to prevent double counting
     // checks for whether the player jumped, or whether they are just falling
-    if(BUTTON_PRESSED(BUTTON_UP) && !doubleJumping && ((jumping || !grounded))) {
+    if(BUTTON_PRESSED(BUTTON_UP) && !doubleJumping && ((jumping || (!grounded && coyoteTimer >= COYOTE_TIME)))) {
         doubleJumping = 1;
         yVel = JUMPVEL;
         framesInAir = 0;
@@ -425,11 +440,12 @@ void updatePlayer() {
     }
 
     // the check for jumping - the double collision check ensures both bottoms are on ground, no coyote jumping! Should this be changed to be more merciful to players?
-    if(BUTTON_PRESSED(BUTTON_UP) && grounded && !dashing
+    if(BUTTON_PRESSED(BUTTON_UP) && (grounded || (!grounded && coyoteTimer < COYOTE_TIME)) && !dashing
         && !pCheckCollision(player.worldCol, player.worldRow - 1)
         && !pCheckCollision(player.worldCol + player.width, player.worldRow - 1)) {
             // sets y to -4 for upwards movement, gravity will eventually bring it down
             yVel = JUMPVEL;
+            framesInAir = 0;
             // need this
             grounded = 0;
             jumping = 1;
@@ -509,6 +525,8 @@ void updatePlayer() {
         if (gTimer % 4 == 0) {
             framesInAir++;
         }
+        // allows for jumps slightly after leaving ledge
+        coyoteTimer++;
         // this adds in button holding to affect jump height. (&& jumping) is to prevent quick release and press again
 
     }
@@ -652,7 +670,7 @@ void updatePlayer() {
             }
         }
         for (int j = 0; j < BIGLETTUCECOUNT; j++) {
-            if (collision(slash.worldCol + (256 * bgIndex) + slash.hitboxCDel, slash.worldRow, slash.width - slash.hitboxCDel, slash.height, big_lettuce[j].worldCol, big_lettuce[j].worldRow, big_lettuce[j].width, big_lettuce[j].height)) {
+            if (collision(slash.worldCol + (256 * bgIndex) + slash.hitboxCDel, slash.worldRow, slash.width - slash.hitboxCDel, slash.height, big_lettuce[j].worldCol, big_lettuce[j].worldRow, big_lettuce[j].width + 2, big_lettuce[j].height)) {
                 // mark it as damaged to prevent multiple hits per frame
                 if (!big_lettuce[j].damaged) {
                     big_lettuce[j].damaged = 1;
@@ -721,7 +739,7 @@ void updateEnemies() {
         }
 
         // checks for collision with player
-        if (collision(lettuce[g].worldCol, lettuce[g].worldRow, lettuce[g].width, lettuce[g].height, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
+        if (collision(lettuce[g].worldCol, lettuce[g].worldRow + 3, lettuce[g].width, lettuce[g].height - 2, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
             player.damaged = 1;
             player.hearts--;
             if (player.hearts < 1) {
@@ -794,7 +812,7 @@ void updateEnemies() {
         }
 
         // checks for collision with player
-        if (collision(big_lettuce[j].worldCol, big_lettuce[j].worldRow, big_lettuce[j].width, big_lettuce[j].height, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
+        if (collision(big_lettuce[j].worldCol + 1, big_lettuce[j].worldRow + 1, big_lettuce[j].width, big_lettuce[j].height, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
             player.damaged = 1;
             player.hearts--;
             if (player.hearts < 1) {
@@ -805,7 +823,6 @@ void updateEnemies() {
         int xDif = pMapPos - big_lettuce[j].worldCol;
         int yDif = player.worldRow - big_lettuce[j].worldRow;
         
-
         // checking if player is within range
         if (abs(xDif) < big_lettuce[j].xRange && abs(yDif) < big_lettuce[j].yRange) {
             if (gTimer % 2 == 0) {
@@ -831,8 +848,8 @@ void updateEnemies() {
                     if (big_lettuce[j].shootTimer > 40) {
                         big_lettuce[j].shooting = 0;
                         big_lettuce[j].shootTimer = 0;
-                        for (int i = 0; i < BIGLETTUCECOUNT * 2; i++) {
-                            if (!bl_bullets[i].active) {
+                        for (int i = 0; i < BIGLETTUCECOUNT; i++) {
+                            if (!bl_bullets[i].active || !bl_bullets[i].onScreen) {
                                 bl_bullets[i].direction = (big_lettuce[j].direction * 2 - 1);
                                 bl_bullets[i].worldCol = big_lettuce[j].worldCol;
                                 bl_bullets[i].worldRow = big_lettuce[j].worldRow + 8;
@@ -853,7 +870,7 @@ void updateEnemies() {
 }
 
 void updateBullets() {
-    for (int g = 0; g < BIGLETTUCECOUNT * 2; g++) {
+    for (int g = 0; g < BIGLETTUCECOUNT; g++) {
         if (!bl_bullets[g].active) {
             return;
         }
@@ -870,8 +887,10 @@ void updateBullets() {
         bl_bullets[g].worldCol += (bl_bullets[g].direction * bl_bullets[g].speed);
 
         // if off screen by far, 'destroy' bullet
-        if (!(bl_bullets[g].worldCol + bl_bullets[g].width > (pMapPos - 480) && bl_bullets[g].worldCol < (pMapPos + 480))) {
+        if (!( (bl_bullets[g].worldCol + bl_bullets[g].width > (pMapPos - 480) && bl_bullets[g].worldCol < (pMapPos + 480 ) ) )
+            && bl_bullets[g].onScreen == 0) {
             bl_bullets[g].active = 0;
+            bl_bullets[g].onScreen = 0;
             return;
         }
 
@@ -881,13 +900,13 @@ void updateBullets() {
         // }
 
         // check for player collision - make sure bullet is on the screen
-        if (collision(bl_bullets[g].worldCol, bl_bullets[g].worldRow, bl_bullets[g].width, bl_bullets[g].height, pMapPos, player.worldRow, player.width, player.height)
+        if (collision(bl_bullets[g].worldCol + 3, bl_bullets[g].worldRow + 4, bl_bullets[g].width, bl_bullets[g].height, pMapPos, player.worldRow, player.width, player.height)
          && bl_bullets[g].onScreen) {
             if (!player.damaged) {
                 player.hearts--;
                 player.damaged = 1;
+                bl_bullets[g].active = 0;
             }
-            bl_bullets[g].active = 0;
             // SOUND - maybe play sound here?
         }
 
@@ -933,6 +952,9 @@ void drawPlayer() {
             case DAMAGED:
             shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame % 3 * 2), (player.aniState + 1) * 2);
             break;
+            case DYING:
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((14 + (player.curFrame * 2)), 0);
+            break;
             default:
             shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((player.curFrame * 2), player.aniState * 2);
             break;
@@ -961,7 +983,7 @@ void drawEnemies() {
                 shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(1) | ATTR2_TILEID(((lettuce[g].curFrame % 2) + 9), 4) * 2;
             }
             else {
-                shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(1) | ATTR2_TILEID((lettuce[g].curFrame + 9), 2) * 2;
+                shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(1) | ATTR2_TILEID((lettuce[g].curFrame + 9), (2 + lettuce[g].aniState)) * 2;
             }
         }
         shadowOAMIndex++;
@@ -995,30 +1017,31 @@ void drawEnemies() {
 }
 
 void drawBullets() {
-    for (int i = 0; i < BIGLETTUCECOUNT * 2; i++) {
-        if (!bl_bullets[i].active || !bl_bullets[i].onScreen) {
+    for (int i = 0; i < BIGLETTUCECOUNT; i++) {
+        if (!(bl_bullets[i].active) || !(bl_bullets[i].onScreen)) {
             shadowOAM[shadowOAMIndex].attr0 |= ATTR0_HIDE;
+            shadowOAMIndex++;
         } 
         else {
             int xCol = (bl_bullets[i].worldCol - (hOff + (256 * bgIndex)));
-        // the reason vOff and hOff are included in here is to keep them according to the camera
-        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (bl_bullets[i].worldRow - vOff)) | ATTR0_SQUARE;
-        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (xCol)) | ATTR1_SMALL;
-        // flipping
-        switch (bl_bullets[i].curFrame) {
-            case 1:
-            shadowOAM[shadowOAMIndex].attr1 |= ATTR1_HFLIP;
-            break;
-            case 2:
-            shadowOAM[shadowOAMIndex].attr1 |= ATTR1_HFLIP;
-            shadowOAM[shadowOAMIndex].attr1 |= ATTR1_VFLIP;
-            break;
-            case 3:
-            shadowOAM[shadowOAMIndex].attr1 |= ATTR1_VFLIP;
-            break;
-            default:
-            break;
-        }
+            // the reason vOff and hOff are included in here is to keep them according to the camera
+            shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (bl_bullets[i].worldRow - vOff)) | ATTR0_SQUARE;
+            shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (xCol)) | ATTR1_SMALL;
+            // flipping
+            switch (bl_bullets[i].curFrame) {
+                case 1:
+                shadowOAM[shadowOAMIndex].attr1 |= ATTR1_HFLIP;
+                break;
+                case 2:
+                shadowOAM[shadowOAMIndex].attr1 |= ATTR1_HFLIP;
+                shadowOAM[shadowOAMIndex].attr1 |= ATTR1_VFLIP;
+                break;
+                case 3:
+                shadowOAM[shadowOAMIndex].attr1 |= ATTR1_VFLIP;
+                break;
+                default:
+                break;
+            }
         shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(1) | ATTR2_TILEID((10), 6) * 2;
         shadowOAMIndex++;
         bl_bullets[i].aniCounter++;
@@ -1080,33 +1103,61 @@ void animatePlayer() {
     if (player.attacking) {
         player.aniState = ATTACK;
     }
-    if (player.damaged) {
+    if (player.damaged && player.damageCounter <= 8) {
         player.aniState = DAMAGED;
     }
     if (dashing && grounded) {
         player.aniState = DOUBLEJUMP;
     }
+    if (dying) {
+        player.aniState = DYING;
+    }
 
-    // Change the animation frame every X frames of gameplay for different states
-    if(player.aniCounter % ATTACK_SPEED == 0 && player.aniState == ATTACK) {
-        player.curFrame = (player.curFrame + 1) % player.numFrames;
-    }
-    else if (player.aniCounter % 5 == 0 && player.aniState == RUNNING) {
-        player.curFrame = (player.curFrame + 1) % player.numFrames;
-    }
-    else if (player.aniCounter % 5 == 0 && player.aniState == DOUBLEJUMP) {
-        player.curFrame = (player.curFrame + 1) % player.numFrames;
-    }
-    else if (player.aniCounter % 5 == 0 && player.aniState == DAMAGED) {
-        player.curFrame = (player.curFrame + 1) % player.numFrames;
-        player.damageCounter++;
-        if (player.damageCounter > 8) {
-            player.damaged = 0;
-            player.damageCounter = 0;
+    // Change the animation frame every X frames of gameplay for different states. make sure not dying first
+    if (!dying) {
+        if(player.aniCounter % ATTACK_SPEED == 0 && player.aniState == ATTACK) {
+            player.curFrame = (player.curFrame + 1) % player.numFrames;
+        }
+        else if (player.aniCounter % 5 == 0 && player.aniState == RUNNING) {
+            player.curFrame = (player.curFrame + 1) % player.numFrames;
+        }
+        else if (player.aniCounter % 5 == 0 && player.aniState == DOUBLEJUMP) {
+            player.curFrame = (player.curFrame + 1) % player.numFrames;
+        }
+        else if (player.aniCounter % 5 == 0 && player.damaged && !dying) {
+            if (player.aniState == DAMAGED) {
+                player.curFrame = (player.curFrame + 1) % player.numFrames;
+            }
+            player.damageCounter++;
+            if (player.damageCounter > 12) {
+                player.damaged = 0;
+                player.damageCounter = 0;
+            }
+        }
+        else if (player.aniCounter % 10 == 0) {
+            player.curFrame = (player.curFrame + 1) % player.numFrames;
         }
     }
-    else if (player.aniCounter % 10 == 0) {
-        player.curFrame = (player.curFrame + 1) % player.numFrames;
+    // this handles the last death animation
+    else if (player.curFrame < 2) {
+        if (player.aniCounter % 8 == 0) {
+            player.curFrame++;
+        }
+    }
+    else if (player.curFrame == 2) {
+        if (player.aniCounter % 12 == 0) {
+            player.curFrame++;
+        }
+    }
+    else if (player.curFrame <= (player.numFrames + 1)){
+        if (player.aniCounter % 10 == 0) {
+            player.curFrame++;
+        }
+    }
+    else {
+        if (player.aniCounter % 30 == 0) {
+            dead = 1;
+        }
     }
 
     player.aniCounter++;
@@ -1119,24 +1170,12 @@ void animateEnemies() {
         if (lettuce[g].aniCounter % 10 == 0) {
             lettuce[g].curFrame = (lettuce[g].curFrame + 1) % lettuce[g].numFrames;
         }
-        if (lettuce[g].damaged) {
-            lettuce[g].aniState = 1;
-        }
-        else {
-            lettuce[g].aniState = 0;
-        }
         lettuce[g].aniCounter++;
     }
 
     for (int g = 0; g < BIGLETTUCECOUNT; g++) {
         if (big_lettuce[g].aniCounter % 10 == 0) {
             big_lettuce[g].curFrame = (big_lettuce[g].curFrame + 1) % big_lettuce[g].numFrames;
-        }
-        if (big_lettuce[g].damaged) {
-            big_lettuce[g].aniState = 1;
-        }
-        else {
-            big_lettuce[g].aniState = 0;
         }
         big_lettuce[g].aniCounter++;
     }
@@ -1311,5 +1350,11 @@ void drawHUD() {
 
 // this handles when player loses all lives / hearts, or falls off map
 void gameOver() {
-    dead = 1;
+    if (!dying) {
+        // SOUND - dying (mario lose)
+        dying = 1;
+        player.aniState = DYING;
+        player.curFrame = 0;
+        cameraLock = 1;
+    }
 }

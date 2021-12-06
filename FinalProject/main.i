@@ -1407,14 +1407,14 @@ typedef struct {
     void animateEnemies();
     void updateEnemies();
 # 5 "game.h" 2
-# 22 "game.h"
+# 24 "game.h"
 typedef struct {
     int currFrame;
     int totalFrames;
     int xLocation;
     int yLocation;
 } SELECTOR;
-# 36 "game.h"
+# 38 "game.h"
 typedef struct {
     int index;
     unsigned char* map;
@@ -1488,13 +1488,15 @@ extern SLASH slash;
 
 extern LETTUCE lettuce[7];
 extern BIG_LETTUCE big_lettuce[6];
-extern BL_BULLET bl_bullets[6 * 2];
+extern BL_BULLET bl_bullets[6];
 
 extern int pauseVar;
 extern int level;
 
 
 extern int dead;
+
+extern int dying;
 
 
 extern int currMap;
@@ -1579,7 +1581,7 @@ extern const unsigned short parallaxBGMap[1024];
 
 extern const unsigned short parallaxBGPal[256];
 # 14 "main.c" 2
-# 30 "main.c"
+# 32 "main.c"
 void initialize();
 
 
@@ -1860,7 +1862,7 @@ void startGame() {
     srand(timer);
 
     waitForVBlank();
-# 325 "main.c"
+# 327 "main.c"
     DMANow(3, parallaxBGTiles, &((charblock *)0x6000000)[2], 7808 / 2);
     DMANow(3, parallaxBGMap, &((screenblock *)0x6000000)[22], 2048 / 2);
 
@@ -1895,6 +1897,9 @@ void game() {
     if (dead) {
         hOff = 0;
         vOff = 0;
+        dead = 0;
+
+        dying = 0;
         setupTitleScreen();
         return;
     }
@@ -1907,7 +1912,7 @@ void game() {
 
 
 }
-# 389 "main.c"
+# 394 "main.c"
 void goToPause() {
     state = PAUSE;
 }
