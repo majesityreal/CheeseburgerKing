@@ -40,16 +40,12 @@ void playSoundA( const signed char* sound, int length, int loops) {
 
 
 void playSoundB( const signed char* sound, int length, int loops) {
+    REG_TM1CNT = 0;
 
-    dma[2].cnt = 0;
 
     int ticks = PROCESSOR_CYCLES_PER_SECOND / SOUND_FREQ;
 
-    DMANow(2, sound, REG_FIFO_B, DMA_DESTINATION_FIXED | DMA_AT_REFRESH | DMA_REPEAT | DMA_32);
-
-    REG_TM1CNT = 0;
-
-    REG_TM1D = -ticks;
+    REG_TM1D = -ticks;    
     REG_TM1CNT = TIMER_ON;
 
     soundB.data = sound;
@@ -58,6 +54,9 @@ void playSoundB( const signed char* sound, int length, int loops) {
     soundB.isPlaying = 1;
     soundB.duration = (VBLANK_FREQ * length) / SOUND_FREQ;
     soundB.vBlankCount = 0;
+
+    DMANow(2, sound, REG_FIFO_B, DMA_DESTINATION_FIXED | DMA_AT_REFRESH | DMA_REPEAT | DMA_32);
+
 }
 
 void setupInterrupts() {

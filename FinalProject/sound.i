@@ -166,14 +166,10 @@ void playSoundA( const signed char* sound, int length, int loops) {
 
 
 void playSoundB( const signed char* sound, int length, int loops) {
+    *(volatile unsigned short*)0x4000106 = 0;
 
-    dma[2].cnt = 0;
 
     int ticks = (16777216) / 11025;
-
-    DMANow(2, sound, (u16*)0x040000A4, (2 << 21) | (3 << 28) | (1 << 25) | (1 << 26));
-
-    *(volatile unsigned short*)0x4000106 = 0;
 
     *(volatile unsigned short*)0x4000104 = -ticks;
     *(volatile unsigned short*)0x4000106 = (1<<7);
@@ -184,6 +180,9 @@ void playSoundB( const signed char* sound, int length, int loops) {
     soundB.isPlaying = 1;
     soundB.duration = ((59.727) * length) / 11025;
     soundB.vBlankCount = 0;
+
+    DMANow(2, sound, (u16*)0x040000A4, (2 << 21) | (3 << 28) | (1 << 25) | (1 << 26));
+
 }
 
 void setupInterrupts() {

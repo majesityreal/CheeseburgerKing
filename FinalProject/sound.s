@@ -124,51 +124,47 @@ playSoundB:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, r5, r6, r7, r8, lr}
-	mov	r7, #0
-	ldr	r3, .L11+8
-	ldr	r3, [r3]
-	mov	r5, r1
-	mov	r6, r0
-	mov	r8, r2
-	mov	r1, r0
-	str	r7, [r3, #32]
-	mov	r0, #2
-	mov	r3, #910163968
-	ldr	r2, .L11+12
-	ldr	r4, .L11+16
-	mov	lr, pc
-	bx	r4
-	mov	r2, #1
-	mvn	r0, #1520
-	mov	r1, #128
-	ldr	r4, .L11+20
-	ldr	r3, .L11+24
-	strh	r7, [r3, #6]	@ movhi
-	strh	r0, [r3, #4]	@ movhi
-	strh	r1, [r3, #6]	@ movhi
-	mov	r0, r5
-	str	r5, [r4, #4]
-	str	r2, [r4, #12]
-	ldr	r3, .L11+28
-	str	r6, [r4]
-	str	r8, [r4, #16]
+	mov	ip, #128
+	mvn	lr, #1520
+	mov	r5, r0
+	mov	r6, #0
+	mov	r0, r1
+	mov	r1, #1
+	ldr	r4, .L11+8
+	ldr	r3, .L11+12
+	strh	r6, [r3, #6]	@ movhi
+	strh	lr, [r3, #4]	@ movhi
+	strh	ip, [r3, #6]	@ movhi
+	str	r5, [r4]
+	str	r2, [r4, #16]
+	ldr	r3, .L11+16
+	str	r0, [r4, #4]
+	str	r1, [r4, #12]
 	mov	lr, pc
 	bx	r3
-	ldr	r5, .L11+32
+	ldr	r7, .L11+20
 	adr	r3, .L11
 	ldmia	r3, {r2-r3}
 	mov	lr, pc
-	bx	r5
+	bx	r7
 	mov	r2, #0
-	ldr	r5, .L11+36
-	ldr	r3, .L11+40
+	ldr	r7, .L11+24
+	ldr	r3, .L11+28
 	mov	lr, pc
-	bx	r5
-	ldr	r3, .L11+44
+	bx	r7
+	ldr	r3, .L11+32
 	mov	lr, pc
 	bx	r3
-	str	r7, [r4, #28]
-	str	r0, [r4, #20]
+	mov	ip, r0
+	mov	r1, r5
+	mov	r3, #910163968
+	ldr	r5, .L11+36
+	mov	r0, #2
+	ldr	r2, .L11+40
+	str	ip, [r4, #20]
+	str	r6, [r4, #28]
+	mov	lr, pc
+	bx	r5
 	pop	{r4, r5, r6, r7, r8, lr}
 	bx	lr
 .L12:
@@ -176,9 +172,6 @@ playSoundB:
 .L11:
 	.word	1443109011
 	.word	1078844686
-	.word	dma
-	.word	67109028
-	.word	DMANow
 	.word	soundB
 	.word	67109120
 	.word	__aeabi_i2d
@@ -186,6 +179,8 @@ playSoundB:
 	.word	__aeabi_ddiv
 	.word	1086687360
 	.word	__aeabi_d2iz
+	.word	DMANow
+	.word	67109028
 	.size	playSoundB, .-playSoundB
 	.align	2
 	.global	interruptHandler

@@ -401,38 +401,28 @@ initMaps:
 	ldr	r4, .L35+20
 	b	.L32
 .L30:
-	ldr	r3, .L35+60
-	mov	r2, #1
-	ldr	r1, [r3]
-	ldr	r0, .L35+64
-	ldr	r3, .L35+16
-	mov	lr, pc
-	bx	r3
-	mov	r0, #60
+	mov	r2, #60
 	mov	r1, #66
-	mov	r2, #28
-	ldr	r3, [r5]
+	mov	r3, #28
 	ldr	r4, .L35+20
-	add	r3, r3, r3, lsl #4
-	add	r3, r4, r3, lsl #5
-	str	r0, [r3, #20]
-	str	r1, [r3, #28]
-	ldr	r0, .L35+68
-	ldr	r1, .L35+72
-	str	r0, [r3, #4]
-	str	r1, [r3, #8]
-	ldr	r0, .L35+76
-	ldr	r1, .L35+80
-	str	r0, [r3, #12]
-	str	r1, [r3, #24]
-	str	r6, [r3, #16]
-	ldr	r0, .L35+36
-	ldr	r1, .L35+40
-	str	r2, [r3, #32]
-	str	r2, [r3, #36]
-	ldr	r3, .L35+84
-	str	r6, [r0, #4]
-	str	r3, [r1]
+	str	r2, [r4, #20]
+	ldr	r2, .L35+60
+	str	r2, [r4, #4]
+	ldr	r2, .L35+64
+	str	r1, [r4, #28]
+	str	r2, [r4, #8]
+	ldr	r1, .L35+68
+	ldr	r2, .L35+72
+	str	r1, [r4, #12]
+	str	r2, [r4, #24]
+	ldr	r1, .L35+36
+	ldr	r2, .L35+40
+	str	r3, [r4, #32]
+	str	r3, [r4, #36]
+	ldr	r3, .L35+76
+	str	r6, [r4, #16]
+	str	r6, [r1, #4]
+	str	r3, [r2]
 	b	.L32
 .L36:
 	.align	2
@@ -452,8 +442,6 @@ initMaps:
 	.word	waitForVBlank
 	.word	DMANow
 	.word	100712448
-	.word	map1Song_length
-	.word	map1Song_data
 	.word	map1Map
 	.word	map1Pal
 	.word	map1Tiles
@@ -2923,39 +2911,45 @@ updateGame:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	ldr	r3, .L544
+	push	{r4, lr}
+	ldr	r4, .L547
+	ldr	r3, [r4, #56]
+	cmp	r3, #0
+	bne	.L528
+	ldr	r3, .L547+4
 	ldrh	r3, [r3]
 	tst	r3, #8
-	push	{r4, lr}
 	and	r3, r3, #4
-	beq	.L529
-	ldr	r2, .L544+4
-	ldrh	r2, [r2]
-	tst	r2, #8
-	bne	.L529
-	mov	r2, #1
-	ldr	r3, .L544+8
-	str	r2, [r3, #56]
+	bne	.L545
 .L531:
+	cmp	r3, #0
+	beq	.L533
+	ldr	r3, .L547+8
+	ldrh	r3, [r3]
+	tst	r3, #4
+	bne	.L533
+.L532:
+	mov	r3, #1
+	str	r3, [r4, #56]
+.L533:
 	bl	updatePlayer
 	bl	updateBullets
 	bl	updateEnemies
 	bl	updateMap
-	ldr	r3, .L544+12
+	ldr	r3, .L547+12
 	ldr	r3, [r3]
 	cmp	r3, #1
-	beq	.L543
-.L532:
-	ldr	r3, .L544+16
+	beq	.L546
+.L534:
+	ldr	r3, .L547+16
 	ldr	r2, [r3, #72]
 	cmp	r2, #0
-	ble	.L533
+	ble	.L535
 	ldr	r2, [r3, #8]
 	cmp	r2, #238
 	ble	.L528
-.L533:
-	ldr	r2, .L544+8
-	ldr	r2, [r2]
+.L535:
+	ldr	r2, [r4]
 	cmp	r2, #0
 	bne	.L528
 	mov	r1, #1
@@ -2963,30 +2957,26 @@ updateGame:
 	str	r2, [r3, #44]
 	str	r1, [r3, #32]
 	b	gameOver.part.0
-.L529:
-	cmp	r3, #0
-	beq	.L531
-	ldr	r3, .L544+4
-	ldrh	r3, [r3]
-	tst	r3, #4
-	moveq	r2, #1
-	ldreq	r3, .L544+8
-	streq	r2, [r3, #56]
-	b	.L531
 .L528:
 	pop	{r4, lr}
 	bx	lr
-.L543:
-	ldr	r3, .L544+20
+.L545:
+	ldr	r2, .L547+8
+	ldrh	r2, [r2]
+	tst	r2, #8
+	beq	.L532
+	b	.L531
+.L546:
+	ldr	r3, .L547+20
 	mov	lr, pc
 	bx	r3
-	b	.L532
-.L545:
+	b	.L534
+.L548:
 	.align	2
-.L544:
+.L547:
+	.word	.LANCHOR0
 	.word	oldButtons
 	.word	buttons
-	.word	.LANCHOR0
 	.word	currMap
 	.word	player
 	.word	updateBoss1
@@ -3014,18 +3004,18 @@ drawHUD:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	ldr	r3, .L556
+	ldr	r3, .L559
 	push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
-	ldr	r6, .L556+4
+	ldr	r6, .L559+4
 	ldr	r3, [r3, #72]
 	ldr	ip, [r6, #12]
 	cmp	r3, #0
 	add	r4, ip, #1
-	ble	.L555
+	ble	.L558
 	mov	r2, #0
 	mov	r5, #16384
 	mov	r1, #198
-	ldr	r0, .L556+8
+	ldr	r0, .L559+8
 	cmp	r3, #1
 	lsl	lr, ip, #3
 	addeq	r3, ip, #2
@@ -3035,8 +3025,8 @@ drawHUD:
 	moveq	ip, r4
 	strh	r1, [lr, #4]	@ movhi
 	moveq	r4, r3
-	beq	.L548
-	ldr	r5, .L556+12
+	beq	.L551
+	ldr	r5, .L559+12
 	add	lr, r0, r4, lsl #3
 	cmp	r3, #2
 	lsl	r4, r4, #3
@@ -3046,8 +3036,8 @@ drawHUD:
 	strh	r2, [r0, r4]	@ movhi
 	addeq	r4, ip, #3
 	moveq	ip, lr
-	beq	.L548
-	ldr	r4, .L556+16
+	beq	.L551
+	ldr	r4, .L559+16
 	cmp	r3, #3
 	add	r3, r0, lr, lsl #3
 	strh	r4, [r3, #2]	@ movhi
@@ -3057,7 +3047,7 @@ drawHUD:
 	moveq	ip, r3
 	lsl	lr, lr, #3
 	strh	r2, [r0, lr]	@ movhi
-	ldrne	r4, .L556+20
+	ldrne	r4, .L559+20
 	addne	lr, r0, r3, lsl #3
 	lslne	r3, r3, #3
 	strhne	r1, [lr, #4]	@ movhi
@@ -3065,12 +3055,12 @@ drawHUD:
 	strhne	r4, [lr, #2]	@ movhi
 	addne	r4, ip, #5
 	addne	ip, ip, #4
-.L548:
+.L551:
 	ldr	r2, [r6, #60]
-	ldr	lr, .L556+24
+	ldr	lr, .L559+24
 	smull	r3, lr, r2, lr
 	asr	r10, r2, #31
-	ldr	r1, .L556+28
+	ldr	r1, .L559+28
 	rsb	lr, r10, lr, asr #5
 	smull	r3, fp, r1, r2
 	add	r3, lr, lr, lsl #2
@@ -3102,10 +3092,10 @@ drawHUD:
 	strh	r2, [r1, #4]	@ movhi
 	strh	r8, [lr, #2]	@ movhi
 	add	r2, ip, #3
-	ldr	lr, .L556+32
+	ldr	lr, .L559+32
 	lsl	r4, r4, #3
 	add	r3, ip, #4
-	ldr	ip, .L556+36
+	ldr	ip, .L559+36
 	strh	r5, [r0, r4]	@ movhi
 	lsl	r4, r2, #3
 	add	r2, r0, r2, lsl #3
@@ -3117,12 +3107,12 @@ drawHUD:
 	strh	ip, [r2, #4]	@ movhi
 	pop	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
 	bx	lr
-.L555:
-	ldr	r0, .L556+8
-	b	.L548
-.L557:
+.L558:
+	ldr	r0, .L559+8
+	b	.L551
+.L560:
 	.align	2
-.L556:
+.L559:
 	.word	player
 	.word	.LANCHOR0
 	.word	shadowOAM
@@ -3144,45 +3134,48 @@ drawGame:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
+	ldr	r3, .L569
+	ldr	r2, [r3, #56]
+	cmp	r2, #0
+	bxne	lr
 	mov	r1, #1
-	ldr	r2, .L562
 	push	{r4, lr}
-	ldr	r3, .L562+4
-	str	r1, [r2, #12]
+	ldr	r2, .L569+4
+	str	r1, [r3, #12]
 	mov	lr, pc
-	bx	r3
+	bx	r2
 	bl	drawHUD
-	ldr	r3, .L562+8
+	ldr	r3, .L569+8
 	ldr	r3, [r3]
 	cmp	r3, #1
-	beq	.L561
-.L559:
+	beq	.L568
+.L563:
 	bl	drawPlayer
 	bl	drawSlash
 	bl	drawEnemies
 	bl	drawBullets
-	ldr	r3, .L562+12
+	ldr	r3, .L569+12
 	mov	lr, pc
 	bx	r3
-	ldr	r4, .L562+16
+	ldr	r4, .L569+16
 	mov	r3, #512
 	mov	r2, #117440512
 	mov	r0, #3
-	ldr	r1, .L562+20
+	ldr	r1, .L569+20
 	mov	lr, pc
 	bx	r4
 	mov	r1, #67108864
-	ldr	r3, .L562+24
+	ldr	r3, .L569+24
 	ldr	r2, [r3]
 	lsl	r3, r2, #16
 	lsr	r3, r3, #16
 	strh	r3, [r1, #20]	@ movhi
-	ldr	r3, .L562+28
+	ldr	r3, .L569+28
 	ldrh	r0, [r3]
-	ldr	r3, .L562+32
+	ldr	r3, .L569+32
 	strh	r0, [r1, #22]	@ movhi
 	ldr	r0, [r3]
-	ldr	r3, .L562+36
+	ldr	r3, .L569+36
 	add	r2, r2, r0, lsl #8
 	smull	r0, r3, r2, r3
 	sub	r3, r3, r2, asr #31
@@ -3191,17 +3184,17 @@ drawGame:
 	strh	r3, [r1, #24]	@ movhi
 	pop	{r4, lr}
 	bx	lr
-.L561:
-	ldr	r3, .L562+40
+.L568:
+	ldr	r3, .L569+40
 	mov	lr, pc
 	bx	r3
-	ldr	r3, .L562+44
+	ldr	r3, .L569+44
 	mov	lr, pc
 	bx	r3
-	b	.L559
-.L563:
+	b	.L563
+.L570:
 	.align	2
-.L562:
+.L569:
 	.word	.LANCHOR0
 	.word	hideSprites
 	.word	currMap
@@ -3226,14 +3219,14 @@ gameOver:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	@ link register save eliminated.
-	ldr	r3, .L566
+	ldr	r3, .L573
 	ldr	r3, [r3]
 	cmp	r3, #0
 	bxne	lr
 	b	gameOver.part.0
-.L567:
+.L574:
 	.align	2
-.L566:
+.L573:
 	.word	.LANCHOR0
 	.size	gameOver, .-gameOver
 	.global	cameraLock

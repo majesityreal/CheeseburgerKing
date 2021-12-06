@@ -1530,6 +1530,8 @@ void updatePlayer();
 void updateBullets();
 
 void gameOver();
+
+void hurtPlayer();
 # 5 "main.c" 2
 # 1 "text.h" 1
 
@@ -1617,8 +1619,16 @@ extern const unsigned int menuSong_length;
 extern const signed char menuSong_data[];
 # 19 "main.c" 2
 
+# 1 "sfx_jump1.h" 1
+
+
+extern const unsigned int sfx_jump1_sampleRate;
+extern const unsigned int sfx_jump1_length;
+extern const signed char sfx_jump1_data[];
+# 21 "main.c" 2
+
 SOUND menuSong;
-# 37 "main.c"
+# 39 "main.c"
 void initialize();
 
 
@@ -1778,6 +1788,11 @@ void titleScreen() {
         }
     }
 
+    if ((!(~(oldButtons) & ((1 << 8))) && (~buttons & ((1 << 8))))) {
+        playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
+    }
+
+
     if ((!(~(oldButtons) & ((1 << 0))) && (~buttons & ((1 << 0)))) && !(~((*(volatile unsigned short *)0x04000130)) & ((1 << 6)))) {
         switch (currSelection) {
             case 0:
@@ -1889,7 +1904,7 @@ void drawButtons() {
         shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((16))*32 + ((6)));
         shadowOAMIndex++;
     }
-    else {
+    else if (state == LEVEL_SELECT) {
 
         for (int i = 0; i < 5; i++) {
             shadowOAM[shadowOAMIndex].attr0 = (0xFF & (selector.yLocation - 4 + (i * 16))) | (0 << 14);
@@ -1898,6 +1913,20 @@ void drawButtons() {
             shadowOAMIndex++;
         }
 
+    }
+    else {
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (selector.yLocation - 4)) | (1 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (selector.xLocation + 8)) | (2 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((12))*32 + ((6)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (selector.yLocation + 12)) | (1 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (selector.xLocation + 8)) | (2 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((14))*32 + ((6)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (selector.yLocation + 28)) | (1 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (selector.xLocation + 8)) | (2 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((16))*32 + ((6)));
+        shadowOAMIndex++;
     }
 }
 
@@ -1956,7 +1985,7 @@ void startGame() {
     srand(timer);
 
     waitForVBlank();
-# 389 "main.c"
+# 410 "main.c"
     DMANow(3, parallaxBGTiles, &((charblock *)0x6000000)[2], 7808 / 2);
     DMANow(3, parallaxBGMap, &((screenblock *)0x6000000)[22], 2048 / 2);
 
@@ -1991,6 +2020,10 @@ void startGame() {
 
 
 void game() {
+    if (pauseVar) {
+        goToPause();
+        return;
+    }
     if (dead) {
         hOff = 0;
         vOff = 0;
@@ -2000,28 +2033,33 @@ void game() {
         setupTitleScreen();
         return;
     }
-    if (pauseVar) {
-        goToPause();
-    }
+
     updateGame();
     drawGame();
-
-
-
 }
-# 459 "main.c"
+
+
 void goToPause() {
     state = PAUSE;
+    waitForVBlank();
+    drawButtons();
+    DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
 }
 
 
 void pause() {
-
+# 492 "main.c"
     if ((!(~(oldButtons) & ((1 << 0))) && (~buttons & ((1 << 0)))) | (!(~(oldButtons) & ((1 << 1))) && (~buttons & ((1 << 1)))) | (!(~(oldButtons) & ((1 << 3))) && (~buttons & ((1 << 3)))) | (!(~(oldButtons) & ((1 << 2))) && (~buttons & ((1 << 2))))) {
-            (*(volatile unsigned short *)0x4000000) = 4 | (1 << 10);
+        pauseVar = 0;
 
         state = GAME;
+        return;
     }
+
+
+
+
+
 }
 
 

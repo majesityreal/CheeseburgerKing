@@ -296,7 +296,7 @@ void initMaps() {
     {
     case 0:
 
-        playSoundA(map1Song_data, map1Song_length, 1);
+        // playSoundA(map1Song_data, map1Song_length, 1);
 
         cameraLock = 0;
         maps[currMap].startingHOff = 0;
@@ -345,6 +345,9 @@ void initMaps() {
 
 // Updates the game each frame
 void updateGame() {
+    if (pauseVar) {
+        return;
+    }
     // pauses the game
     if (BUTTON_PRESSED(BUTTON_START) | BUTTON_PRESSED(BUTTON_SELECT)) {
         pauseVar = 1;
@@ -374,6 +377,11 @@ void updateGame() {
 
 // Draws the game each frame
 void drawGame() {
+
+    if (pauseVar) {
+        return;
+    }
+
     shadowOAMIndex = 1;
     hideSprites();
     drawHUD();
@@ -458,6 +466,7 @@ void updatePlayer() {
     if(BUTTON_PRESSED(BUTTON_UP) && (grounded || (!grounded && coyoteTimer < COYOTE_TIME)) && !dashing
         && !pCheckCollision(player.worldCol, player.worldRow - 1)
         && !pCheckCollision(player.worldCol + player.width, player.worldRow - 1)) {
+            // delay
             playSoundB(sfx_jump2_data, sfx_jump2_length, 0);
             // sets y to -4 for upwards movement, gravity will eventually bring it down
             yVel = JUMPVEL;
@@ -667,6 +676,8 @@ void updatePlayer() {
     }
     // #endregion
 
+
+    // #region attacking slash
     slash.worldCol = player.worldCol + (slash.cdel * ((player.direction * -2) + 1)) - 2;
     slash.worldRow = player.worldRow;
     animateSlash();
@@ -730,6 +741,8 @@ void updatePlayer() {
         playSoundB(sfx_attack_data, sfx_attack_length / 2, 0);
 
     }
+
+    // #endregion
 
     // update the gravity check timer, so gravity is more smooth
     gTimer++;

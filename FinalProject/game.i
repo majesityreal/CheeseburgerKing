@@ -2201,7 +2201,7 @@ void initMaps() {
     {
     case 0:
 
-        playSoundA(map1Song_data, map1Song_length, 1);
+
 
         cameraLock = 0;
         maps[currMap].startingHOff = 0;
@@ -2250,6 +2250,9 @@ void initMaps() {
 
 
 void updateGame() {
+    if (pauseVar) {
+        return;
+    }
 
     if ((!(~(oldButtons) & ((1 << 3))) && (~buttons & ((1 << 3)))) | (!(~(oldButtons) & ((1 << 2))) && (~buttons & ((1 << 2))))) {
         pauseVar = 1;
@@ -2279,6 +2282,11 @@ void updateGame() {
 
 
 void drawGame() {
+
+    if (pauseVar) {
+        return;
+    }
+
     shadowOAMIndex = 1;
     hideSprites();
     drawHUD();
@@ -2363,6 +2371,7 @@ void updatePlayer() {
     if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && (grounded || (!grounded && coyoteTimer < 8)) && !dashing
         && !pCheckCollision(player.worldCol, player.worldRow - 1)
         && !pCheckCollision(player.worldCol + player.width, player.worldRow - 1)) {
+
             playSoundB(sfx_jump2_data, sfx_jump2_length, 0);
 
             yVel = -5;
@@ -2572,6 +2581,8 @@ void updatePlayer() {
     }
 
 
+
+
     slash.worldCol = player.worldCol + (slash.cdel * ((player.direction * -2) + 1)) - 2;
     slash.worldRow = player.worldRow;
     animateSlash();
@@ -2635,6 +2646,8 @@ void updatePlayer() {
         playSoundB(sfx_attack_data, sfx_attack_length / 2, 0);
 
     }
+
+
 
 
     gTimer++;
@@ -3171,7 +3184,7 @@ void hurtPlayer() {
 
 
 void drawFont() {
-# 1324 "game.c"
+# 1337 "game.c"
 }
 
 void drawHUD() {

@@ -17,6 +17,8 @@
 
 #include "menuSong.h"
 
+#include "sfx_jump1.h"
+
 SOUND menuSong;
 
 /*
@@ -192,6 +194,11 @@ void titleScreen() {
             currSelection = 0;
         }
     }
+
+    if (BUTTON_PRESSED(BUTTON_R)) {
+        playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
+    }
+    
     // if start,select pressed, launch into game
     if (BUTTON_PRESSED(BUTTON_A) && !BUTTON_HELD(BUTTON_UP)) {
         switch (currSelection) {
@@ -304,7 +311,7 @@ void drawButtons() {
         shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((6), (16));
         shadowOAMIndex++;
     }
-    else {
+    else if (state == LEVEL_SELECT) {
         // using this to count indices to easily add more levels
         for (int i = 0; i < 5; i++) {
             shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (selector.yLocation - 4 + (i * 16))) | ATTR0_SQUARE;
@@ -313,6 +320,20 @@ void drawButtons() {
             shadowOAMIndex++;
         }
 
+    }
+    else {
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (selector.yLocation - 4)) | ATTR0_WIDE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (selector.xLocation + 8)) | ATTR1_MEDIUM;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((6), (12));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (selector.yLocation + 12)) | ATTR0_WIDE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (selector.xLocation + 8)) | ATTR1_MEDIUM;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((6), (14));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (selector.yLocation + 28)) | ATTR0_WIDE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (selector.xLocation + 8)) | ATTR1_MEDIUM;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((6), (16));
+        shadowOAMIndex++;
     }
 }
 
@@ -420,6 +441,10 @@ void startGame() {
 
 // Runs every frame of the game state
 void game() {
+    if (pauseVar) {
+        goToPause();
+        return;
+    }
     if (dead) {
         hOff = 0;
         vOff = 0;
@@ -429,45 +454,52 @@ void game() {
         setupTitleScreen();
         return;
     }
-    if (pauseVar) {
-        goToPause();
-    }
+
     updateGame();
     drawGame();
-    // if (lives < 1) {
-    //     goToLose();
-    // }
 }
-
-// // Sets up the start state
-// void goToStart() {
-//     REG_DISPCTL = MODE3 | BG2_ENABLE;
-//     state = TITLE;
-// }
-
-// // Runs every frame of the start state
-// void start() {
-//     fillScreen3(RED);
-//     timer++;
-//     if (BUTTON_PRESSED(BUTTON_A)) {
-//         goToGame();
-//         initGame();
-//     }
-// }
 
 // Sets up the pause state
 void goToPause() {
     state = PAUSE;
+    waitForVBlank();
+    drawButtons();
+    DMANow(3, shadowOAM, OAM, 128 * 4);
 }
 
 // Runs every frame of the pause state
 void pause() {
+
+    // FIXME - when pressing alternate button it no work o
     
+    // if (BUTTON_PRESSED(BUTTON_UP)) {
+    //     currSelection--;
+    //     if (currSelection < 0) {
+    //         currSelection = BUTTON_COUNT + 1;
+    //     }
+    // }
+    // if (BUTTON_PRESSED(BUTTON_DOWN)) {
+    //     currSelection++;
+    //     if (currSelection > BUTTON_COUNT + 1) {
+    //         currSelection = 0;
+    //     }
+    // }
+
+
+
+
+
     if (BUTTON_PRESSED(BUTTON_A) | BUTTON_PRESSED(BUTTON_B) | BUTTON_PRESSED(BUTTON_START) | BUTTON_PRESSED(BUTTON_SELECT)) {
-            REG_DISPCTL = MODE4 | BG2_ENABLE;
+        pauseVar = 0;
         // TODO - add functionality for going to game without having to restart it
         state = GAME;
+        return;
     }
+
+    // waitForVBlank();
+    // drawButtons();
+    // DMANow(3, shadowOAM, OAM, 128 * 4);
+
 }
 
 // Sets up the win state
