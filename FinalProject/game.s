@@ -2403,19 +2403,23 @@ updatePlayer:
 	ldr	r3, .L497+80
 	mov	lr, pc
 	bx	r3
+	mov	r1, #67108864
+	mov	r0, #256
 	mov	r5, #376
-	mov	r0, #67108864
-	mov	r1, #256
 	ldr	r3, [r8]
 	add	r2, r3, #23
 	lsl	r2, r2, #24
 	orr	r2, r2, #1073741824
-	sub	r3, r3, #1
 	lsr	r2, r2, #16
+	sub	r3, r3, #1
 	str	r3, [r8]
-	strh	r2, [r0, #10]	@ movhi
+	strh	r2, [r1, #10]	@ movhi
+	ldr	r2, .L497+32
+	ldrh	r2, [r2]
+	str	r0, [r9]
+	strh	r0, [r1, #20]	@ movhi
+	strh	r2, [r1, #22]	@ movhi
 	str	r5, [r7, #12]
-	str	r1, [r9]
 	lsl	r3, r3, #8
 .L385:
 	ldr	r2, .L497+28
@@ -2459,20 +2463,24 @@ updatePlayer:
 	ldr	r3, .L497+80
 	mov	lr, pc
 	bx	r3
-	mov	r5, #120
 	mov	r0, #67108864
-	mov	r1, #0
+	mov	ip, #0
+	mov	r5, #120
 	ldr	r3, [r8]
 	add	r2, r3, #25
 	lsl	r2, r2, #24
+	add	r1, r3, #1
 	orr	r2, r2, #1073741824
+	ldr	r3, .L497+32
 	lsr	r2, r2, #16
-	add	r3, r3, #1
-	str	r3, [r8]
+	str	r1, [r8]
 	strh	r2, [r0, #10]	@ movhi
-	lsl	r3, r3, #8
+	ldrh	r2, [r3]
+	str	ip, [r9]
+	lsl	r3, r1, #8
+	strh	ip, [r0, #20]	@ movhi
+	strh	r2, [r0, #22]	@ movhi
 	str	r5, [r7, #12]
-	str	r1, [r9]
 	ldr	r2, [r7, #8]
 	b	.L387
 .L485:

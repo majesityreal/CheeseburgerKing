@@ -2451,12 +2451,15 @@ void updatePlayer() {
 
 
                     if (hOff <= 0 && bgIndex != 0) {
+
                         waitForVBlank();
                         bgIndex--;
                         (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((24 + bgIndex) << 8) | (1 << 14) | (0 << 7);
                         hOff = 256;
-                        player.worldCol = 120 + 256;
 
+                        (*(volatile unsigned short *)0x04000014) = hOff;
+                        (*(volatile unsigned short *)0x04000016) = vOff;
+                        player.worldCol = 120 + 256;
                     }
                 }
             }
@@ -2474,14 +2477,14 @@ void updatePlayer() {
                     }
 
 
-
                     if (hOff > 256) {
                         waitForVBlank();
                         bgIndex++;
                         (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((24 + bgIndex) << 8) | (1 << 14) | (0 << 7);
                         hOff = 0;
+                        (*(volatile unsigned short *)0x04000014) = hOff;
+                        (*(volatile unsigned short *)0x04000016) = vOff;
                         player.worldCol = 120;
-
                     }
                 }
             }
@@ -3085,7 +3088,7 @@ int eCheckCollision(int col, int row) {
 
 
 void drawFont() {
-# 1300 "game.c"
+# 1303 "game.c"
 }
 
 void drawHUD() {

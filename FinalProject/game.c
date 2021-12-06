@@ -608,12 +608,15 @@ void updatePlayer() {
                     
                     // left map / camera changing!
                     if (hOff <= 0 && bgIndex != 0) {
+
                         waitForVBlank();
                         bgIndex--;
                         REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(24 + bgIndex) | BG_SIZE_WIDE | BG_4BPP;
                         hOff = 256;
+                        // we need to set these right away to stop the 1 frame visual artifacts ! SO HAPPY I FIXED THIS !
+                        REG_BG1HOFF = hOff;
+                        REG_BG1VOFF = vOff;
                         player.worldCol = 120 + 256;
-                        // pWorldPos += 256;
                     }
                 }
             }
@@ -629,7 +632,6 @@ void updatePlayer() {
                     if (hOff <= 256 && (player.worldCol - hOff > (SCREENWIDTH / 2)) && pMapPos <= (MAPWIDTH - 120)) {
                         hOff += player.cdel;
                     }
-
                     // check for right camera changes
                     // if goes over, changes thingy
                     if (hOff > 256) {
@@ -637,8 +639,9 @@ void updatePlayer() {
                         bgIndex++;
                         REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(24 + bgIndex) | BG_SIZE_WIDE | BG_4BPP;
                         hOff = 0;
+                        REG_BG1HOFF = hOff;
+                        REG_BG1VOFF = vOff;
                         player.worldCol = 120;
-                        // pWorldPos = 256;
                     }
                 }
             }
