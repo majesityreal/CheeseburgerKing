@@ -95,10 +95,9 @@ typedef volatile struct
 extern DMA *dma;
 # 268 "myLib.h"
 void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned int cnt);
-
-
-
-
+# 304 "myLib.h"
+typedef void (*ihp)(void);
+# 324 "myLib.h"
 int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB);
 # 2 "text.c" 2
 # 1 "text.h" 1

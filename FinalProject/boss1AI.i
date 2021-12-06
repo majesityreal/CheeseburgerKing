@@ -95,10 +95,9 @@ typedef volatile struct
 extern DMA *dma;
 # 268 "mylib.h"
 void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned int cnt);
-
-
-
-
+# 304 "mylib.h"
+typedef void (*ihp)(void);
+# 324 "mylib.h"
 int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB);
 # 2 "boss1AI.c" 2
 # 1 "game.h" 1
@@ -1493,13 +1492,15 @@ extern SLASH slash;
 
 extern LETTUCE lettuce[7];
 extern BIG_LETTUCE big_lettuce[6];
-extern BL_BULLET bl_bullets[6 * 2];
+extern BL_BULLET bl_bullets[6];
 
 extern int pauseVar;
 extern int level;
 
 
 extern int dead;
+
+extern int dying;
 
 
 extern int currMap;
@@ -1534,6 +1535,8 @@ void updatePlayer();
 void updateBullets();
 
 void gameOver();
+
+void hurtPlayer();
 # 3 "boss1AI.c" 2
 # 1 "boss1AI.h" 1
 
@@ -1935,6 +1938,7 @@ const int sin_lut_fixed8[] = {
   -4
 };
 # 6 "boss1AI.c" 2
+
 
 
 int timer;

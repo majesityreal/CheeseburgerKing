@@ -9,6 +9,14 @@
 #include "boss1.h"
 #include "boss1Collision.h"
 
+#include "sound.h"
+#include "map1Song.h"
+#include "bossSong.h"
+#include "sfx_attack.h"
+#include "sfx_player_hurt.h"
+#include "sfx_jump1.h"
+#include "sfx_jump2.h"
+
 
 
 
@@ -287,6 +295,9 @@ void initMaps() {
     switch (currMap)
     {
     case 0:
+
+        playSoundA(map1Song_data, map1Song_length, 1);
+
         cameraLock = 0;
         maps[currMap].startingHOff = 0;
         maps[currMap].startingVOff = 60;
@@ -304,6 +315,9 @@ void initMaps() {
 
         break;
     case 1:
+
+        playSoundA(bossSong_data, bossSong_length, 1);
+
         cameraLock = 1;
         maps[currMap].startingHOff = 0;
         maps[currMap].startingVOff = 0;
@@ -428,6 +442,7 @@ void updatePlayer() {
     // the check for double jumping - must go before regular jumping to prevent double counting
     // checks for whether the player jumped, or whether they are just falling
     if(BUTTON_PRESSED(BUTTON_UP) && !doubleJumping && ((jumping || (!grounded && coyoteTimer >= COYOTE_TIME)))) {
+        playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
         doubleJumping = 1;
         yVel = JUMPVEL;
         framesInAir = 0;
@@ -443,6 +458,7 @@ void updatePlayer() {
     if(BUTTON_PRESSED(BUTTON_UP) && (grounded || (!grounded && coyoteTimer < COYOTE_TIME)) && !dashing
         && !pCheckCollision(player.worldCol, player.worldRow - 1)
         && !pCheckCollision(player.worldCol + player.width, player.worldRow - 1)) {
+            playSoundB(sfx_jump2_data, sfx_jump2_length, 0);
             // sets y to -4 for upwards movement, gravity will eventually bring it down
             yVel = JUMPVEL;
             framesInAir = 0;
@@ -609,7 +625,6 @@ void updatePlayer() {
                     // left map / camera changing!
                     if (hOff <= 0 && bgIndex != 0) {
 
-                        waitForVBlank();
                         bgIndex--;
                         REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(24 + bgIndex) | BG_SIZE_WIDE | BG_4BPP;
                         hOff = 256;
@@ -635,7 +650,6 @@ void updatePlayer() {
                     // check for right camera changes
                     // if goes over, changes thingy
                     if (hOff > 256) {
-                        waitForVBlank();
                         bgIndex++;
                         REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(24 + bgIndex) | BG_SIZE_WIDE | BG_4BPP;
                         hOff = 0;
@@ -712,6 +726,9 @@ void updatePlayer() {
         slash.curFrame = 0;
         // I am setting to 0 because I am controlling individual frames of attack
         slash.aniCounter = 0;
+        
+        playSoundB(sfx_attack_data, sfx_attack_length / 2, 0);
+
     }
 
     // update the gravity check timer, so gravity is more smooth
@@ -743,11 +760,7 @@ void updateEnemies() {
 
         // checks for collision with player
         if (collision(lettuce[g].worldCol, lettuce[g].worldRow + 3, lettuce[g].width, lettuce[g].height - 2, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
-            player.damaged = 1;
-            player.hearts--;
-            if (player.hearts < 1) {
-                gameOver();
-            }
+            hurtPlayer();
         }
 
         int xDif = pMapPos - lettuce[g].worldCol;
@@ -816,11 +829,7 @@ void updateEnemies() {
 
         // checks for collision with player
         if (collision(big_lettuce[j].worldCol + 1, big_lettuce[j].worldRow + 1, big_lettuce[j].width, big_lettuce[j].height, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
-            player.damaged = 1;
-            player.hearts--;
-            if (player.hearts < 1) {
-                gameOver();
-            }
+            hurtPlayer();
         }
 
         int xDif = pMapPos - big_lettuce[j].worldCol;
@@ -906,6 +915,7 @@ void updateBullets() {
         if (collision(bl_bullets[g].worldCol + 3, bl_bullets[g].worldRow + 4, bl_bullets[g].width, bl_bullets[g].height, pMapPos, player.worldRow, player.width, player.height)
          && bl_bullets[g].onScreen) {
             if (!player.damaged) {
+                playSoundB(sfx_player_hurt_data, sfx_player_hurt_length, 0);
                 player.hearts--;
                 player.damaged = 1;
                 bl_bullets[g].active = 0;
@@ -1241,6 +1251,17 @@ int eCheckCollision(int col, int row) {
             return 1;
         }
     return 0;
+}
+
+void hurtPlayer() {
+    if (!player.damaged) {
+        playSoundB(sfx_player_hurt_data, sfx_player_hurt_length, 0);
+        player.hearts--;
+        player.damaged = 1;
+    }
+    if (player.hearts < 1) {
+        gameOver();
+    }
 }
 
 // i am using this for debugging

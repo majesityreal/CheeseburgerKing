@@ -1317,10 +1317,9 @@ typedef volatile struct
 extern DMA *dma;
 # 268 "myLib.h"
 void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned int cnt);
-
-
-
-
+# 304 "myLib.h"
+typedef void (*ihp)(void);
+# 324 "myLib.h"
 int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB);
 # 4 "main.c" 2
 # 1 "game.h" 1
@@ -1540,7 +1539,7 @@ void drawString(int col, int row, char *str, unsigned short color);
 
 # 1 "titlescreen.h" 1
 # 22 "titlescreen.h"
-extern const unsigned short TitleScreenTiles[6288];
+extern const unsigned short TitleScreenTiles[6080];
 
 
 extern const unsigned short TitleScreenMap[1024];
@@ -1581,7 +1580,45 @@ extern const unsigned short parallaxBGMap[1024];
 
 extern const unsigned short parallaxBGPal[256];
 # 14 "main.c" 2
-# 32 "main.c"
+
+
+# 1 "sound.h" 1
+void setupSounds();
+void playSoundA(const signed char* sound, int length, int loops);
+void playSoundB(const signed char* sound, int length, int loops);
+
+void setupInterrupts();
+void interruptHandler();
+
+void pauseSound();
+void unpauseSound();
+void stopSound();
+# 49 "sound.h"
+typedef struct{
+    const signed char* data;
+    int length;
+    int frequency;
+    int isPlaying;
+    int loops;
+    int duration;
+    int priority;
+    int vBlankCount;
+} SOUND;
+
+SOUND soundA;
+SOUND soundB;
+# 17 "main.c" 2
+
+# 1 "menuSong.h" 1
+
+
+extern const unsigned int menuSong_sampleRate;
+extern const unsigned int menuSong_length;
+extern const signed char menuSong_data[];
+# 19 "main.c" 2
+
+SOUND menuSong;
+# 37 "main.c"
 void initialize();
 
 
@@ -1610,6 +1647,8 @@ void drawButtons();
 void setupTitleScreen();
 void titleScreen();
 
+void drawWaterfall();
+
 
 enum
 {
@@ -1633,6 +1672,12 @@ int timer = 0;
 int currSelection = 0;
 SELECTOR selector;
 
+int waterfallTimer = 0;
+int waterfallX = 120;
+int waterfallY = 55;
+int waterfallFrames = 0;
+int kingFrames = 0;
+
 
 OBJ_ATTR shadowOAM[128];
 
@@ -1641,6 +1686,10 @@ int main()
     timer = 0;
     buttons = (*(volatile unsigned short *)0x04000130);
     oldButtons = 0;
+
+
+    setupSounds();
+    setupInterrupts();
 
     setupTitleScreen();
 
@@ -1684,7 +1733,7 @@ void setupTitleScreen() {
     (*(volatile unsigned short *)0x400000C) = (0 << 7) | ((0) << 2) | ((24) << 8);
 
     DMANow(3, TitleScreenPal, ((unsigned short *)0x5000000), 512 / 2);
-    DMANow(3, TitleScreenTiles, &((charblock *)0x6000000)[0], 12576 / 2);
+    DMANow(3, TitleScreenTiles, &((charblock *)0x6000000)[0], 12160 / 2);
     DMANow(3, TitleScreenMap, &((screenblock *)0x6000000)[24], 2048 / 2);
 
 
@@ -1694,7 +1743,6 @@ void setupTitleScreen() {
     (*(volatile unsigned short *)0x0400001A) = vOff;
     (*(volatile unsigned short *)0x04000018) = hOff;
 
-    state = TITLE;
 
 
     selector.currFrame = 0;
@@ -1704,11 +1752,17 @@ void setupTitleScreen() {
 
     DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
 
+    stopSound();
+    playSoundA(menuSong_data, menuSong_length, 1);
+
+    state = TITLE;
+
 }
 
 
 void titleScreen() {
     timer++;
+    waterfallTimer++;
     shadowOAMIndex = 0;
     hideSprites();
     if ((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6))))) {
@@ -1746,6 +1800,8 @@ void titleScreen() {
         drawButtons();
     }
 
+    drawWaterfall();
+
 
     DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
 }
@@ -1757,6 +1813,7 @@ void setupLevelSelect() {
 
 void levelSelect() {
     timer++;
+    waterfallTimer++;
     shadowOAMIndex = 0;
     hideSprites();
     if ((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6))))) {
@@ -1791,6 +1848,7 @@ void levelSelect() {
 
     drawSelector();
     drawButtons();
+    drawWaterfall();
 
     DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
 }
@@ -1843,6 +1901,42 @@ void drawButtons() {
     }
 }
 
+void drawWaterfall() {
+    shadowOAM[shadowOAMIndex].attr0 = (0xFF & (waterfallY)) | (2 << 14);
+    shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (waterfallX)) | (2 << 14);
+    shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((0))*32 + (17 + (2 * waterfallFrames)));
+    shadowOAMIndex++;
+    shadowOAM[shadowOAMIndex].attr0 = (0xFF & (waterfallY + 32)) | (2 << 14);
+    shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (waterfallX)) | (2 << 14);
+    shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((4))*32 + (17 + (2 * waterfallFrames)));
+    shadowOAMIndex++;
+    shadowOAM[shadowOAMIndex].attr0 = (0xFF & (waterfallY + 64)) | (2 << 14);
+    shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (waterfallX)) | (2 << 14);
+    shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((8))*32 + (17 + (2 * waterfallFrames)));
+    shadowOAMIndex++;
+
+    shadowOAM[shadowOAMIndex].attr0 = (0xFF & (waterfallY + 88)) | (1 << 14);
+    shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (waterfallX - 9)) | (2 << 14);
+    shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((18))*32 + (8 + (4 * waterfallFrames)));
+    shadowOAMIndex++;
+
+
+    shadowOAM[shadowOAMIndex].attr0 = (0xFF & (waterfallY - 26)) | (2 << 14);
+    shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (waterfallX - 9)) | (2 << 14);
+    shadowOAM[shadowOAMIndex].attr2 = ((1) << 12) | ((13)*32 + (17 + (2 * kingFrames)));
+    shadowOAMIndex++;
+
+    if (waterfallTimer % 6 == 0) {
+        waterfallFrames++;
+        waterfallFrames = waterfallFrames % 6;
+    }
+    if (waterfallTimer % 12 == 0) {
+        kingFrames++;
+        kingFrames = kingFrames % 4;
+    }
+
+}
+
 
 void startGame() {
 
@@ -1862,7 +1956,7 @@ void startGame() {
     srand(timer);
 
     waitForVBlank();
-# 327 "main.c"
+# 389 "main.c"
     DMANow(3, parallaxBGTiles, &((charblock *)0x6000000)[2], 7808 / 2);
     DMANow(3, parallaxBGMap, &((screenblock *)0x6000000)[22], 2048 / 2);
 
@@ -1884,6 +1978,9 @@ void startGame() {
     hideSprites();
 
     DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
+
+    stopSound();
+
 
     dead = 0;
     state = GAME;
@@ -1912,7 +2009,7 @@ void game() {
 
 
 }
-# 394 "main.c"
+# 459 "main.c"
 void goToPause() {
     state = PAUSE;
 }

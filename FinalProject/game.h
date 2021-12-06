@@ -151,3 +151,5 @@ void updatePlayer();
 void updateBullets();
 
 void gameOver();
+
+void hurtPlayer();

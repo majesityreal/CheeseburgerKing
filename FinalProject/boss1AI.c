@@ -5,6 +5,7 @@
 #include "sin.notquitec"
 
 
+
 int timer;
 int damageTimer = 0;
 

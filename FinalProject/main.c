@@ -12,16 +12,21 @@
 // parallax background
 #include "parallaxBG.h"
 
+// SOUND!
+#include "sound.h"
+
+#include "menuSong.h"
+
+SOUND menuSong;
+
 /*
 
 // how are the iFrames after being damaged? More / less?
 
 // Lethargic Lettuce - is it balanced?
 
-// How do I prevent the camera from overlapping itself? When at the bottom, I start to see the top of the map
-
 KNOWN BUGS:
-    - The lettuce projectiles will ocassionaly freeze
+    FIXED, YAY! - The lettuce projectiles will ocassionaly freeze
        I do not know the cause of this, but it is very minor, and they are fixed as soon as the big_lettuce fires another one. It is visual glitch
 
     - There is a weird bug where when I press up, it sometimes registers as pressing 'A'??? In the title screen, I had to purposely negate this for the buttons
@@ -57,6 +62,8 @@ void drawButtons();
 void setupTitleScreen();
 void titleScreen();
 
+void drawWaterfall();
+
 // States
 enum
 {
@@ -80,6 +87,12 @@ int timer = 0;
 int currSelection = 0;
 SELECTOR selector;
 
+int waterfallTimer = 0;
+int waterfallX = 120;
+int waterfallY = 55;
+int waterfallFrames = 0;
+int kingFrames = 0;
+
 // Shadow OAM
 OBJ_ATTR shadowOAM[128];
 
@@ -89,6 +102,10 @@ int main()
     buttons = BUTTONS;
     oldButtons = 0;
     // sets up the title screen
+
+    setupSounds();
+    setupInterrupts();
+
     setupTitleScreen();
 
     while (1)
@@ -141,7 +158,6 @@ void setupTitleScreen() {
     REG_BG2VOFF = vOff;
     REG_BG2HOFF = hOff;
 
-    state = TITLE;
 
     // setting up selector. not big enough to grant its own method
     selector.currFrame = 0;
@@ -151,11 +167,17 @@ void setupTitleScreen() {
 
     DMANow(3, shadowOAM, OAM, 128 * 4);
 
+    stopSound();
+    playSoundA(menuSong_data, menuSong_length, 1);
+
+    state = TITLE;
+
 }
 
 // runs every frame of the title screen
 void titleScreen() {
     timer++;
+    waterfallTimer++;
     shadowOAMIndex = 0;
     hideSprites();
     if (BUTTON_PRESSED(BUTTON_UP)) {
@@ -193,6 +215,8 @@ void titleScreen() {
         drawButtons();
     }
 
+    drawWaterfall();
+
 
     DMANow(3, shadowOAM, OAM, 128 * 4);
 }
@@ -204,6 +228,7 @@ void setupLevelSelect() {
 
 void levelSelect() {
     timer++;
+    waterfallTimer++;
     shadowOAMIndex = 0;
     hideSprites();
     if (BUTTON_PRESSED(BUTTON_UP)) {
@@ -238,6 +263,7 @@ void levelSelect() {
 
     drawSelector();
     drawButtons();
+    drawWaterfall();
 
     DMANow(3, shadowOAM, OAM, 128 * 4);
 }
@@ -288,6 +314,42 @@ void drawButtons() {
         }
 
     }
+}
+
+void drawWaterfall() {
+    shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (waterfallY)) | ATTR0_TALL;
+    shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (waterfallX)) | ATTR1_MEDIUM;
+    shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(17 + (2 * waterfallFrames), (0));
+    shadowOAMIndex++;
+    shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (waterfallY + 32)) | ATTR0_TALL;
+    shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (waterfallX)) | ATTR1_MEDIUM;
+    shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(17 + (2 * waterfallFrames), (4));
+    shadowOAMIndex++;
+    shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (waterfallY + 64)) | ATTR0_TALL;
+    shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (waterfallX)) | ATTR1_MEDIUM;
+    shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(17 + (2 * waterfallFrames), (8));
+    shadowOAMIndex++;
+    // this is the fuzz at the bottom of the waterfall
+    shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (waterfallY + 88)) | ATTR0_WIDE;
+    shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (waterfallX - 9)) | ATTR1_MEDIUM;
+    shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(8 + (4 * waterfallFrames), (18));
+    shadowOAMIndex++;
+
+    // this is the king
+    shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (waterfallY - 26)) | ATTR0_TALL;
+    shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (waterfallX - 9)) | ATTR1_MEDIUM;
+    shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(1) | ATTR2_TILEID(17 + (2 * kingFrames), 13);
+    shadowOAMIndex++;
+            
+    if (waterfallTimer % 6 == 0) {
+        waterfallFrames++;
+        waterfallFrames = waterfallFrames % 6;
+    }
+    if (waterfallTimer % 12 == 0) {
+        kingFrames++;
+        kingFrames = kingFrames % 4;
+    }
+
 }
 
 // sets up the game into mode 0 and all the required setups
@@ -345,6 +407,9 @@ void startGame() {
     hideSprites();
     // spooky scary shadowOAM
     DMANow(3, shadowOAM, OAM, 128 * 4);
+
+    stopSound();
+    
 
     dead = 0;
     state = GAME;

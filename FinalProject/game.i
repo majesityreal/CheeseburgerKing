@@ -967,10 +967,9 @@ typedef volatile struct
 extern DMA *dma;
 # 268 "myLib.h"
 void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned int cnt);
-
-
-
-
+# 304 "myLib.h"
+typedef void (*ihp)(void);
+# 324 "myLib.h"
 int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB);
 # 3 "game.c" 2
 # 1 "game.h" 1
@@ -1779,6 +1778,8 @@ void updatePlayer();
 void updateBullets();
 
 void gameOver();
+
+void hurtPlayer();
 # 4 "game.c" 2
 # 1 "boss1AI.h" 1
 
@@ -1851,6 +1852,75 @@ extern const unsigned short boss1CollisionBitmap[262144];
 
 extern const unsigned short boss1CollisionPal[256];
 # 11 "game.c" 2
+
+# 1 "sound.h" 1
+void setupSounds();
+void playSoundA(const signed char* sound, int length, int loops);
+void playSoundB(const signed char* sound, int length, int loops);
+
+void setupInterrupts();
+void interruptHandler();
+
+void pauseSound();
+void unpauseSound();
+void stopSound();
+# 49 "sound.h"
+typedef struct{
+    const signed char* data;
+    int length;
+    int frequency;
+    int isPlaying;
+    int loops;
+    int duration;
+    int priority;
+    int vBlankCount;
+} SOUND;
+
+SOUND soundA;
+SOUND soundB;
+# 13 "game.c" 2
+# 1 "map1Song.h" 1
+
+
+extern const unsigned int map1Song_sampleRate;
+extern const unsigned int map1Song_length;
+extern const signed char map1Song_data[];
+# 14 "game.c" 2
+# 1 "bossSong.h" 1
+
+
+extern const unsigned int bossSong_sampleRate;
+extern const unsigned int bossSong_length;
+extern const signed char bossSong_data[];
+# 15 "game.c" 2
+# 1 "sfx_attack.h" 1
+
+
+extern const unsigned int sfx_attack_sampleRate;
+extern const unsigned int sfx_attack_length;
+extern const signed char sfx_attack_data[];
+# 16 "game.c" 2
+# 1 "sfx_player_hurt.h" 1
+
+
+extern const unsigned int sfx_player_hurt_sampleRate;
+extern const unsigned int sfx_player_hurt_length;
+extern const signed char sfx_player_hurt_data[];
+# 17 "game.c" 2
+# 1 "sfx_jump1.h" 1
+
+
+extern const unsigned int sfx_jump1_sampleRate;
+extern const unsigned int sfx_jump1_length;
+extern const signed char sfx_jump1_data[];
+# 18 "game.c" 2
+# 1 "sfx_jump2.h" 1
+
+
+extern const unsigned int sfx_jump2_sampleRate;
+extern const unsigned int sfx_jump2_length;
+extern const signed char sfx_jump2_data[];
+# 19 "game.c" 2
 
 
 
@@ -2130,6 +2200,9 @@ void initMaps() {
     switch (currMap)
     {
     case 0:
+
+        playSoundA(map1Song_data, map1Song_length, 1);
+
         cameraLock = 0;
         maps[currMap].startingHOff = 0;
         maps[currMap].startingVOff = 60;
@@ -2147,6 +2220,9 @@ void initMaps() {
 
         break;
     case 1:
+
+        playSoundA(bossSong_data, bossSong_length, 1);
+
         cameraLock = 1;
         maps[currMap].startingHOff = 0;
         maps[currMap].startingVOff = 0;
@@ -2271,6 +2347,7 @@ void updatePlayer() {
 
 
     if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && !doubleJumping && ((jumping || (!grounded && coyoteTimer >= 8)))) {
+        playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
         doubleJumping = 1;
         yVel = -5;
         framesInAir = 0;
@@ -2286,6 +2363,7 @@ void updatePlayer() {
     if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && (grounded || (!grounded && coyoteTimer < 8)) && !dashing
         && !pCheckCollision(player.worldCol, player.worldRow - 1)
         && !pCheckCollision(player.worldCol + player.width, player.worldRow - 1)) {
+            playSoundB(sfx_jump2_data, sfx_jump2_length, 0);
 
             yVel = -5;
             framesInAir = 0;
@@ -2452,7 +2530,6 @@ void updatePlayer() {
 
                     if (hOff <= 0 && bgIndex != 0) {
 
-                        waitForVBlank();
                         bgIndex--;
                         (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((24 + bgIndex) << 8) | (1 << 14) | (0 << 7);
                         hOff = 256;
@@ -2478,7 +2555,6 @@ void updatePlayer() {
 
 
                     if (hOff > 256) {
-                        waitForVBlank();
                         bgIndex++;
                         (*(volatile unsigned short *)0x400000A) = ((0) << 2) | ((24 + bgIndex) << 8) | (1 << 14) | (0 << 7);
                         hOff = 0;
@@ -2555,6 +2631,9 @@ void updatePlayer() {
         slash.curFrame = 0;
 
         slash.aniCounter = 0;
+
+        playSoundB(sfx_attack_data, sfx_attack_length / 2, 0);
+
     }
 
 
@@ -2586,11 +2665,7 @@ void updateEnemies() {
 
 
         if (collision(lettuce[g].worldCol, lettuce[g].worldRow + 3, lettuce[g].width, lettuce[g].height - 2, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
-            player.damaged = 1;
-            player.hearts--;
-            if (player.hearts < 1) {
-                gameOver();
-            }
+            hurtPlayer();
         }
 
         int xDif = pMapPos - lettuce[g].worldCol;
@@ -2659,11 +2734,7 @@ void updateEnemies() {
 
 
         if (collision(big_lettuce[j].worldCol + 1, big_lettuce[j].worldRow + 1, big_lettuce[j].width, big_lettuce[j].height, pMapPos, player.worldRow, player.width, player.height) && !player.damaged) {
-            player.damaged = 1;
-            player.hearts--;
-            if (player.hearts < 1) {
-                gameOver();
-            }
+            hurtPlayer();
         }
 
         int xDif = pMapPos - big_lettuce[j].worldCol;
@@ -2749,6 +2820,7 @@ void updateBullets() {
         if (collision(bl_bullets[g].worldCol + 3, bl_bullets[g].worldRow + 4, bl_bullets[g].width, bl_bullets[g].height, pMapPos, player.worldRow, player.width, player.height)
          && bl_bullets[g].onScreen) {
             if (!player.damaged) {
+                playSoundB(sfx_player_hurt_data, sfx_player_hurt_length, 0);
                 player.hearts--;
                 player.damaged = 1;
                 bl_bullets[g].active = 0;
@@ -3086,9 +3158,20 @@ int eCheckCollision(int col, int row) {
     return 0;
 }
 
+void hurtPlayer() {
+    if (!player.damaged) {
+        playSoundB(sfx_player_hurt_data, sfx_player_hurt_length, 0);
+        player.hearts--;
+        player.damaged = 1;
+    }
+    if (player.hearts < 1) {
+        gameOver();
+    }
+}
+
 
 void drawFont() {
-# 1303 "game.c"
+# 1324 "game.c"
 }
 
 void drawHUD() {
