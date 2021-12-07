@@ -4,6 +4,9 @@
 
 #include "sin.notquitec"
 
+#include "interrupts.h"
+#include "sfx_lettuce_roll.h"
+
 
 
 int timer;
@@ -51,12 +54,12 @@ void initBoss1() {
     boss.worldCol = hoverX;
     boss.eyesOffsetX = 8;
     boss.eyesOffsetY = 6;
-    boss.state = HOVERING;
+    boss.state = ROLLING;
     boss.aniCounter = 0;
     boss.width = 32;
     boss.height = 32;
     // left
-    boss.direction = 0;
+    boss.direction = 1;
     rollCounter = 0;
     hoverCounter = 0;
     roundCounter = 0;
@@ -73,10 +76,7 @@ void updateBoss1() {
     }
 
     if (collision(boss.worldCol, boss.worldRow, boss.width, boss.height, player.worldCol, player.worldRow, player.width, player.height)) {
-        if (!player.damaged) {
-            player.damaged = 1;
-            player.hearts--;
-        }
+        hurtPlayer();
     }
 
     if (boss.damaged) {
@@ -93,6 +93,9 @@ void updateBoss1() {
         rollCounter++;
         boss.direction = rand() % 2;
         boss.worldRow = 113;
+        if (rollCounter <= 2) {
+            playSoundB(sfx_lettuce_roll_data, sfx_lettuce_roll_length, 0);
+        }
         if (boss.direction) { // right motion
             boss.worldCol = 17;
         }
@@ -112,15 +115,19 @@ void updateBoss1() {
     if (timer > 250 && hoverCounter <= 2 && boss.state == HOVERING) {
         timer = 0;
         hoverCounter++;
-        if (roundCounter > 0 && hoverCounter == 1) {
+        if (roundCounter > 1 && hoverCounter == 1) {
             spawnBigLettuce();
+
         }
         else {
+            // ensures that it only spawns two small lettuce the first time
+            hoverCounter++;
             spawnLettuce();
         }
     }
 
     if (hoverCounter > 2 && boss.state == HOVERING) {
+        playSoundB(sfx_lettuce_roll_data, sfx_lettuce_roll_length, 0);
         hoverCounter = 0;
         boss.state = ROLLING;
         boss.worldRow = hoverY;
@@ -176,12 +183,20 @@ void drawBoss1() {
 
             int Sx = 1;
             int Sy = 1;
-            SHADOW_OAM_AFF[0].a = sin_lut_fixed8[(time + 90) % 360] * Sx;
-            SHADOW_OAM_AFF[0].b = -sin_lut_fixed8[time  % 360] * Sx;
-            SHADOW_OAM_AFF[0].c = sin_lut_fixed8[time  % 360] * Sy;
-            SHADOW_OAM_AFF[0].d = sin_lut_fixed8[(time + 90)  % 360] * Sy;
+            // right
+            if (boss.direction) {
+                SHADOW_OAM_AFF[0].a = sin_lut_fixed8[(time) % 360] * Sx;
+                SHADOW_OAM_AFF[0].b = -sin_lut_fixed8[(time + 90)  % 360] * Sx;
+                SHADOW_OAM_AFF[0].c = sin_lut_fixed8[(time + 90)  % 360] * Sy;
+                SHADOW_OAM_AFF[0].d = sin_lut_fixed8[(time)  % 360] * Sy;
+            }
+            else {
+                SHADOW_OAM_AFF[0].a = sin_lut_fixed8[(time + 90) % 360] * Sx;
+                SHADOW_OAM_AFF[0].b = -sin_lut_fixed8[time  % 360] * Sx;
+                SHADOW_OAM_AFF[0].c = sin_lut_fixed8[time  % 360] * Sy;
+                SHADOW_OAM_AFF[0].d = sin_lut_fixed8[(time + 90)  % 360] * Sy;
+            }
             shadowOAMIndex++;
-
         }
         else {
             // the reason vOff and hOff are included in here is to keep them according to the camera
@@ -214,7 +229,7 @@ void drawHealthBar() {
         shadowOAMIndex++;
     }
 
-    for (int i = 1; i < 8; i++) {
+    for (int i = 1; i < 11; i++) {
         // puts full middle bar
         if (boss.lives >= 2 * (i + 1)) {
             shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (15)) | ATTR0_SQUARE;
@@ -302,19 +317,19 @@ void spawnLettuce() {
     for (int g = 0; g < LETTUCECOUNT; g++) {
         if (!lettuce[g].active) {
             if (counter == 1) {
-                lettuce[g].active = 1;
                 lettuce[g].worldRow = 80;
                 lettuce[g].worldCol = 40;
                 lettuce[g].aniState = 1;
-                lettuce[g].lives = 0;
+                lettuce[g].lives = 2;
+                lettuce[g].active = 1;
                 return;
             }
             else {
-                lettuce[g].active = 1;
                 lettuce[g].worldRow = 80;
                 lettuce[g].worldCol = 200;
                 lettuce[g].aniState = 1;
-                lettuce[g].lives = 0;
+                lettuce[g].lives = 2;
+                lettuce[g].active = 1;
                 counter++;
             }
         }
@@ -326,18 +341,18 @@ void spawnBigLettuce() {
     for (int g = 0; g < BIGLETTUCECOUNT; g++) {
         if (!big_lettuce[g].active) {
             if (counter == 1) {
-                big_lettuce[g].active = 1;
                 big_lettuce[g].worldRow = 120;
                 big_lettuce[g].worldCol = 10;
                 big_lettuce[g].lives = 2;
+                big_lettuce[g].active = 1;
                 return;
             }
             else {
-                big_lettuce[g].active = 1;
                 big_lettuce[g].worldRow = 120;
                 big_lettuce[g].worldCol = 210;
                 big_lettuce[g].lives = 2;
                 counter++;
+                big_lettuce[g].active = 1;
             }
         }
     }

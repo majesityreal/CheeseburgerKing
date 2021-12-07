@@ -5005,14 +5005,14 @@ TitleSpritesheetTiles:
 	.short	-4370
 	.short	135
 	.short	32494
+	.short	8
+	.short	-30738
 	.short	0
-	.short	2030
+	.short	2174
 	.short	0
-	.short	126
+	.short	135
 	.short	0
-	.short	7
-	.short	0
-	.short	0
+	.short	8
 	.short	0
 	.short	0
 	.short	0
@@ -5503,8 +5503,8 @@ TitleSpritesheetTiles:
 	.short	0
 	.short	-30720
 	.short	0
-	.short	-26240
-	.short	0
+	.short	-26232
+	.short	-32768
 	.short	-30317
 	.short	-32768
 	.short	-30567
@@ -6002,9 +6002,9 @@ TitleSpritesheetTiles:
 	.short	0
 	.short	-30584
 	.short	0
-	.short	2048
+	.short	-30720
 	.short	0
-	.short	-32768
+	.short	-30720
 	.short	0
 	.short	2048
 	.short	0
@@ -8581,57 +8581,57 @@ TitleSpritesheetTiles:
 	.short	-30584
 	.short	-30584
 	.short	18568
-	.short	18500
-	.short	18568
-	.short	18568
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	-30584
-	.short	-30584
-	.short	8738
-	.short	8738
-	.short	-30584
-	.short	-30584
-	.short	-30584
-	.short	-30584
-	.short	18500
-	.short	18500
 	.short	18504
 	.short	18568
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	-30584
-	.short	-30584
-	.short	8738
-	.short	8738
-	.short	-30584
-	.short	-30584
-	.short	-30584
-	.short	-30584
-	.short	18564
 	.short	17480
-	.short	18504
+	.short	0
+	.short	0
+	.short	0
+	.short	0
+	.short	-30584
+	.short	-30584
+	.short	8738
+	.short	8738
+	.short	-30584
+	.short	-30584
+	.short	-30584
+	.short	-30584
+	.short	17480
+	.short	17480
+	.short	-30648
 	.short	-31608
 	.short	0
 	.short	0
 	.short	0
 	.short	0
 	.short	-30584
-	.short	136
+	.short	-30584
 	.short	8738
-	.short	2178
+	.short	8738
 	.short	-30584
-	.short	2088
 	.short	-30584
-	.short	2184
+	.short	-30584
+	.short	-30584
 	.short	17480
+	.short	18504
+	.short	18504
+	.short	18504
+	.short	0
+	.short	0
+	.short	0
+	.short	0
+	.short	-30584
 	.short	2184
+	.short	8738
+	.short	-30686
+	.short	-30584
+	.short	-32120
+	.short	-30584
+	.short	-30584
+	.short	17480
+	.short	-30584
 	.short	-30648
-	.short	2184
+	.short	-30584
 	.short	-30592
 	.short	0
 	.short	17536
@@ -9081,11 +9081,11 @@ TitleSpritesheetTiles:
 	.short	0
 	.short	0
 	.short	18568
+	.short	18504
 	.short	18568
+	.short	18504
 	.short	18568
-	.short	18568
-	.short	18568
-	.short	18500
+	.short	18504
 	.short	-30680
 	.short	-30584
 	.short	8840
@@ -9096,27 +9096,11 @@ TitleSpritesheetTiles:
 	.short	0
 	.short	0
 	.short	0
-	.short	18500
-	.short	18500
-	.short	18564
+	.short	17480
+	.short	-31608
 	.short	18568
-	.short	18504
-	.short	18500
-	.short	-30584
-	.short	-30584
-	.short	8738
-	.short	8738
-	.short	-30584
-	.short	-30584
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	18504
 	.short	-31608
-	.short	18504
-	.short	-31608
-	.short	18564
+	.short	17480
 	.short	-31608
 	.short	-30584
 	.short	-30584
@@ -9129,17 +9113,33 @@ TitleSpritesheetTiles:
 	.short	0
 	.short	0
 	.short	17480
-	.short	2184
-	.short	18568
-	.short	2184
+	.short	18504
+	.short	-31672
+	.short	18504
+	.short	18504
 	.short	17480
-	.short	2184
 	.short	-30584
-	.short	2088
+	.short	-30584
 	.short	8738
-	.short	2178
+	.short	8738
 	.short	-30584
-	.short	136
+	.short	-30584
+	.short	0
+	.short	0
+	.short	0
+	.short	0
+	.short	-30648
+	.short	-30584
+	.short	-30648
+	.short	-30584
+	.short	17480
+	.short	-30648
+	.short	-30584
+	.short	-32120
+	.short	8738
+	.short	-30686
+	.short	-30584
+	.short	2184
 	.short	0
 	.short	0
 	.short	0

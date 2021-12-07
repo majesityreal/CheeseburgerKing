@@ -1738,6 +1738,7 @@ extern BIG_LETTUCE big_lettuce[6];
 extern BL_BULLET bl_bullets[6];
 
 extern int pauseVar;
+extern int winning;
 extern int level;
 
 
@@ -1768,6 +1769,7 @@ void drawFont();
 void drawSlash();
 void drawHUD();
 void drawBullets();
+void drawTimer();
 
 void animateSlash();
 void animatePlayer();
@@ -1853,7 +1855,7 @@ extern const unsigned short boss1CollisionBitmap[262144];
 extern const unsigned short boss1CollisionPal[256];
 # 11 "game.c" 2
 
-# 1 "sound.h" 1
+# 1 "interrupts.h" 1
 void setupSounds();
 void playSoundA(const signed char* sound, int length, int loops);
 void playSoundB(const signed char* sound, int length, int loops);
@@ -1864,7 +1866,13 @@ void interruptHandler();
 void pauseSound();
 void unpauseSound();
 void stopSound();
-# 49 "sound.h"
+
+void startTimer();
+void pauseTimer();
+
+extern int time_s;
+extern int time_m;
+# 55 "interrupts.h"
 typedef struct{
     const signed char* data;
     int length;
@@ -1921,9 +1929,16 @@ extern const unsigned int sfx_jump2_sampleRate;
 extern const unsigned int sfx_jump2_length;
 extern const signed char sfx_jump2_data[];
 # 19 "game.c" 2
+# 1 "sfx_lettuce_projectile.h" 1
 
 
+extern const unsigned int sfx_lettuce_projectile_sampleRate;
+extern const unsigned int sfx_lettuce_projectile_length;
+extern const signed char sfx_lettuce_projectile_data[];
+# 20 "game.c" 2
 
+
+int winning = 0;
 
 OBJ_ATTR shadowOAM[128];
 
@@ -2002,6 +2017,13 @@ enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP, DYING };
 
 
 void initGame() {
+    if (currMap == 2) {
+        pauseTimer();
+    }
+    else {
+        startTimer();
+    }
+    winning = 0;
     for (int i=0; i<128; i++) {
 
         shadowOAM[i].attr0 = 2 << 8;
@@ -2219,8 +2241,6 @@ void initMaps() {
         maps[currMap].doorY = 66;
         maps[currMap].doorWidth = 28;
         maps[currMap].doorHeight = 28;
-
-
         break;
     case 1:
 
@@ -2234,6 +2254,13 @@ void initMaps() {
         maps[currMap].map = boss1Map;
         maps[currMap].palette = boss1Pal;
         maps[currMap].tiles = boss1Tiles;
+
+        (*(volatile unsigned short *)0x0400001A) = 0;
+        break;
+
+    case 2:
+        winning = 1;
+    break;
 
     default:
         break;
@@ -2305,6 +2332,8 @@ void drawGame() {
     drawBullets();
     drawFont();
 
+    drawTimer();
+
 
 
     waitForVBlank();
@@ -2366,7 +2395,7 @@ void updatePlayer() {
 
 
     if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && !doubleJumping && ((jumping || (!grounded && coyoteTimer >= 8)))) {
-
+        playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
         doubleJumping = 1;
         yVel = -5;
         framesInAir = 0;
@@ -2383,8 +2412,7 @@ void updatePlayer() {
     if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && (grounded || (!grounded && coyoteTimer < 8)) && !dashing
         && !pCheckCollision(player.worldCol, player.worldRow - 1)
         && !pCheckCollision(player.worldCol + player.width, player.worldRow - 1)) {
-
-
+            playSoundB(sfx_jump2_data, sfx_jump2_length, 0);
 
             yVel = -5;
             framesInAir = 0;
@@ -2412,11 +2440,10 @@ void updatePlayer() {
                 break;
             }
         }
-# 528 "game.c"
+# 542 "game.c"
     for (int i = 1; i <= yVel; i++) {
         if (pCheckCollision(player.worldCol, player.worldRow + player.height + i)
         || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
-            playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
 
             player.worldRow += (i);
             if (!cameraLock) {
@@ -2464,7 +2491,7 @@ void updatePlayer() {
         player.worldRow += yVel;
 
     }
-# 588 "game.c"
+# 601 "game.c"
         if (!grounded) {
         }
 
@@ -2504,7 +2531,7 @@ void updatePlayer() {
         }
     }
 
-    if ((!(~(oldButtons) & ((1 << 8))) && (~buttons & ((1 << 8)))) || (!(~(oldButtons) & ((1 << 9))) && (~buttons & ((1 << 9)))) && !dashing) {
+    if (((!(~(oldButtons) & ((1 << 8))) && (~buttons & ((1 << 8)))) || (!(~(oldButtons) & ((1 << 9))) && (~buttons & ((1 << 9))))) && !dashing) {
         dashing = 1;
 
         if (grounded) {
@@ -2774,6 +2801,7 @@ void updateEnemies() {
                 if (big_lettuce[j].shooting) {
                     big_lettuce[j].shootTimer++;
                     if (big_lettuce[j].shootTimer > 40) {
+                        playSoundB(sfx_lettuce_projectile_data, sfx_lettuce_projectile_length, 0);
                         big_lettuce[j].shooting = 0;
                         big_lettuce[j].shootTimer = 0;
                         for (int i = 0; i < 6; i++) {
@@ -3182,39 +3210,30 @@ void hurtPlayer() {
 
 
 void drawFont() {
-# 1328 "game.c"
-    int c3 = framesInAir / 100;
-    int c2 = (framesInAir % 100) / 10;
-    int c1 = framesInAir % 10;
-        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (148)) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + c3)));
-        shadowOAMIndex++;
-        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (156)) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + c2)));
-        shadowOAMIndex++;
-        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (164)) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + c1)));
-        shadowOAMIndex++;
+# 1374 "game.c"
+}
 
-    int e3 = player.worldRow / 100;
-    int e2 = (player.worldRow % 100) / 10;
-    int e1 = player.worldRow % 10;
+void drawTimer() {
+        int e4 = (time_m % 100) / 10;
+        int e3 = time_m % 10;
+        int e2 = (time_s % 100) / 10;
+        int e1 = time_s % 10;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (76)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + e4)));
+        shadowOAMIndex++;
         shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (82)) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + e3)));
         shadowOAMIndex++;
         shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
-        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (90)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (92)) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + e2)));
         shadowOAMIndex++;
         shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (98)) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + e1)));
         shadowOAMIndex++;
-
 }
 
 void drawHUD() {

@@ -5,6 +5,7 @@
         "collisionimage.h": "c",
         "map1collision.h": "c",
         "spritesheet.h": "c",
-        "hugemap.h": "c"
+        "hugemap.h": "c",
+        "interrupts.h": "c"
     }
 }

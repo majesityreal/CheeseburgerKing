@@ -1495,6 +1495,7 @@ extern BIG_LETTUCE big_lettuce[6];
 extern BL_BULLET bl_bullets[6];
 
 extern int pauseVar;
+extern int winning;
 extern int level;
 
 
@@ -1525,6 +1526,7 @@ void drawFont();
 void drawSlash();
 void drawHUD();
 void drawBullets();
+void drawTimer();
 
 void animateSlash();
 void animatePlayer();
@@ -1939,6 +1941,46 @@ const int sin_lut_fixed8[] = {
 };
 # 6 "boss1AI.c" 2
 
+# 1 "interrupts.h" 1
+void setupSounds();
+void playSoundA(const signed char* sound, int length, int loops);
+void playSoundB(const signed char* sound, int length, int loops);
+
+void setupInterrupts();
+void interruptHandler();
+
+void pauseSound();
+void unpauseSound();
+void stopSound();
+
+void startTimer();
+void pauseTimer();
+
+extern int time_s;
+extern int time_m;
+# 55 "interrupts.h"
+typedef struct{
+    const signed char* data;
+    int length;
+    int frequency;
+    int isPlaying;
+    int loops;
+    int duration;
+    int priority;
+    int vBlankCount;
+} SOUND;
+
+SOUND soundA;
+SOUND soundB;
+# 8 "boss1AI.c" 2
+# 1 "sfx_lettuce_roll.h" 1
+
+
+extern const unsigned int sfx_lettuce_roll_sampleRate;
+extern const unsigned int sfx_lettuce_roll_length;
+extern const signed char sfx_lettuce_roll_data[];
+# 9 "boss1AI.c" 2
+
 
 
 int timer;
@@ -1979,19 +2021,19 @@ int currentState;
 
 void initBoss1() {
     timer = 0;
-    boss.lives = 18;
+    boss.lives = 24;
     hoverX = 104;
     hoverY = 45;
     boss.worldRow = hoverY;
     boss.worldCol = hoverX;
     boss.eyesOffsetX = 8;
     boss.eyesOffsetY = 6;
-    boss.state = HOVERING;
+    boss.state = ROLLING;
     boss.aniCounter = 0;
     boss.width = 32;
     boss.height = 32;
 
-    boss.direction = 0;
+    boss.direction = 1;
     rollCounter = 0;
     hoverCounter = 0;
     roundCounter = 0;
@@ -2008,10 +2050,7 @@ void updateBoss1() {
     }
 
     if (collision(boss.worldCol, boss.worldRow, boss.width, boss.height, player.worldCol, player.worldRow, player.width, player.height)) {
-        if (!player.damaged) {
-            player.damaged = 1;
-            player.hearts--;
-        }
+        hurtPlayer();
     }
 
     if (boss.damaged) {
@@ -2028,6 +2067,9 @@ void updateBoss1() {
         rollCounter++;
         boss.direction = rand() % 2;
         boss.worldRow = 113;
+        if (rollCounter <= 2) {
+            playSoundB(sfx_lettuce_roll_data, sfx_lettuce_roll_length, 0);
+        }
         if (boss.direction) {
             boss.worldCol = 17;
         }
@@ -2047,15 +2089,19 @@ void updateBoss1() {
     if (timer > 250 && hoverCounter <= 2 && boss.state == HOVERING) {
         timer = 0;
         hoverCounter++;
-        if (roundCounter > 0 && hoverCounter == 1) {
+        if (roundCounter > 1 && hoverCounter == 1) {
             spawnBigLettuce();
+
         }
         else {
+
+            hoverCounter++;
             spawnLettuce();
         }
     }
 
     if (hoverCounter > 2 && boss.state == HOVERING) {
+        playSoundB(sfx_lettuce_roll_data, sfx_lettuce_roll_length, 0);
         hoverCounter = 0;
         boss.state = ROLLING;
         boss.worldRow = hoverY;
@@ -2111,12 +2157,20 @@ void drawBoss1() {
 
             int Sx = 1;
             int Sy = 1;
-            SHADOW_OAM_AFF[0].a = sin_lut_fixed8[(time + 90) % 360] * Sx;
-            SHADOW_OAM_AFF[0].b = -sin_lut_fixed8[time % 360] * Sx;
-            SHADOW_OAM_AFF[0].c = sin_lut_fixed8[time % 360] * Sy;
-            SHADOW_OAM_AFF[0].d = sin_lut_fixed8[(time + 90) % 360] * Sy;
-            shadowOAMIndex++;
 
+            if (boss.direction) {
+                SHADOW_OAM_AFF[0].a = sin_lut_fixed8[(time) % 360] * Sx;
+                SHADOW_OAM_AFF[0].b = -sin_lut_fixed8[(time + 90) % 360] * Sx;
+                SHADOW_OAM_AFF[0].c = sin_lut_fixed8[(time + 90) % 360] * Sy;
+                SHADOW_OAM_AFF[0].d = sin_lut_fixed8[(time) % 360] * Sy;
+            }
+            else {
+                SHADOW_OAM_AFF[0].a = sin_lut_fixed8[(time + 90) % 360] * Sx;
+                SHADOW_OAM_AFF[0].b = -sin_lut_fixed8[time % 360] * Sx;
+                SHADOW_OAM_AFF[0].c = sin_lut_fixed8[time % 360] * Sy;
+                SHADOW_OAM_AFF[0].d = sin_lut_fixed8[(time + 90) % 360] * Sy;
+            }
+            shadowOAMIndex++;
         }
         else {
 
@@ -2149,7 +2203,7 @@ void drawHealthBar() {
         shadowOAMIndex++;
     }
 
-    for (int i = 1; i < 8; i++) {
+    for (int i = 1; i < 11; i++) {
 
         if (boss.lives >= 2 * (i + 1)) {
             shadowOAM[shadowOAMIndex].attr0 = (0xFF & (15)) | (0 << 14);
@@ -2174,16 +2228,16 @@ void drawHealthBar() {
 
     }
 
-    int end = (18 / 2) - 1;
+    int end = (24 / 2) - 1;
 
 
-    if (boss.lives == 18) {
+    if (boss.lives == 24) {
         shadowOAM[shadowOAMIndex].attr0 = (0xFF & (15)) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (startingCol + (8 * end))) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((6)*32 + ((12)));
         shadowOAMIndex++;
     }
-    else if (boss.lives == 18 - 1) {
+    else if (boss.lives == 24 - 1) {
         shadowOAM[shadowOAMIndex].attr0 = (0xFF & (15)) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (startingCol + (8 * end))) | (0 << 14);
         shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((6)*32 + ((14)));
@@ -2237,19 +2291,19 @@ void spawnLettuce() {
     for (int g = 0; g < 7; g++) {
         if (!lettuce[g].active) {
             if (counter == 1) {
-                lettuce[g].active = 1;
                 lettuce[g].worldRow = 80;
                 lettuce[g].worldCol = 40;
                 lettuce[g].aniState = 1;
-                lettuce[g].lives = 0;
+                lettuce[g].lives = 2;
+                lettuce[g].active = 1;
                 return;
             }
             else {
-                lettuce[g].active = 1;
                 lettuce[g].worldRow = 80;
                 lettuce[g].worldCol = 200;
                 lettuce[g].aniState = 1;
-                lettuce[g].lives = 0;
+                lettuce[g].lives = 2;
+                lettuce[g].active = 1;
                 counter++;
             }
         }
@@ -2261,18 +2315,18 @@ void spawnBigLettuce() {
     for (int g = 0; g < 6; g++) {
         if (!big_lettuce[g].active) {
             if (counter == 1) {
-                big_lettuce[g].active = 1;
                 big_lettuce[g].worldRow = 120;
                 big_lettuce[g].worldCol = 10;
                 big_lettuce[g].lives = 2;
+                big_lettuce[g].active = 1;
                 return;
             }
             else {
-                big_lettuce[g].active = 1;
                 big_lettuce[g].worldRow = 120;
                 big_lettuce[g].worldCol = 210;
                 big_lettuce[g].lives = 2;
                 counter++;
+                big_lettuce[g].active = 1;
             }
         }
     }

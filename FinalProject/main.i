@@ -1490,6 +1490,7 @@ extern BIG_LETTUCE big_lettuce[6];
 extern BL_BULLET bl_bullets[6];
 
 extern int pauseVar;
+extern int winning;
 extern int level;
 
 
@@ -1520,6 +1521,7 @@ void drawFont();
 void drawSlash();
 void drawHUD();
 void drawBullets();
+void drawTimer();
 
 void animateSlash();
 void animatePlayer();
@@ -1549,6 +1551,26 @@ extern const unsigned short TitleScreenMap[1024];
 
 extern const unsigned short TitleScreenPal[256];
 # 8 "main.c" 2
+# 1 "HowToPlayScreen.h" 1
+# 22 "HowToPlayScreen.h"
+extern const unsigned short HowToPlayScreenTiles[4912];
+
+
+extern const unsigned short HowToPlayScreenMap[1024];
+
+
+extern const unsigned short HowToPlayScreenPal[256];
+# 9 "main.c" 2
+# 1 "victoryScreen.h" 1
+# 22 "victoryScreen.h"
+extern const unsigned short victoryScreenTiles[2256];
+
+
+extern const unsigned short victoryScreenMap[1024];
+
+
+extern const unsigned short victoryScreenPal[256];
+# 10 "main.c" 2
 # 1 "spritesheet.h" 1
 # 22 "spritesheet.h"
 extern const unsigned short spritesheetTiles[16384];
@@ -1558,7 +1580,7 @@ extern const unsigned short spritesheetMap[1024];
 
 
 extern const unsigned short spritesheetPal[256];
-# 9 "main.c" 2
+# 11 "main.c" 2
 
 # 1 "TitleSpritesheet.h" 1
 # 22 "TitleSpritesheet.h"
@@ -1569,7 +1591,7 @@ extern const unsigned short TitleSpritesheetMap[1024];
 
 
 extern const unsigned short TitleSpritesheetPal[256];
-# 11 "main.c" 2
+# 13 "main.c" 2
 
 
 # 1 "parallaxBG.h" 1
@@ -1581,10 +1603,10 @@ extern const unsigned short parallaxBGMap[1024];
 
 
 extern const unsigned short parallaxBGPal[256];
-# 14 "main.c" 2
+# 16 "main.c" 2
 
 
-# 1 "sound.h" 1
+# 1 "interrupts.h" 1
 void setupSounds();
 void playSoundA(const signed char* sound, int length, int loops);
 void playSoundB(const signed char* sound, int length, int loops);
@@ -1595,7 +1617,13 @@ void interruptHandler();
 void pauseSound();
 void unpauseSound();
 void stopSound();
-# 49 "sound.h"
+
+void startTimer();
+void pauseTimer();
+
+extern int time_s;
+extern int time_m;
+# 55 "interrupts.h"
 typedef struct{
     const signed char* data;
     int length;
@@ -1609,7 +1637,7 @@ typedef struct{
 
 SOUND soundA;
 SOUND soundB;
-# 17 "main.c" 2
+# 19 "main.c" 2
 
 # 1 "menuSong.h" 1
 
@@ -1617,7 +1645,7 @@ SOUND soundB;
 extern const unsigned int menuSong_sampleRate;
 extern const unsigned int menuSong_length;
 extern const signed char menuSong_data[];
-# 19 "main.c" 2
+# 21 "main.c" 2
 
 # 1 "sfx_jump1.h" 1
 
@@ -1625,10 +1653,10 @@ extern const signed char menuSong_data[];
 extern const unsigned int sfx_jump1_sampleRate;
 extern const unsigned int sfx_jump1_length;
 extern const signed char sfx_jump1_data[];
-# 21 "main.c" 2
+# 23 "main.c" 2
 
 SOUND menuSong;
-# 57 "main.c"
+# 60 "main.c"
 void initialize();
 
 
@@ -1739,6 +1767,11 @@ int main()
 
 
 void setupTitleScreen() {
+
+    time_s = 0;
+    time_m = 0;
+    pauseTimer();
+
     (*(volatile unsigned short *)0x4000000) = 0 | (1 << 10) | (1 << 12);
     (*(volatile unsigned short *)0x400000C) = (0 << 7) | ((0) << 2) | ((24) << 8);
 
@@ -1869,12 +1902,42 @@ void levelSelect() {
 }
 
 void setupCredits() {
-
-
+    hideSprites();
+    waitForVBlank();
+    DMANow(3, HowToPlayScreenPal, ((unsigned short *)0x5000000), 512 / 2);
+    DMANow(3, HowToPlayScreenTiles, &((charblock *)0x6000000)[0], 9824 / 2);
+    DMANow(3, HowToPlayScreenMap, &((screenblock *)0x6000000)[24], 2048 / 2);
+    DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
     state = CREDITS;
 }
 
+
 void credits() {
+    shadowOAMIndex = 0;
+        hideSprites();
+        waterfallTimer++;
+        if (waterfallTimer % 6 == 0) {
+            waterfallFrames++;
+            waterfallFrames = waterfallFrames % 6;
+        }
+        waitForVBlank();
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (waterfallY + 88)) | (1 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (waterfallX - 9)) | (2 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | (((18))*32 + (8 + (4 * waterfallFrames)));
+        shadowOAMIndex++;
+    if ((!(~(oldButtons) & ((1 << 1))) && (~buttons & ((1 << 1))))) {
+        currSelection = 0;
+        state = TITLE;
+        selector.currFrame = 0;
+        selector.totalFrames = 3;
+        selector.xLocation = 20;
+        selector.yLocation = 50;
+        DMANow(3, TitleScreenPal, ((unsigned short *)0x5000000), 512 / 2);
+        DMANow(3, TitleScreenTiles, &((charblock *)0x6000000)[0], 12160 / 2);
+        DMANow(3, TitleScreenMap, &((screenblock *)0x6000000)[24], 2048 / 2);
+        DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
+    }
+    DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
 
 }
 
@@ -1985,24 +2048,18 @@ void startGame() {
     srand(timer);
 
     waitForVBlank();
-# 428 "main.c"
+
+
+    startTimer();
+
+
+
     DMANow(3, parallaxBGTiles, &((charblock *)0x6000000)[2], 7808 / 2);
     DMANow(3, parallaxBGMap, &((screenblock *)0x6000000)[22], 2048 / 2);
 
 
-
-
-
-
-
     DMANow(3, spritesheetPal, ((unsigned short *)0x5000200), 512 / 2);
     DMANow(3, spritesheetTiles, &((charblock *)0x6000000)[4], 32768 / 2);
-
-
-
-
-
-
 
     hideSprites();
 
@@ -2020,6 +2077,10 @@ void startGame() {
 
 
 void game() {
+    if (winning) {
+        goToWin();
+        return;
+    }
     if (pauseVar) {
         goToPause();
         return;
@@ -2048,7 +2109,7 @@ void goToPause() {
 
 
 void pause() {
-# 510 "main.c"
+# 532 "main.c"
     if ((!(~(oldButtons) & ((1 << 0))) && (~buttons & ((1 << 0)))) | (!(~(oldButtons) & ((1 << 1))) && (~buttons & ((1 << 1)))) | (!(~(oldButtons) & ((1 << 3))) && (~buttons & ((1 << 3)))) | (!(~(oldButtons) & ((1 << 2))) && (~buttons & ((1 << 2))))) {
         pauseVar = 0;
 
@@ -2064,12 +2125,25 @@ void pause() {
 
 
 void goToWin() {
+    hideSprites();
+        DMANow(3, victoryScreenPal, ((unsigned short *)0x5000000), 512 / 2);
+        DMANow(3, victoryScreenTiles, &((charblock *)0x6000000)[0], 4512 / 2);
+        DMANow(3, victoryScreenMap, &((screenblock *)0x6000000)[24], 2048 / 2);
+        DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
+
     state = WIN;
 }
 
 
 void win() {
-
+    shadowOAMIndex = 0;
+    if ((!(~(oldButtons) & ((1 << 0))) && (~buttons & ((1 << 0)))) | (!(~(oldButtons) & ((1 << 1))) && (~buttons & ((1 << 1)))) | (!(~(oldButtons) & ((1 << 3))) && (~buttons & ((1 << 3)))) | (!(~(oldButtons) & ((1 << 2))) && (~buttons & ((1 << 2))))
+     | (!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) | (!(~(oldButtons) & ((1 << 7))) && (~buttons & ((1 << 7)))) | (!(~(oldButtons) & ((1 << 5))) && (~buttons & ((1 << 5)))) | (!(~(oldButtons) & ((1 << 4))) && (~buttons & ((1 << 4))))
+      | (!(~(oldButtons) & ((1 << 8))) && (~buttons & ((1 << 8)))) | (!(~(oldButtons) & ((1 << 9))) && (~buttons & ((1 << 9))))) {
+        setupTitleScreen();
+    }
+    drawTimer();
+    DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
 }
 
 

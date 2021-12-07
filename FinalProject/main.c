@@ -5,6 +5,8 @@
 #include "text.h"
 // place for the extra assets
 #include "titlescreen.h"
+#include "HowToPlayScreen.h"
+#include "victoryScreen.h"
 #include "spritesheet.h"
 
 #include "TitleSpritesheet.h"
@@ -13,7 +15,7 @@
 #include "parallaxBG.h"
 
 // SOUND!
-#include "sound.h"
+#include "interrupts.h"
 
 #include "menuSong.h"
 
@@ -24,10 +26,11 @@ SOUND menuSong;
 /*
 
 What I want to highlight:
-    - Affine sprites: The LETHARGIC LETTUCE uses affine sprites when rolling.
+    - Affine sprites: The LETHARGIC LETTUCE uses affine sprites when rolling. Rotates correctly based on direction too
         See: boss1AI.c, line 177 - 183 ish in the drawBoss1() method, 
     - LARGE MAP (1024 x 256) I use multiple screen blocks to load in multiple maps
         See: game.c, line 635 for left motion and 661 for right motion (updatePlayer method)
+    - There is a speedrun timer
 
 What is finished:
     - ALL mechanics (double jump, dash, attack)
@@ -164,6 +167,11 @@ int main()
 
 // sets up title screen in MODE 4
 void setupTitleScreen() {
+    // ensures there is no timer while in title
+    time_s = 0;
+    time_m = 0;
+    pauseTimer();
+    
     REG_DISPCTL = MODE0 | BG2_ENABLE | SPRITE_ENABLE;
     REG_BG2CNT = BG_4BPP | BG_CHARBLOCK(0) | BG_SCREENBLOCK(24);
     // draw the title screen image
@@ -294,12 +302,42 @@ void levelSelect() {
 }
 
 void setupCredits() {
-
-
+    hideSprites();
+    waitForVBlank();
+    DMANow(3, HowToPlayScreenPal, PALETTE, HowToPlayScreenPalLen / 2);
+    DMANow(3, HowToPlayScreenTiles, &CHARBLOCK[0], HowToPlayScreenTilesLen / 2);
+    DMANow(3, HowToPlayScreenMap, &SCREENBLOCK[24], HowToPlayScreenMapLen / 2);
+    DMANow(3, shadowOAM, OAM, 128 * 4);
     state = CREDITS;
 }
 
+// I am manually doing it for lack of time. Don't question it.
 void credits() {
+    shadowOAMIndex = 0;
+        hideSprites();
+        waterfallTimer++;
+        if (waterfallTimer % 6 == 0) {
+            waterfallFrames++;
+            waterfallFrames = waterfallFrames % 6;
+        }
+        waitForVBlank();
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (waterfallY + 88)) | ATTR0_WIDE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (waterfallX - 9)) | ATTR1_MEDIUM;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID(8 + (4 * waterfallFrames), (18));
+        shadowOAMIndex++;
+    if (BUTTON_PRESSED(BUTTON_B)) {
+        currSelection = 0;
+        state = TITLE;
+        selector.currFrame = 0;
+        selector.totalFrames = 3;
+        selector.xLocation = 20;
+        selector.yLocation = 50;
+        DMANow(3, TitleScreenPal, PALETTE, TitleScreenPalLen / 2);
+        DMANow(3, TitleScreenTiles, &CHARBLOCK[0], TitleScreenTilesLen / 2);
+        DMANow(3, TitleScreenMap, &SCREENBLOCK[24], TitleScreenMapLen / 2);
+        DMANow(3, shadowOAM, OAM, 128 * 4);
+    }
+    DMANow(3, shadowOAM, OAM, 128 * 4);
 
 }
 
@@ -411,6 +449,9 @@ void startGame() {
 
     waitForVBlank();
 
+    // start the speedrunning timer
+    startTimer();
+
     // adding parallax
     // DMANow(3, platformerPal, PALETTE, 32);
     DMANow(3, parallaxBGTiles, &CHARBLOCK[2], parallaxBGTilesLen / 2);
@@ -436,6 +477,10 @@ void startGame() {
 
 // Runs every frame of the game state
 void game() {
+    if (winning) {
+        goToWin();
+        return;
+    }
     if (pauseVar) {
         goToPause();
         return;
@@ -499,12 +544,25 @@ void pause() {
 
 // Sets up the win state
 void goToWin() {
+    hideSprites();
+        DMANow(3, victoryScreenPal, PALETTE, victoryScreenPalLen / 2);
+        DMANow(3, victoryScreenTiles, &CHARBLOCK[0], victoryScreenTilesLen / 2);
+        DMANow(3, victoryScreenMap, &SCREENBLOCK[24], victoryScreenMapLen / 2);
+        DMANow(3, shadowOAM, OAM, 128 * 4);
+
     state = WIN;
 }
 
 // Runs every frame of the win state
 void win() {
-    
+    shadowOAMIndex = 0;
+    if (BUTTON_PRESSED(BUTTON_A) | BUTTON_PRESSED(BUTTON_B) | BUTTON_PRESSED(BUTTON_START) | BUTTON_PRESSED(BUTTON_SELECT)
+     | BUTTON_PRESSED(BUTTON_UP) | BUTTON_PRESSED(BUTTON_DOWN) | BUTTON_PRESSED(BUTTON_LEFT) | BUTTON_PRESSED(BUTTON_RIGHT)
+      | BUTTON_PRESSED(BUTTON_R) | BUTTON_PRESSED(BUTTON_L)) {
+        setupTitleScreen();
+    }
+    drawTimer();
+    DMANow(3, shadowOAM, OAM, 128 * 4);
 }
 
 // Sets up the lose state

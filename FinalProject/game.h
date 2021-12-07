@@ -111,6 +111,7 @@ extern BIG_LETTUCE big_lettuce[BIGLETTUCECOUNT];
 extern BL_BULLET bl_bullets[BIGLETTUCECOUNT];
 
 extern int pauseVar;
+extern int winning;
 extern int level;
 
 // int to track whether player has died yet
@@ -141,6 +142,7 @@ void drawFont();
 void drawSlash();
 void drawHUD();
 void drawBullets();
+void drawTimer();
 
 void animateSlash();
 void animatePlayer();

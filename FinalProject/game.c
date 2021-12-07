@@ -9,16 +9,17 @@
 #include "boss1.h"
 #include "boss1Collision.h"
 
-#include "sound.h"
+#include "interrupts.h"
 #include "map1Song.h"
 #include "bossSong.h"
 #include "sfx_attack.h"
 #include "sfx_player_hurt.h"
 #include "sfx_jump1.h"
 #include "sfx_jump2.h"
+#include "sfx_lettuce_projectile.h"
 
-
-
+// keeps track of whether the player has 'won'
+int winning = 0;
 
 OBJ_ATTR shadowOAM[128];
 
@@ -97,6 +98,13 @@ enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP, DYING };
 // Initialize the game
 // #region init
 void initGame() {
+    if (currMap == 2) {
+        pauseTimer();
+    }
+    else {
+        startTimer();
+    }
+    winning = 0;
     for (int i=0; i<128; i++) {
         // hides the sprites in the beginning
         shadowOAM[i].attr0 = 2 << 8;
@@ -143,7 +151,7 @@ void initPlayer() {
         break;
     case 1:
         player.worldRow = 80;
-        player.worldCol = 120;
+        player.worldCol = 120;    
     default:
         break;
     }
@@ -314,8 +322,6 @@ void initMaps() {
         maps[currMap].doorY = 66;
         maps[currMap].doorWidth = 28;
         maps[currMap].doorHeight = 28;
-
-
         break;
     case 1:
 
@@ -329,6 +335,13 @@ void initMaps() {
         maps[currMap].map = boss1Map;
         maps[currMap].palette = boss1Pal;
         maps[currMap].tiles = boss1Tiles;
+
+        REG_BG2VOFF = 0;
+        break;
+
+    case 2:
+        winning = 1;
+    break;
 
     default:
         break;
@@ -400,6 +413,8 @@ void drawGame() {
     drawBullets();
     drawFont();
 
+    drawTimer();
+
 
 
     waitForVBlank();
@@ -461,7 +476,7 @@ void updatePlayer() {
     // the check for double jumping - must go before regular jumping to prevent double counting
     // checks for whether the player jumped, or whether they are just falling
     if(BUTTON_PRESSED(BUTTON_UP) && !doubleJumping && ((jumping || (!grounded && coyoteTimer >= COYOTE_TIME)))) {
-        // playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
+        playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
         doubleJumping = 1;
         yVel = JUMPVEL;
         framesInAir = 0;
@@ -478,8 +493,7 @@ void updatePlayer() {
     if(BUTTON_PRESSED(BUTTON_UP) && (grounded || (!grounded && coyoteTimer < COYOTE_TIME)) && !dashing
         && !pCheckCollision(player.worldCol, player.worldRow - 1)
         && !pCheckCollision(player.worldCol + player.width, player.worldRow - 1)) {
-            // delay
-            // playSoundB(sfx_jump2_data, sfx_jump2_length, 0);
+            playSoundB(sfx_jump2_data, sfx_jump2_length, 0);
             // sets y to -4 for upwards movement, gravity will eventually bring it down
             yVel = JUMPVEL;
             framesInAir = 0;
@@ -528,7 +542,6 @@ void updatePlayer() {
     for (int i = 1; i <= yVel; i++) {
         if (pCheckCollision(player.worldCol, player.worldRow + player.height + i)
         || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
-            playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
             // snaps player to ground and resets yVel
             player.worldRow += (i);
             if (!cameraLock) {
@@ -624,7 +637,7 @@ void updatePlayer() {
         }
     }
 
-    if (BUTTON_PRESSED(BUTTON_R) || BUTTON_PRESSED(BUTTON_L) && !dashing) {
+    if ((BUTTON_PRESSED(BUTTON_R) || BUTTON_PRESSED(BUTTON_L)) && !dashing) {
         dashing = 1;
         // makes slower movement on the ground
         if (grounded) {
@@ -890,10 +903,11 @@ void updateEnemies() {
                         big_lettuce[j].curFrame = 0;
                     }
                 }
-                // first 40 frames of shoot, it just animates. then it shoots lettuce
+                // first 40 frames of shoot, animates to tell player about to shoot. then it shoots lettuce
                 if (big_lettuce[j].shooting) {
                     big_lettuce[j].shootTimer++;
                     if (big_lettuce[j].shootTimer > 40) {
+                        playSoundB(sfx_lettuce_projectile_data, sfx_lettuce_projectile_length, 0);
                         big_lettuce[j].shooting = 0;
                         big_lettuce[j].shootTimer = 0;
                         for (int i = 0; i < BIGLETTUCECOUNT; i++) {
@@ -1325,38 +1339,61 @@ void drawFont() {
     //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + d1), 3);
     //     shadowOAMIndex++;
 
-    int c3 = framesInAir / 100;
-    int c2 = (framesInAir % 100) / 10;
-    int c1 = framesInAir % 10;
-        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (148)) | ATTR1_TINY;
-        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c3), 3);
-        shadowOAMIndex++;
-        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (156)) | ATTR1_TINY;
-        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c2), 3);
-        shadowOAMIndex++;
-        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (164)) | ATTR1_TINY;
-        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c1), 3);
-        shadowOAMIndex++;
+    // int c3 = framesInAir / 100;
+    // int c2 = (framesInAir % 100) / 10;
+    // int c1 = framesInAir % 10;
+    //     shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+    //     shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (148)) | ATTR1_TINY;
+    //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c3), 3);
+    //     shadowOAMIndex++;
+    //     shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+    //     shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (156)) | ATTR1_TINY;
+    //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c2), 3);
+    //     shadowOAMIndex++;
+    //     shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+    //     shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (164)) | ATTR1_TINY;
+    //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c1), 3);
+    //     shadowOAMIndex++;
 
-    int e3 = player.worldRow / 100;
-    int e2 = (player.worldRow % 100) / 10;
-    int e1 = player.worldRow % 10;
+    // int e3 = player.worldRow / 100;
+    // int e2 = (player.worldRow % 100) / 10;
+    // int e1 = player.worldRow % 10;
+    //     shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+    //     shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (82)) | ATTR1_TINY;
+    //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e3), 3);
+    //     shadowOAMIndex++;
+    //     shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+    //     shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (90)) | ATTR1_TINY;
+    //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e2), 3);
+    //     shadowOAMIndex++;
+    //     shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+    //     shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (98)) | ATTR1_TINY;
+    //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e1), 3);
+    //     shadowOAMIndex++;
+
+}
+
+void drawTimer() {
+        int e4 = (time_m % 100) / 10;
+        int e3 = time_m % 10;
+        int e2 = (time_s % 100) / 10;
+        int e1 = time_s % 10;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (76)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e4), 3);
+        shadowOAMIndex++;
         shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
         shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (82)) | ATTR1_TINY;
         shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e3), 3);
         shadowOAMIndex++;
         shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (90)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (92)) | ATTR1_TINY;
         shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e2), 3);
         shadowOAMIndex++;
         shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
         shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (98)) | ATTR1_TINY;
         shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e1), 3);
         shadowOAMIndex++;
-
 }
 
 void drawHUD() {

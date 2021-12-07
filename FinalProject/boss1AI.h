@@ -1,4 +1,4 @@
-#define BOSS_LIVES 18
+#define BOSS_LIVES 24
 
 typedef struct {
     int lives;

@@ -35,9 +35,9 @@ boss1Pal:
 	.short	0
 	.short	0
 	.short	0
+	.short	13848
 	.short	16985
 	.short	18041
-	.short	13848
 	.short	0
 	.short	0
 	.short	0
