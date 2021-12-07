@@ -1,13 +1,17 @@
 #include <math.h>
 #include "myLib.h"
 #include "game.h"
-#include "boss1AI.h"
 
 #include "map1.h"
 #include "map1Collision.h"
 
 #include "boss1.h"
 #include "boss1Collision.h"
+#include "boss1AI.h"
+
+#include "boss2.h"
+#include "boss2Collision.h"
+#include "boss2AI.h"
 
 #include "interrupts.h"
 #include "map1Song.h"
@@ -89,7 +93,7 @@ int bgIndex;
 // offset counter for 256 / 512 conversions mid map
 // int offSet = 0;
 
-MAP maps[4];
+MAP maps[5];
 
 int dead = 0;
 
@@ -102,6 +106,7 @@ enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP, DYING };
 // Initialize the game
 // #region init
 void initGame() {
+
     if (currMap == 2) {
         winning = 1;
         pauseTimer();
@@ -157,7 +162,14 @@ void initPlayer() {
     case 1:
         player.worldRow = 80;
         player.worldCol = 120;    
+        break;
+    case 2:
+        player.worldRow = 80;
+        player.worldCol = 120;
+        break;
     default:
+        player.worldRow = 80;
+        player.worldCol = 120;
         break;
     }
 
@@ -210,6 +222,13 @@ void initEnemies() {
             lettuce[g].lives = 1;
         }
         lettuce[g].damaged = 0;
+    }
+    if (currMap == 3) {
+        lettuce[0].worldCol = 120;
+        lettuce[0].worldRow = 120;
+                lettuce[0].active = 1;
+                lettuce[0].onScreen = 1;
+
     }
 
     // the big L. goes through all and sets defaults
@@ -356,6 +375,19 @@ void initMaps() {
     case 2:
         winning = 1;
     break;
+    case 3:
+        playSoundA(bossSong_data, bossSong_length, 1);
+
+        cameraLock = 1;
+        maps[currMap].startingHOff = 0;
+        maps[currMap].startingVOff = 0;
+
+        collisionMap = boss2CollisionBitmap;
+        maps[currMap].map = boss1Map;
+        maps[currMap].palette = boss1Pal;
+        maps[currMap].tiles = boss1Tiles;
+        REG_BG2VOFF = 0;
+        break;
 
     default:
         break;
@@ -392,6 +424,15 @@ void updateGame() {
     if (currMap == 1) {
         updateBoss1();
     }
+    if (currMap == 3) {
+        updateBoss2();
+    }
+                    if (currMap == 3) {
+            shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+            shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (156)) | ATTR1_TINY;
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15), 3);
+            shadowOAMIndex++;
+        }
 
     // this determines lose conditions
     if (player.hearts < 1 || player.worldRow > 238) {
@@ -416,9 +457,16 @@ void drawGame() {
     hideSprites();
     drawHUD();
 
+
+
     if (currMap == 1) {
         drawBoss1();
         animateBoss1();
+    }
+
+    if (currMap == 3) {
+        drawBoss2();
+        animateBoss2();
     }
 
     drawPlayer();
@@ -786,6 +834,15 @@ void updatePlayer() {
 
             }
         }
+        if (currMap == 3) {
+            if (collision(slash.worldCol + slash.hitboxCDel, slash.worldRow, slash.width - slash.hitboxCDel, slash.height, boss2.worldCol, boss2.worldRow, boss2.width, boss2.height)) {
+                if (!boss2.damaged) {
+                    boss2.lives--;
+                    boss2.damaged = 1;
+                }
+
+            }
+        }
         // we are displacing slash by its cdel off from the main player
         // ((player.direction * -2) + 1) <- this is making it either 1 or -1 to change the direction of cdel
         player.attackTimer--;
@@ -1101,6 +1158,7 @@ void drawEnemies() {
             }
         }
         shadowOAMIndex++;
+
     }
     for (int g = 0; g < BIGLETTUCECOUNT; g++) {
         if (!big_lettuce[g].active || !big_lettuce[g].onScreen) {

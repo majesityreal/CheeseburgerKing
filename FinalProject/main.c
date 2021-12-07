@@ -308,8 +308,8 @@ void levelSelect() {
     }
 
         if (startTime != 0 && startTime < waterfallTimer - 10) {
-            currMap = currSelection;
             startGame();
+            currMap = currSelection;
             initGame();
         }
 

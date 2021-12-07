@@ -1784,6 +1784,42 @@ void gameOver();
 
 void hurtPlayer();
 # 4 "game.c" 2
+
+# 1 "map1.h" 1
+# 22 "map1.h"
+extern const unsigned short map1Tiles[1008];
+
+
+extern const unsigned short map1Map[8192];
+
+
+extern const unsigned short map1Pal[256];
+# 6 "game.c" 2
+# 1 "map1Collision.h" 1
+# 21 "map1Collision.h"
+extern const unsigned short map1CollisionBitmap[262144];
+
+
+extern const unsigned short map1CollisionPal[256];
+# 7 "game.c" 2
+
+# 1 "boss1.h" 1
+# 22 "boss1.h"
+extern const unsigned short boss1Tiles[400];
+
+
+extern const unsigned short boss1Map[8192];
+
+
+extern const unsigned short boss1Pal[256];
+# 9 "game.c" 2
+# 1 "boss1Collision.h" 1
+# 21 "boss1Collision.h"
+extern const unsigned short boss1CollisionBitmap[262144];
+
+
+extern const unsigned short boss1CollisionPal[256];
+# 10 "game.c" 2
 # 1 "boss1AI.h" 1
 
 
@@ -1818,43 +1854,80 @@ void drawHealthBar();
 
 void spawnLettuce();
 void spawnBigLettuce();
-# 5 "game.c" 2
-
-# 1 "map1.h" 1
-# 22 "map1.h"
-extern const unsigned short map1Tiles[1008];
-
-
-extern const unsigned short map1Map[8192];
-
-
-extern const unsigned short map1Pal[256];
-# 7 "game.c" 2
-# 1 "map1Collision.h" 1
-# 21 "map1Collision.h"
-extern const unsigned short map1CollisionBitmap[262144];
-
-
-extern const unsigned short map1CollisionPal[256];
-# 8 "game.c" 2
-
-# 1 "boss1.h" 1
-# 22 "boss1.h"
-extern const unsigned short boss1Tiles[400];
-
-
-extern const unsigned short boss1Map[8192];
-
-
-extern const unsigned short boss1Pal[256];
-# 10 "game.c" 2
-# 1 "boss1Collision.h" 1
-# 21 "boss1Collision.h"
-extern const unsigned short boss1CollisionBitmap[262144];
-
-
-extern const unsigned short boss1CollisionPal[256];
 # 11 "game.c" 2
+
+# 1 "boss2.h" 1
+# 22 "boss2.h"
+extern const unsigned short boss2Tiles[352];
+
+
+extern const unsigned short boss2Map[8192];
+
+
+extern const unsigned short boss2Pal[256];
+# 13 "game.c" 2
+# 1 "boss2Collision.h" 1
+# 21 "boss2Collision.h"
+extern const unsigned short boss2CollisionBitmap[262144];
+
+
+extern const unsigned short boss2CollisionPal[256];
+# 14 "game.c" 2
+# 1 "boss2AI.h" 1
+
+
+typedef struct {
+    int lives;
+    int worldCol;
+    int worldRow;
+    int width;
+    int height;
+    int eyesOffsetX;
+    int eyesOffsetY;
+    int state;
+
+    int damaged;
+
+    int direction;
+
+    int hide;
+
+    int aniCounter;
+
+} BOSS2;
+
+typedef struct {
+
+    int active;
+    int worldRow;
+    int worldCol;
+    int width;
+    int height;
+
+    int aniCounter;
+    int curFrame;
+    int numFrames;
+
+    int direction;
+    int speed;
+    } KNIFE;
+
+
+extern BOSS2 boss2;
+
+void initBoss2();
+void updateBoss2();
+void drawBoss2();
+void animateBoss2();
+
+void initKnives();
+void updateKnives();
+
+void drawHealthBar2();
+
+void spawnLettuce2();
+void spawnBigLettuce2();
+# 15 "game.c" 2
 
 # 1 "interrupts.h" 1
 void setupSounds();
@@ -1887,56 +1960,56 @@ typedef struct{
 
 SOUND soundA;
 SOUND soundB;
-# 13 "game.c" 2
+# 17 "game.c" 2
 # 1 "map1Song.h" 1
 
 
 extern const unsigned int map1Song_sampleRate;
 extern const unsigned int map1Song_length;
 extern const signed char map1Song_data[];
-# 14 "game.c" 2
+# 18 "game.c" 2
 # 1 "bossSong.h" 1
 
 
 extern const unsigned int bossSong_sampleRate;
 extern const unsigned int bossSong_length;
 extern const signed char bossSong_data[];
-# 15 "game.c" 2
+# 19 "game.c" 2
 # 1 "sfx_attack.h" 1
 
 
 extern const unsigned int sfx_attack_sampleRate;
 extern const unsigned int sfx_attack_length;
 extern const signed char sfx_attack_data[];
-# 16 "game.c" 2
+# 20 "game.c" 2
 # 1 "sfx_player_hurt.h" 1
 
 
 extern const unsigned int sfx_player_hurt_sampleRate;
 extern const unsigned int sfx_player_hurt_length;
 extern const signed char sfx_player_hurt_data[];
-# 17 "game.c" 2
+# 21 "game.c" 2
 # 1 "sfx_jump1.h" 1
 
 
 extern const unsigned int sfx_jump1_sampleRate;
 extern const unsigned int sfx_jump1_length;
 extern const signed char sfx_jump1_data[];
-# 18 "game.c" 2
+# 22 "game.c" 2
 # 1 "sfx_jump2.h" 1
 
 
 extern const unsigned int sfx_jump2_sampleRate;
 extern const unsigned int sfx_jump2_length;
 extern const signed char sfx_jump2_data[];
-# 19 "game.c" 2
+# 23 "game.c" 2
 # 1 "sfx_lettuce_projectile.h" 1
 
 
 extern const unsigned int sfx_lettuce_projectile_sampleRate;
 extern const unsigned int sfx_lettuce_projectile_length;
 extern const signed char sfx_lettuce_projectile_data[];
-# 20 "game.c" 2
+# 24 "game.c" 2
 
 
 int winning = 0;
@@ -2009,7 +2082,7 @@ int bgIndex;
 
 
 
-MAP maps[4];
+MAP maps[5];
 
 int dead = 0;
 
@@ -2022,6 +2095,7 @@ enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP, DYING };
 
 
 void initGame() {
+
     if (currMap == 2) {
         winning = 1;
         pauseTimer();
@@ -2077,7 +2151,14 @@ void initPlayer() {
     case 1:
         player.worldRow = 80;
         player.worldCol = 120;
+        break;
+    case 2:
+        player.worldRow = 80;
+        player.worldCol = 120;
+        break;
     default:
+        player.worldRow = 80;
+        player.worldCol = 120;
         break;
     }
 
@@ -2130,6 +2211,13 @@ void initEnemies() {
             lettuce[g].lives = 1;
         }
         lettuce[g].damaged = 0;
+    }
+    if (currMap == 3) {
+        lettuce[0].worldCol = 120;
+        lettuce[0].worldRow = 120;
+                lettuce[0].active = 1;
+                lettuce[0].onScreen = 1;
+
     }
 
 
@@ -2276,6 +2364,19 @@ void initMaps() {
     case 2:
         winning = 1;
     break;
+    case 3:
+        playSoundA(bossSong_data, bossSong_length, 1);
+
+        cameraLock = 1;
+        maps[currMap].startingHOff = 0;
+        maps[currMap].startingVOff = 0;
+
+        collisionMap = boss2CollisionBitmap;
+        maps[currMap].map = boss1Map;
+        maps[currMap].palette = boss1Pal;
+        maps[currMap].tiles = boss1Tiles;
+        (*(volatile unsigned short *)0x0400001A) = 0;
+        break;
 
     default:
         break;
@@ -2312,6 +2413,15 @@ void updateGame() {
     if (currMap == 1) {
         updateBoss1();
     }
+    if (currMap == 3) {
+        updateBoss2();
+    }
+                    if (currMap == 3) {
+            shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (156)) | (0 << 14);
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15)));
+            shadowOAMIndex++;
+        }
 
 
     if (player.hearts < 1 || player.worldRow > 238) {
@@ -2336,9 +2446,16 @@ void drawGame() {
     hideSprites();
     drawHUD();
 
+
+
     if (currMap == 1) {
         drawBoss1();
         animateBoss1();
+    }
+
+    if (currMap == 3) {
+        drawBoss2();
+        animateBoss2();
     }
 
     drawPlayer();
@@ -2455,7 +2572,7 @@ void updatePlayer() {
                 break;
             }
         }
-# 556 "game.c"
+# 604 "game.c"
     for (int i = 1; i <= yVel; i++) {
         if (pCheckCollision(player.worldCol, player.worldRow + player.height + i)
         || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
@@ -2506,7 +2623,7 @@ void updatePlayer() {
         player.worldRow += yVel;
 
     }
-# 615 "game.c"
+# 663 "game.c"
         if (!grounded) {
         }
 
@@ -2677,6 +2794,15 @@ void updatePlayer() {
                 if (!boss.damaged) {
                     boss.lives--;
                     boss.damaged = 1;
+                }
+
+            }
+        }
+        if (currMap == 3) {
+            if (collision(slash.worldCol + slash.hitboxCDel, slash.worldRow, slash.width - slash.hitboxCDel, slash.height, boss2.worldCol, boss2.worldRow, boss2.width, boss2.height)) {
+                if (!boss2.damaged) {
+                    boss2.lives--;
+                    boss2.damaged = 1;
                 }
 
             }
@@ -2996,6 +3122,7 @@ void drawEnemies() {
             }
         }
         shadowOAMIndex++;
+
     }
     for (int g = 0; g < 6; g++) {
         if (!big_lettuce[g].active || !big_lettuce[g].onScreen) {
@@ -3268,7 +3395,7 @@ void hurtPlayer() {
 
 
 void drawFont() {
-# 1431 "game.c"
+# 1489 "game.c"
 }
 
 void drawTimer() {

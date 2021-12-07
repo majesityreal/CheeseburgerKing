@@ -1091,11 +1091,11 @@ levelSelect:
 	bx	r3
 	b	.L101
 .L127:
-	ldr	r3, .L128+56
-	ldr	r2, [r4, #4]
-	str	r2, [r3]
 	bl	startGame
+	ldr	r2, .L128+56
+	ldr	r1, [r4, #4]
 	ldr	r3, .L128+60
+	str	r1, [r2]
 	mov	lr, pc
 	bx	r3
 	b	.L102

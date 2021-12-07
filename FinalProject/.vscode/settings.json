@@ -6,6 +6,7 @@
         "map1collision.h": "c",
         "spritesheet.h": "c",
         "hugemap.h": "c",
-        "interrupts.h": "c"
+        "interrupts.h": "c",
+        "boss1collision.h": "c"
     }
 }
