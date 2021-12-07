@@ -2317,6 +2317,7 @@ void drawGame() {
 
 
     (*(volatile unsigned short *)0x04000018) = ((hOff + (bgIndex * 256)) / 3);
+    (*(volatile unsigned short *)0x0400001A) = ((vOff / 3) - 15);
 
 }
 
@@ -2358,6 +2359,7 @@ void updatePlayer() {
         dashed = 0;
         coyoteTimer = 0;
         jumping = 0;
+
 
     }
 
@@ -2410,7 +2412,7 @@ void updatePlayer() {
                 break;
             }
         }
-# 526 "game.c"
+# 528 "game.c"
     for (int i = 1; i <= yVel; i++) {
         if (pCheckCollision(player.worldCol, player.worldRow + player.height + i)
         || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
@@ -2462,7 +2464,7 @@ void updatePlayer() {
         player.worldRow += yVel;
 
     }
-# 586 "game.c"
+# 588 "game.c"
         if (!grounded) {
         }
 
@@ -3180,7 +3182,7 @@ void hurtPlayer() {
 
 
 void drawFont() {
-# 1326 "game.c"
+# 1328 "game.c"
     int c3 = framesInAir / 100;
     int c2 = (framesInAir % 100) / 10;
     int c1 = framesInAir % 10;

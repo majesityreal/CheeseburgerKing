@@ -3197,25 +3197,33 @@ drawGame:
 	ldr	r1, .L533+20
 	mov	lr, pc
 	bx	r4
-	mov	r1, #67108864
+	mov	ip, #67108864
 	ldr	r3, .L533+24
-	ldr	r2, [r3]
-	lsl	r3, r2, #16
-	lsr	r3, r3, #16
-	strh	r3, [r1, #20]	@ movhi
-	ldr	r3, .L533+28
-	ldrh	r0, [r3]
-	ldr	r3, .L533+32
-	strh	r0, [r1, #22]	@ movhi
-	ldr	r0, [r3]
-	ldr	r3, .L533+36
-	add	r2, r2, r0, lsl #8
-	smull	r0, r3, r2, r3
-	sub	r3, r3, r2, asr #31
+	ldr	r3, [r3]
+	lsl	r2, r3, #16
+	lsr	r2, r2, #16
+	strh	r2, [ip, #20]	@ movhi
+	ldr	r2, .L533+28
+	ldr	lr, [r2]
+	ldr	r1, .L533+32
+	lsl	r2, lr, #16
+	lsr	r2, r2, #16
+	ldr	r0, [r1]
+	strh	r2, [ip, #22]	@ movhi
+	ldr	r2, .L533+36
+	add	r0, r3, r0, lsl #8
+	smull	r3, r1, r2, lr
+	smull	r4, r3, r2, r0
+	sub	r2, r1, lr, asr #31
+	sub	r3, r3, r0, asr #31
+	sub	r2, r2, #15
 	lsl	r3, r3, #16
+	lsl	r2, r2, #16
 	lsr	r3, r3, #16
-	strh	r3, [r1, #24]	@ movhi
+	lsr	r2, r2, #16
+	strh	r3, [ip, #24]	@ movhi
 	pop	{r4, lr}
+	strh	r2, [ip, #26]	@ movhi
 	bx	lr
 .L532:
 	ldr	r3, .L533+40

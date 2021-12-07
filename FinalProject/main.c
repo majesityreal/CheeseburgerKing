@@ -411,37 +411,14 @@ void startGame() {
 
     waitForVBlank();
 
-
-    // adding temp mario map
-    // DMANow(3, map1Pal, PALETTE, 48);
-    // DMANow(3, map2Tiles, &CHARBLOCK[0], map2TilesLen / 2);
-    // DMANow(3, map2Map, &SCREENBLOCK[28], map2MapLen / 2);
-    // TODO - something that dma's in the map tiles in per thing ? but it doesnt work for everything
-
-    // mario map 2 (since it is wide, it is using two consective screen blocks)
-    // we do not need this if they use the same tiles, else we do
-    // DMANow(3, map1Tiles, &CHARBLOCK[0], map1TilesLen / 2);
-    // DMANow(3, map1Map, &SCREENBLOCK[30], map1MapLen / 2);
-
     // adding parallax
     // DMANow(3, platformerPal, PALETTE, 32);
     DMANow(3, parallaxBGTiles, &CHARBLOCK[2], parallaxBGTilesLen / 2);
     DMANow(3, parallaxBGMap, &SCREENBLOCK[22], parallaxBGMapLen / 2);
 
-    // old aadding maop
-    // DMANow(3, GameBackgroundPal, PALETTE, 16);
-    // DMANow(3, GameBackgroundTiles, &CHARBLOCK[2], GameBackgroundTilesLen / 2);
-    // DMANow(3, GameBackgroundMap, &SCREENBLOCK[26], GameBackgroundMapLen / 2);
-
     // setting up the sprites
     DMANow(3, spritesheetPal, SPRITEPALETTE, spritesheetPalLen / 2);
     DMANow(3, spritesheetTiles, &CHARBLOCK[4], spritesheetTilesLen / 2);
-
- 
-
-    // // into charblock
-    // DMANow(3, pelletTiles, &CHARBLOCK[2], pelletTilesLen / 2);
-    // DMANow(3, pelletPal, SPRITEPALETTE, pelletPalLen / 2);
 
     hideSprites();
     // spooky scary shadowOAM

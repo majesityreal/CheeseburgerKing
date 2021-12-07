@@ -412,6 +412,7 @@ void drawGame() {
 
     // parallax motion babbyyy :) - checks based on screen changes
     REG_BG2HOFF = ((hOff + (bgIndex * 256)) / PARALLAXFACTOR);
+    REG_BG2VOFF = ((vOff / PARALLAXFACTOR) - 15);
 
 }
 
