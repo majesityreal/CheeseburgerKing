@@ -1544,6 +1544,8 @@ void hurtPlayer();
 # 1 "boss2AI.h" 1
 
 
+
+
 typedef struct {
     int lives;
     int worldCol;
@@ -1583,6 +1585,8 @@ typedef struct {
 
 extern BOSS2 boss2;
 
+extern KNIFE knives[5];
+
 void initBoss2();
 void updateBoss2();
 void drawBoss2();
@@ -1595,6 +1599,8 @@ void drawHealthBar2();
 
 void spawnLettuce2();
 void spawnBigLettuce2();
+
+void drawKnives();
 # 4 "boss2AI.c" 2
 
 # 1 "interrupts.h" 1
@@ -1644,7 +1650,7 @@ int hoverX2;
 int hoverY2;
 
 
-KNIFE knives[10];
+KNIFE knives[5];
 
 BOSS2 boss2;
 
@@ -1678,7 +1684,7 @@ void initBoss2() {
 }
 
 void initKnives() {
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 5; i++) {
         knives[i].active = 0;
         knives[i].width = 13;
         knives[i].height = 15;
@@ -1702,7 +1708,9 @@ void updateBoss2() {
         return;
     }
 
-    if (collision(boss2.worldCol + 1, boss2.worldRow + 3, boss2.width - 3, boss2.height - 5, player.worldCol, player.worldRow, player.width, player.height)) {
+    updateKnives();
+
+    if (collision(boss2.worldCol + 2, boss2.worldRow + 3, boss2.width - 5, boss2.height - 6, player.worldCol, player.worldRow, player.width, player.height)) {
         hurtPlayer();
     }
 
@@ -1717,7 +1725,7 @@ void updateBoss2() {
 
     if (timer2 > 60 && boss2.state == BOMBING) {
         timer2 = 0;
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 5; i++) {
             if (!knives[i].active) {
                 knives[i].direction = 0;
                 knives[i].worldCol = boss2.worldCol;
@@ -1756,7 +1764,12 @@ void updateBoss2() {
 
         else {
             bombCounter2++;
-            direction *= -1;
+            if (boss2.direction) {
+                boss2.direction = 0;
+            }
+            else {
+                boss2.direction = 1;
+            }
         }
 
 
@@ -1770,13 +1783,12 @@ void updateBoss2() {
 
     }
 
-    updateKnives();
 }
 
 void updateKnives() {
-    for (int g = 0; g < 10; g++) {
+    for (int g = 0; g < 5; g++) {
         if (!knives[g].active) {
-            return;
+            continue;
         }
 
 
@@ -1786,13 +1798,13 @@ void updateKnives() {
 
 
 
-        if (knives[g].worldRow > 250) {
+        if (knives[g].worldRow > 160) {
             knives[g].active = 0;
-            return;
+            continue;
         }
 
 
-        if (eCheckCollision(knives[g].worldCol, knives[g].worldRow)) {
+        if (eCheckCollision(knives[g].worldCol, knives[g].worldRow + 5)) {
             knives[g].active = 0;
         }
 
@@ -1821,13 +1833,13 @@ void drawBoss2() {
             if (time2 % 10 < 5) {
                 shadowOAM[shadowOAMIndex].attr0 = (0xFF & (boss2.worldRow)) | (0 << 14);
                 shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (boss2.worldCol)) | (2 << 14);
-                shadowOAM[shadowOAMIndex].attr2 = ((4) << 12) | ((7)*32 + ((4))) * 4;
+                shadowOAM[shadowOAMIndex].attr2 = ((6) << 12) | ((7)*32 + ((4))) * 4;
                 shadowOAMIndex++;
             }
             else {
                 shadowOAM[shadowOAMIndex].attr0 = (0xFF & (boss2.worldRow)) | (0 << 14);
                 shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (boss2.worldCol)) | (2 << 14);
-                shadowOAM[shadowOAMIndex].attr2 = ((4) << 12) | ((6)*32 + ((4))) * 4;
+                shadowOAM[shadowOAMIndex].attr2 = ((6) << 12) | ((6)*32 + ((4))) * 4;
                 shadowOAMIndex++;
             }
 
@@ -1836,12 +1848,44 @@ void drawBoss2() {
 
             shadowOAM[shadowOAMIndex].attr0 = (0xFF & (boss2.worldRow)) | (0 << 14);
             shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (boss2.worldCol)) | (2 << 14);
-            shadowOAM[shadowOAMIndex].attr2 = ((4) << 12) | ((6)*32 + ((6))) * 4;
+            shadowOAM[shadowOAMIndex].attr2 = ((6) << 12) | ((6)*32 + ((6))) * 4;
             shadowOAMIndex++;
 
         }
     }
     drawHealthBar2();
+    drawKnives();
+}
+
+void drawKnives() {
+    for (int i = 0; i < 5; i++) {
+        if (!knives[i].active) {
+            continue;
+        }
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & (knives[i].worldRow)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (knives[i].worldCol)) | (1 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((8)*32 + ((22)));
+        knives[i].aniCounter++;
+        if (knives[i].aniCounter % 5 == 0) {
+            knives[i].curFrame++;
+            knives[i].curFrame = knives[i].curFrame % knives[i].numFrames;
+        }
+
+        switch (knives[i].curFrame) {
+            case 0:
+                shadowOAM[shadowOAMIndex].attr1 |= (1 << 13);
+            break;
+            case 1:
+                shadowOAM[shadowOAMIndex].attr1 |= (1 << 13);
+                shadowOAM[shadowOAMIndex].attr1 |= (1 << 12);
+            break;
+            case 2:
+                shadowOAM[shadowOAMIndex].attr1 |= (1 << 12);
+            break;
+        }
+
+        shadowOAMIndex++;
+    }
 }
 
 void drawHealthBar2() {
@@ -1942,27 +1986,27 @@ void spawnLettuce2() {
     for (int g = 0; g < 7; g++) {
         if (!lettuce[g].active) {
             if (counter == 1) {
-                lettuce[g].worldRow = 80;
-                lettuce[g].worldCol = 40;
-                lettuce[g].aniState = 1;
+                lettuce[g].worldRow = 60;
+                lettuce[g].worldCol = 65;
+                lettuce[g].aniState = 3;
                 if (cheating) {
                     lettuce[g].lives = 0;
                 }
                 else {
-                    lettuce[g].lives = 2;
+                    lettuce[g].lives = 1;
                 }
                 lettuce[g].active = 1;
                 return;
             }
             else {
-                lettuce[g].worldRow = 80;
-                lettuce[g].worldCol = 200;
-                lettuce[g].aniState = 1;
+                lettuce[g].worldRow = 60;
+                lettuce[g].worldCol = 160;
+                lettuce[g].aniState = 3;
                 if (cheating) {
                     lettuce[g].lives = 0;
                 }
                 else {
-                    lettuce[g].lives = 2;
+                    lettuce[g].lives = 1;
                 }
                 lettuce[g].active = 1;
                 counter++;
@@ -1976,7 +2020,7 @@ void spawnBigLettuce2() {
     for (int g = 0; g < 6; g++) {
         if (!big_lettuce[g].active) {
             if (counter == 1) {
-                big_lettuce[g].worldRow = 120;
+                big_lettuce[g].worldRow = 104;
                 big_lettuce[g].worldCol = 10;
                 if (cheating) {
                     big_lettuce[g].lives = 0;
@@ -1988,7 +2032,7 @@ void spawnBigLettuce2() {
                 return;
             }
             else {
-                big_lettuce[g].worldRow = 120;
+                big_lettuce[g].worldRow = 104;
                 big_lettuce[g].worldCol = 210;
                 if (cheating) {
                     big_lettuce[g].lives = 0;

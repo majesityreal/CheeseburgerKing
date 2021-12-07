@@ -223,13 +223,6 @@ void initEnemies() {
         }
         lettuce[g].damaged = 0;
     }
-    if (currMap == 3) {
-        lettuce[0].worldCol = 120;
-        lettuce[0].worldRow = 120;
-                lettuce[0].active = 1;
-                lettuce[0].onScreen = 1;
-
-    }
 
     // the big L. goes through all and sets defaults
     for (int g = 0; g < BIGLETTUCECOUNT; g++) {
@@ -330,6 +323,10 @@ void initEnemies() {
             // this is the boss level
             initBoss1();
         break;
+
+        case 3:
+            initBoss2();
+        break;
     }
 
 }
@@ -383,9 +380,9 @@ void initMaps() {
         maps[currMap].startingVOff = 0;
 
         collisionMap = boss2CollisionBitmap;
-        maps[currMap].map = boss1Map;
+        maps[currMap].map = boss2Map;
         maps[currMap].palette = boss1Pal;
-        maps[currMap].tiles = boss1Tiles;
+        maps[currMap].tiles = boss2Tiles;
         REG_BG2VOFF = 0;
         break;
 
@@ -427,12 +424,6 @@ void updateGame() {
     if (currMap == 3) {
         updateBoss2();
     }
-                    if (currMap == 3) {
-            shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-            shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (156)) | ATTR1_TINY;
-            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15), 3);
-            shadowOAMIndex++;
-        }
 
     // this determines lose conditions
     if (player.hearts < 1 || player.worldRow > 238) {

@@ -2050,7 +2050,7 @@ void updateBoss1() {
         return;
     }
 
-    if (collision(boss.worldCol + 1, boss.worldRow + 3, boss.width - 3, boss.height - 5, player.worldCol, player.worldRow, player.width, player.height)) {
+    if (collision(boss.worldCol + 2, boss.worldRow + 3, boss.width - 5, boss.height - 6, player.worldCol, player.worldRow, player.width, player.height)) {
         hurtPlayer();
     }
 

@@ -559,10 +559,10 @@ updateBoss1:
 	ldr	r0, [r4, #4]
 	stm	sp, {ip, lr}
 	ldr	r7, .L112+16
-	sub	r3, r3, #5
-	sub	r2, r2, #3
+	sub	r3, r3, #6
+	sub	r2, r2, #5
 	add	r1, r1, #3
-	add	r0, r0, #1
+	add	r0, r0, #2
 	mov	lr, pc
 	bx	r7
 	cmp	r0, #0

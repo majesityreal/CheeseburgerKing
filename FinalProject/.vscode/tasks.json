@@ -6,7 +6,7 @@
         {
             "label": "build run",
             "type": "shell",
-            "command": "C:/Users/Carson/Documents/'CS 2261'/visualboyadvance-m.exe ./Project.gba", //Put your file path here
+            "command": "C:/Users/carso/Documents/'CS 2261'/visualboyadvance-m.exe ./Project.gba", //Put your file path here
             // add the visualboyadvance-m.exe exact path to the above line, before "./Project.gba"!
             // Make sure there is a space between the exact path and "./Project.gba".
             "problemMatcher": [],

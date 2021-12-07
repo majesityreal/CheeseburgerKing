@@ -1,5 +1,7 @@
 #define BOSS2_LIVES 24
 
+#define KNIFECOUNT 5
+
 typedef struct {
     int lives;
     int worldCol;
@@ -39,6 +41,8 @@ typedef struct {
 
 extern BOSS2 boss2;
 
+extern KNIFE knives[KNIFECOUNT];
+
 void initBoss2();
 void updateBoss2();
 void drawBoss2();
@@ -51,3 +55,5 @@ void drawHealthBar2();
 
 void spawnLettuce2();
 void spawnBigLettuce2();
+
+void drawKnives();

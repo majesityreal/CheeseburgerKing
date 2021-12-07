@@ -59,7 +59,7 @@ initBoss2:
 	str	r5, [r1, #36]
 	str	r6, [r1, #12]
 	str	r6, [r1, #16]
-	add	r1, r3, #400
+	add	r1, r3, #200
 .L2:
 	str	r2, [r3]
 	str	lr, [r3, #12]
@@ -103,7 +103,7 @@ initKnives:
 	mov	ip, #4
 	mov	r0, #1
 	ldr	r3, .L12
-	add	r1, r3, #400
+	add	r1, r3, #200
 .L9:
 	str	r2, [r3]
 	str	r4, [r3, #12]
@@ -131,42 +131,38 @@ initKnives:
 	.type	updateKnives, %function
 updateKnives:
 	@ Function supports interworking.
-	@ args = 0, pretend = 0, frame = 8
+	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
-	mov	r6, #0
-	ldr	r10, .L32
-	mov	r9, r6
-	mov	r4, r10
-	ldr	r8, .L32+4
-	ldr	r5, .L32+8
-	ldr	r7, .L32+12
-	ldr	fp, .L32+16
-	sub	sp, sp, #28
-	b	.L21
-.L20:
-	cmp	r6, #10
-	add	r4, r4, #40
-	beq	.L14
+	mov	r7, #0
+	ldr	r4, .L31
+	ldr	r9, .L31+4
+	ldr	r5, .L31+8
+	ldr	r8, .L31+12
+	ldr	r10, .L31+16
+	sub	sp, sp, #20
+	add	r6, r4, #200
 .L21:
 	ldr	r3, [r4]
 	cmp	r3, #0
-	beq	.L14
+	beq	.L16
 	ldr	r3, [r4, #32]
 	cmp	r3, #0
 	ldr	r1, [r4, #4]
 	ldreq	r3, [r4, #36]
 	addeq	r1, r1, r3
 	streq	r1, [r4, #4]
-	cmp	r1, #250
-	bgt	.L31
+	cmp	r1, #160
+	strgt	r7, [r4]
+	bgt	.L16
+	add	r1, r1, #5
 	ldr	r0, [r4, #8]
 	mov	lr, pc
-	bx	r8
+	bx	r9
 	add	ip, r5, #24
 	cmp	r0, #0
-	strne	r9, [r4]
 	ldm	ip, {ip, lr}
+	strne	r7, [r4]
 	add	r2, r4, #12
 	ldm	r2, {r2, r3}
 	ldr	r1, [r4, #4]
@@ -181,44 +177,132 @@ updateKnives:
 	add	r1, r1, #4
 	add	r0, r0, #3
 	mov	lr, pc
-	bx	r7
+	bx	r8
 	cmp	r0, #0
-	add	r6, r6, #1
-	beq	.L20
-	ldr	r3, [r5, #76]
-	cmp	r3, #0
-	bne	.L20
-	str	r3, [sp, #20]
-	mov	lr, pc
-	bx	fp
-	ldr	r3, [sp, #20]
-	cmp	r6, #10
-	str	r3, [r4]
+	beq	.L16
+	ldr	fp, [r5, #76]
+	cmp	fp, #0
+	beq	.L30
+.L16:
 	add	r4, r4, #40
+	cmp	r4, r6
 	bne	.L21
-.L14:
-	add	sp, sp, #28
+	add	sp, sp, #20
 	@ sp needed
 	pop	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
 	bx	lr
-.L31:
-	mov	r3, #0
-	add	r6, r6, r6, lsl #2
-	lsl	r6, r6, #3
-	str	r3, [r10, r6]
-	add	sp, sp, #28
-	@ sp needed
-	pop	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
-	bx	lr
-.L33:
-	.align	2
+.L30:
+	mov	lr, pc
+	bx	r10
+	str	fp, [r4]
+	b	.L16
 .L32:
+	.align	2
+.L31:
 	.word	knives
 	.word	eCheckCollision
 	.word	player
 	.word	collision
 	.word	hurtPlayer
 	.size	updateKnives, .-updateKnives
+	.global	__aeabi_idivmod
+	.align	2
+	.global	drawKnives
+	.syntax unified
+	.arm
+	.fpu softvfp
+	.type	drawKnives, %function
+drawKnives:
+	@ Function supports interworking.
+	@ args = 0, pretend = 0, frame = 0
+	@ frame_needed = 0, uses_anonymous_args = 0
+	mov	r0, #0
+	push	{r3, r4, r5, r6, r7, r8, r9, r10, fp, lr}
+	ldr	r3, .L51
+	ldr	r4, .L51+4
+	ldr	r6, [r3]
+	ldr	r8, .L51+8
+	ldr	r2, .L51+12
+	ldr	fp, .L51+16
+	ldr	r10, .L51+20
+	add	r9, r4, #200
+.L40:
+	ldr	r3, [r4]
+	cmp	r3, #0
+	beq	.L34
+	ldr	r3, [r4, #20]
+	add	r3, r3, #1
+	smull	r1, r0, r10, r3
+	ldr	r5, [r4, #8]
+	asr	r1, r3, #31
+	rsb	r1, r1, r0, asr #1
+	add	r1, r1, r1, lsl #2
+	ldrb	r0, [r4, #4]	@ zero_extendqisi2
+	and	r5, r5, r2
+	cmp	r3, r1
+	orr	r5, r5, #16384
+	add	r1, r8, r6, lsl #3
+	lsl	r7, r6, #3
+	str	r3, [r4, #20]
+	strh	r5, [r1, #2]	@ movhi
+	mov	r3, r1
+	strh	fp, [r1, #4]	@ movhi
+	strh	r0, [r8, r7]	@ movhi
+	beq	.L35
+	ldr	r1, [r4, #24]
+	cmp	r1, #1
+	beq	.L37
+.L50:
+	cmp	r1, #2
+	beq	.L38
+	cmp	r1, #0
+	addeq	r7, r8, r7
+	orreq	r5, r5, #8192
+	strheq	r5, [r7, #2]	@ movhi
+.L39:
+	mov	r0, #1
+	add	r6, r6, r0
+.L34:
+	add	r4, r4, #40
+	cmp	r4, r9
+	bne	.L40
+	cmp	r0, #0
+	ldrne	r3, .L51
+	strne	r6, [r3]
+	pop	{r3, r4, r5, r6, r7, r8, r9, r10, fp, lr}
+	bx	lr
+.L35:
+	add	r0, r4, #24
+	ldm	r0, {r0, r1}
+	ldr	r3, .L51+24
+	add	r0, r0, #1
+	mov	lr, pc
+	bx	r3
+	cmp	r1, #1
+	str	r1, [r4, #24]
+	ldr	r2, .L51+12
+	bne	.L50
+.L37:
+	add	r7, r8, r7
+	orr	r5, r5, #12288
+	strh	r5, [r7, #2]	@ movhi
+	b	.L39
+.L38:
+	add	r7, r8, r7
+	orr	r5, r5, #4096
+	strh	r5, [r7, #2]	@ movhi
+	b	.L39
+.L52:
+	.align	2
+.L51:
+	.word	shadowOAMIndex
+	.word	knives
+	.word	shadowOAM
+	.word	511
+	.word	278
+	.word	1717986919
+	.word	__aeabi_idivmod
+	.size	drawKnives, .-drawKnives
 	.align	2
 	.global	drawHealthBar2
 	.syntax unified
@@ -230,17 +314,17 @@ drawHealthBar2:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
-	ldr	r9, .L48
+	ldr	r9, .L67
 	ldr	r0, [r9]
 	cmp	r0, #0
-	ble	.L34
+	ble	.L53
 	mov	r3, #15
 	cmp	r0, #1
 	moveq	r1, #237
 	movne	r1, #202
-	ldr	r10, .L48+4
+	ldr	r10, .L67+4
 	ldr	r5, [r10]
-	ldr	r7, .L48+8
+	ldr	r7, .L67+8
 	lsl	r2, r5, #3
 	mov	ip, #72
 	strh	r3, [r7, r2]	@ movhi
@@ -256,7 +340,7 @@ drawHealthBar2:
 	lsr	lr, lr, #16
 	strh	ip, [r3, #2]	@ movhi
 	rsb	lr, lr, #80
-.L41:
+.L60:
 	add	r3, lr, r2
 	lsl	r3, r3, #16
 	cmp	r0, r1
@@ -265,26 +349,26 @@ drawHealthBar2:
 	strh	r3, [r2, #10]	@ movhi
 	strhge	r6, [r2, #12]	@ movhi
 	sub	ip, r1, #1
-	bge	.L39
+	bge	.L58
 	cmp	r0, ip
 	strheq	fp, [r2, #12]	@ movhi
 	strhne	r8, [r2, #12]	@ movhi
-.L39:
+.L58:
 	add	r1, r1, #2
 	cmp	r1, #24
 	add	r2, r2, #8
-	bne	.L41
+	bne	.L60
 	ldr	r2, [r9]
 	cmp	r2, #24
 	mov	ip, #15
 	mov	r1, #160
 	moveq	r2, #204
 	add	r3, r5, #11
-	beq	.L47
+	beq	.L66
 	cmp	r2, #23
 	moveq	r2, #206
 	movne	r2, #236
-.L47:
+.L66:
 	lsl	r0, r3, #3
 	add	r5, r5, #12
 	add	r3, r7, r3, lsl #3
@@ -292,12 +376,12 @@ drawHealthBar2:
 	strh	ip, [r7, r0]	@ movhi
 	strh	r1, [r3, #2]	@ movhi
 	strh	r2, [r3, #4]	@ movhi
-.L34:
+.L53:
 	pop	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
 	bx	lr
-.L49:
+.L68:
 	.align	2
-.L48:
+.L67:
 	.word	boss2
 	.word	shadowOAMIndex
 	.word	shadowOAM
@@ -312,31 +396,32 @@ drawBoss2:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	ldr	r2, .L57
+	ldr	r2, .L76
 	ldr	r3, [r2, #40]
 	push	{r4, r5, r6, r7, r8, lr}
-	ldr	lr, .L57+4
+	ldr	lr, .L76+4
 	cmp	r3, #0
 	ldr	r3, [lr]
-	beq	.L51
-	ldr	r1, .L57+8
+	beq	.L70
+	ldr	r1, .L76+8
 	lsl	r3, r3, #3
 	ldrh	r2, [r1, r3]
 	orr	r2, r2, #512
 	strh	r2, [r1, r3]	@ movhi
+	bl	drawHealthBar2
 	pop	{r4, r5, r6, r7, r8, lr}
-	b	drawHealthBar2
-.L51:
+	b	drawKnives
+.L70:
 	mov	r4, #664
 	ldr	ip, [r2, #4]
 	ldr	r1, [r2, #20]
-	ldr	r0, .L57+12
+	ldr	r0, .L76+12
 	add	r1, r1, ip
-	ldr	r6, .L57+16
+	ldr	r6, .L76+16
 	ldrh	r5, [r2, #8]
 	and	r1, r1, r0
 	and	r7, ip, r0
-	ldr	ip, .L57+8
+	ldr	ip, .L76+8
 	ldr	r0, [r2, #24]
 	ldr	r8, [r2, #32]
 	add	r0, r5, r0
@@ -350,13 +435,13 @@ drawBoss2:
 	strh	r0, [ip, r2]	@ movhi
 	strh	r4, [r6, #4]	@ movhi
 	add	r2, r3, #1
-	ldreq	r0, .L57+20
+	ldreq	r0, .L76+20
 	orr	r1, r1, r7
 	and	r5, r5, #255
 	add	r3, r3, #2
-	beq	.L56
-	ldr	r4, .L57+24
-	ldr	r0, .L57+28
+	beq	.L75
+	ldr	r4, .L76+24
+	ldr	r0, .L76+28
 	ldr	r4, [r4]
 	smull	r7, r6, r0, r4
 	asr	r0, r4, #31
@@ -364,30 +449,31 @@ drawBoss2:
 	add	r0, r0, r0, lsl #2
 	sub	r0, r4, r0, lsl #1
 	cmp	r0, #4
-	ldrle	r0, .L57+32
-	ldrgt	r0, .L57+36
-.L56:
+	ldrle	r0, .L76+32
+	ldrgt	r0, .L76+36
+.L75:
 	str	r3, [lr]
 	add	r3, ip, r2, lsl #3
 	lsl	r2, r2, #3
 	strh	r5, [ip, r2]	@ movhi
 	strh	r0, [r3, #4]	@ movhi
 	strh	r1, [r3, #2]	@ movhi
+	bl	drawHealthBar2
 	pop	{r4, r5, r6, r7, r8, lr}
-	b	drawHealthBar2
-.L58:
+	b	drawKnives
+.L77:
 	.align	2
-.L57:
+.L76:
 	.word	boss2
 	.word	shadowOAMIndex
 	.word	shadowOAM
 	.word	511
 	.word	-32768
-	.word	17176
+	.word	25368
 	.word	.LANCHOR0
 	.word	1717986919
-	.word	17296
-	.word	17168
+	.word	25488
+	.word	25360
 	.size	drawBoss2, .-drawBoss2
 	.align	2
 	.global	animateBoss2
@@ -400,33 +486,33 @@ animateBoss2:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	@ link register save eliminated.
-	ldr	r2, .L64
+	ldr	r2, .L83
 	ldr	r3, [r2, #28]
 	cmp	r3, #1
 	ldr	r3, [r2, #44]
-	beq	.L63
-.L60:
+	beq	.L82
+.L79:
 	add	r3, r3, #1
 	str	r3, [r2, #44]
 	bx	lr
-.L63:
-	ldr	r1, .L64+4
+.L82:
+	ldr	r1, .L83+4
 	smull	r0, r1, r3, r1
 	asr	r0, r3, #31
 	rsb	r1, r0, r1, asr #2
 	add	r1, r1, r1, lsl #2
 	cmp	r3, r1, lsl #1
-	bne	.L60
+	bne	.L79
 	ldr	r1, [r2, #8]
 	cmp	r1, #45
-	beq	.L61
+	beq	.L80
 	bic	r1, r1, #2
 	cmp	r1, #44
 	moveq	r1, #45
 	streq	r1, [r2, #8]
-	b	.L60
-.L61:
-	ldr	r1, .L64+8
+	b	.L79
+.L80:
+	ldr	r1, .L83+8
 	smull	ip, r1, r3, r1
 	sub	r0, r1, r0
 	add	r0, r0, r0, lsl #1
@@ -434,10 +520,10 @@ animateBoss2:
 	moveq	r1, #44
 	movne	r1, #46
 	str	r1, [r2, #8]
-	b	.L60
-.L65:
+	b	.L79
+.L84:
 	.align	2
-.L64:
+.L83:
 	.word	boss2
 	.word	1717986919
 	.word	1431655766
@@ -453,66 +539,66 @@ spawnLettuce2:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	mov	r3, #0
-	ldr	r2, .L81
-	push	{r4, r5, r6, r7, r8, r9, lr}
-	ldr	r9, [r2]
-	cmp	r9, r3
-	movne	r8, r3
-	moveq	r8, #2
-	mov	r5, r3
-	mov	r7, #80
-	mov	r6, #200
-	mov	lr, #1
-	ldr	r1, .L81+4
-.L73:
-	add	r0, r3, r3, lsl #3
-	ldr	ip, [r1, r0, lsl #3]
-	cmp	ip, #0
-	add	r2, r1, r0, lsl #3
-	lsl	r4, r3, #3
-	bne	.L67
-	cmp	r5, #1
-	beq	.L72
-	add	r3, r3, #1
-	cmp	r3, #7
-	str	r7, [r2, #8]
-	str	r6, [r2, #12]
-	str	lr, [r2, #28]
-	str	r8, [r2, #48]
-	str	lr, [r1, r0, lsl #3]
-	add	r4, r3, r3, lsl #3
-	beq	.L66
-	ldr	r2, [r1, r4, lsl #3]
-	cmp	r2, #0
-	lsl	r4, r3, #3
-	bne	.L80
-.L72:
-	cmp	r9, #0
-	mov	r0, #1
-	moveq	ip, #2
-	mov	r5, #80
-	mov	lr, #40
-	add	r3, r4, r3
-	add	r2, r1, r3, lsl #3
-	str	ip, [r2, #48]
-	str	r5, [r2, #8]
-	str	lr, [r2, #12]
-	str	r0, [r2, #28]
-	str	r0, [r1, r3, lsl #3]
-.L66:
-	pop	{r4, r5, r6, r7, r8, r9, lr}
-	bx	lr
-.L80:
+	push	{r4, r5, r6, r7, r8, lr}
+	mov	r4, r3
+	mov	r8, #60
+	mov	r7, #160
+	mov	r6, #3
 	mov	r5, #1
-.L67:
+	ldr	r2, .L99
+	ldr	lr, [r2]
+	sub	r2, lr, r3
+	rsbs	lr, r2, #0
+	ldr	r1, .L99+4
+	adc	lr, lr, r2
+.L91:
+	add	r0, r3, r3, lsl #3
+	ldr	r2, [r1, r0, lsl #3]
+	cmp	r2, #0
+	lsl	ip, r3, #3
+	add	r2, r1, r0, lsl #3
+	bne	.L86
+	cmp	r4, #1
+	beq	.L90
 	add	r3, r3, #1
 	cmp	r3, #7
-	bne	.L73
-	pop	{r4, r5, r6, r7, r8, r9, lr}
+	str	r8, [r2, #8]
+	str	r7, [r2, #12]
+	str	r6, [r2, #28]
+	str	lr, [r2, #48]
+	str	r5, [r1, r0, lsl #3]
+	add	ip, r3, r3, lsl #3
+	beq	.L85
+	ldr	r2, [r1, ip, lsl #3]
+	cmp	r2, #0
+	lsl	ip, r3, #3
+	bne	.L98
+.L90:
+	mov	r2, #3
+	mov	r5, #1
+	mov	r4, #60
+	mov	r0, #65
+	add	r3, ip, r3
+	str	r5, [r1, r3, lsl #3]
+	add	r1, r1, r3, lsl r2
+	str	lr, [r1, #48]
+	str	r4, [r1, #8]
+	str	r0, [r1, #12]
+	str	r2, [r1, #28]
+.L85:
+	pop	{r4, r5, r6, r7, r8, lr}
 	bx	lr
-.L82:
+.L98:
+	mov	r4, #1
+.L86:
+	add	r3, r3, #1
+	cmp	r3, #7
+	bne	.L91
+	pop	{r4, r5, r6, r7, r8, lr}
+	bx	lr
+.L100:
 	.align	2
-.L81:
+.L99:
 	.word	cheating
 	.word	lettuce
 	.size	spawnLettuce2, .-spawnLettuce2
@@ -527,26 +613,26 @@ spawnBigLettuce2:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	mov	r3, #0
-	ldr	r2, .L98
+	ldr	r2, .L116
 	push	{r4, r5, r6, r7, r8, r9, lr}
 	ldr	r9, [r2]
 	cmp	r9, r3
 	movne	r8, r3
 	moveq	r8, #2
 	mov	r4, r3
-	mov	r7, #120
+	mov	r7, #104
 	mov	r6, #210
 	mov	r5, #1
-	ldr	r2, .L98+4
-.L90:
+	ldr	r2, .L116+4
+.L108:
 	add	r1, r3, r3, lsl #2
 	ldr	ip, [r2, r1, lsl #4]
 	cmp	ip, #0
 	add	r0, r2, r1, lsl #4
 	lsl	lr, r3, #2
-	bne	.L84
+	bne	.L102
 	cmp	r4, #1
-	beq	.L89
+	beq	.L107
 	add	r3, r3, #1
 	cmp	r3, #6
 	str	r7, [r0, #8]
@@ -554,15 +640,15 @@ spawnBigLettuce2:
 	str	r8, [r0, #48]
 	str	r5, [r2, r1, lsl #4]
 	add	lr, r3, r3, lsl #2
-	beq	.L83
+	beq	.L101
 	ldr	r1, [r2, lr, lsl #4]
 	cmp	r1, #0
 	lsl	lr, r3, #2
-	bne	.L97
-.L89:
+	bne	.L115
+.L107:
 	cmp	r9, #0
 	moveq	ip, #2
-	mov	r5, #120
+	mov	r5, #104
 	mov	r4, #10
 	mov	r0, #1
 	add	r3, lr, r3
@@ -571,20 +657,20 @@ spawnBigLettuce2:
 	str	r5, [r1, #8]
 	str	r4, [r1, #12]
 	str	r0, [r2, r3, lsl #4]
-.L83:
+.L101:
 	pop	{r4, r5, r6, r7, r8, r9, lr}
 	bx	lr
-.L97:
+.L115:
 	mov	r4, #1
-.L84:
+.L102:
 	add	r3, r3, #1
 	cmp	r3, #6
-	bne	.L90
+	bne	.L108
 	pop	{r4, r5, r6, r7, r8, r9, lr}
 	bx	lr
-.L99:
+.L117:
 	.align	2
-.L98:
+.L116:
 	.word	cheating
 	.word	big_lettuce
 	.size	spawnBigLettuce2, .-spawnBigLettuce2
@@ -599,9 +685,9 @@ updateBoss2:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, r5, r6, r7, lr}
-	ldr	r5, .L142
-	ldr	r6, .L142+4
-	ldr	r4, .L142+8
+	ldr	r5, .L159
+	ldr	r6, .L159+4
+	ldr	r4, .L159+8
 	ldr	r2, [r5]
 	ldr	r3, [r6]
 	ldr	r1, [r4]
@@ -611,8 +697,9 @@ updateBoss2:
 	str	r2, [r5]
 	str	r3, [r6]
 	sub	sp, sp, #20
-	ble	.L133
-	ldr	r2, .L142+12
+	ble	.L150
+	bl	updateKnives
+	ldr	r2, .L159+12
 	add	r0, r2, #24
 	ldm	r0, {r0, r1}
 	ldr	lr, [r2, #8]
@@ -624,19 +711,19 @@ updateBoss2:
 	ldr	r1, [r4, #8]
 	ldr	r0, [r4, #4]
 	stm	sp, {ip, lr}
-	ldr	r7, .L142+16
-	sub	r3, r3, #5
-	sub	r2, r2, #3
+	ldr	r7, .L159+16
+	sub	r3, r3, #6
+	sub	r2, r2, #5
 	add	r1, r1, #3
-	add	r0, r0, #1
+	add	r0, r0, #2
 	mov	lr, pc
 	bx	r7
 	cmp	r0, #0
-	bne	.L134
+	bne	.L151
 	ldr	r3, [r4, #32]
 	cmp	r3, #0
-	beq	.L105
-.L138:
+	beq	.L123
+.L155:
 	ldr	r3, [r6, #4]
 	add	r3, r3, #1
 	cmp	r3, #20
@@ -644,22 +731,22 @@ updateBoss2:
 	strle	r3, [r6, #4]
 	strgt	r3, [r6, #4]
 	strgt	r3, [r4, #32]
-.L105:
+.L123:
 	ldr	r2, [r5]
 	cmp	r2, #60
 	ldr	r3, [r4, #28]
-	ble	.L108
+	ble	.L126
 	cmp	r3, #2
-	beq	.L135
-	ldr	r6, .L142+20
+	beq	.L152
+	ldr	r6, .L159+20
 	cmp	r2, #250
 	ldr	r2, [r6]
-	ble	.L113
+	ble	.L131
 	cmp	r2, #2
-	bgt	.L114
+	bgt	.L132
 	cmp	r3, #1
-	bne	.L115
-	ldr	r3, .L142+24
+	bne	.L133
+	ldr	r3, .L159+24
 	ldr	r3, [r3]
 	add	r1, r2, #1
 	cmp	r3, #1
@@ -671,42 +758,42 @@ updateBoss2:
 	cmp	r3, r0
 	str	r1, [r6]
 	str	r0, [r5]
-	bne	.L136
+	bne	.L153
 	add	r2, r2, #2
 	str	r2, [r6]
 	bl	spawnLettuce2
 	ldr	r3, [r4, #28]
 	ldr	r2, [r6]
-	b	.L113
-.L108:
-	ldr	r6, .L142+20
+	b	.L131
+.L126:
+	ldr	r6, .L159+20
 	ldr	r2, [r6]
-.L113:
+.L131:
 	cmp	r2, #2
-	ble	.L115
-.L114:
+	ble	.L133
+.L132:
 	cmp	r3, #1
-	beq	.L137
-.L115:
+	beq	.L154
+.L133:
 	cmp	r3, #2
-	beq	.L117
+	beq	.L135
 .L118:
 	add	sp, sp, #20
 	@ sp needed
 	pop	{r4, r5, r6, r7, lr}
-	b	updateKnives
-.L134:
-	ldr	r3, .L142+28
+	bx	lr
+.L151:
+	ldr	r3, .L159+28
 	mov	lr, pc
 	bx	r3
 	ldr	r3, [r4, #32]
 	cmp	r3, #0
-	beq	.L105
-	b	.L138
-.L133:
-	ldr	r2, .L142+32
+	beq	.L123
+	b	.L155
+.L150:
+	ldr	r2, .L159+32
 	ldr	r3, [r2]
-	ldr	r1, .L142+36
+	ldr	r1, .L159+36
 	add	r3, r3, #1
 	str	r3, [r2]
 	mov	lr, pc
@@ -715,7 +802,7 @@ updateBoss2:
 	@ sp needed
 	pop	{r4, r5, r6, r7, lr}
 	bx	lr
-.L141:
+.L158:
 	mov	ip, #1
 	add	r3, r3, r3, lsl #2
 	ldr	r2, [r4, #8]
@@ -725,20 +812,24 @@ updateBoss2:
 	add	r2, r2, #8
 	stmib	r3, {r2, ip}
 	str	r1, [r3, #32]
-.L117:
-	ldr	r3, [r4, #36]
-	lsl	r3, r3, #1
+.L135:
+	ldr	r1, [r4, #36]
+	lsl	r3, r1, #1
 	cmp	r3, #2
 	sub	r3, r3, #1
-	beq	.L139
+	beq	.L156
 	cmn	r3, #1
-	beq	.L140
-.L121:
-	ldr	r2, .L142+40
+	beq	.L157
+.L138:
+	cmp	r1, #0
+	movne	r1, #0
+	moveq	r1, #1
+	ldr	r2, .L159+40
 	ldr	r3, [r2]
 	add	r3, r3, #1
 	str	r3, [r2]
-.L122:
+	str	r1, [r4, #36]
+.L139:
 	cmp	r3, #2
 	ble	.L118
 	ldr	r3, [r4, #4]
@@ -748,43 +839,40 @@ updateBoss2:
 	movls	r3, #1
 	strls	r1, [r2]
 	strls	r3, [r4, #28]
-	add	sp, sp, #20
-	@ sp needed
-	pop	{r4, r5, r6, r7, lr}
-	b	updateKnives
-.L139:
-	ldr	r1, [r4, #4]
-	cmp	r1, #191
-	bgt	.L121
-.L120:
-	ldr	r2, .L142+40
-	add	r3, r1, r3, lsl #1
+	b	.L118
+.L156:
+	ldr	r0, [r4, #4]
+	cmp	r0, #191
+	bgt	.L138
+.L137:
+	ldr	r2, .L159+40
+	add	r3, r0, r3, lsl #1
 	str	r3, [r4, #4]
 	ldr	r3, [r2]
-	b	.L122
-.L135:
+	b	.L139
+.L152:
 	mov	r1, #0
-	ldr	r0, .L142+44
+	ldr	r0, .L159+44
 	mov	r3, r1
 	mov	r2, r0
 	str	r1, [r5]
-.L112:
+.L130:
 	ldr	r1, [r2]
 	cmp	r1, #0
-	beq	.L141
+	beq	.L158
 	add	r3, r3, #1
-	cmp	r3, #6
+	cmp	r3, #5
 	add	r2, r2, #40
-	bne	.L112
-	b	.L117
-.L137:
+	bne	.L130
+	b	.L135
+.L154:
 	mov	r0, #0
 	mov	r1, #2
-	ldr	r2, .L142+24
+	ldr	r2, .L159+24
 	ldr	r3, [r2]
 	add	r3, r3, #1
 	str	r3, [r2]
-	ldr	r3, .L142+48
+	ldr	r3, .L159+48
 	str	r0, [r6]
 	str	r1, [r4, #28]
 	mov	lr, pc
@@ -794,20 +882,20 @@ updateBoss2:
 	rsblt	r0, r0, #0
 	str	r0, [r4, #36]
 	ldr	r3, [r4, #28]
-	b	.L115
-.L140:
-	ldr	r1, [r4, #4]
-	cmp	r1, #17
-	ble	.L121
-	b	.L120
-.L136:
+	b	.L133
+.L157:
+	ldr	r0, [r4, #4]
+	cmp	r0, #17
+	ble	.L138
+	b	.L137
+.L153:
 	bl	spawnBigLettuce2
 	ldr	r3, [r4, #28]
 	ldr	r2, [r6]
-	b	.L113
-.L143:
+	b	.L131
+.L160:
 	.align	2
-.L142:
+.L159:
 	.word	timer2
 	.word	.LANCHOR0
 	.word	boss2
@@ -825,7 +913,7 @@ updateBoss2:
 	.global	currentFrame2
 	.global	time2
 	.comm	boss2,48,4
-	.comm	knives,400,4
+	.comm	knives,200,4
 	.comm	hoverY2,4,4
 	.comm	hoverX2,4,4
 	.comm	hoverCounter2,4,4

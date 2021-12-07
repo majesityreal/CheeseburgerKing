@@ -2212,13 +2212,6 @@ void initEnemies() {
         }
         lettuce[g].damaged = 0;
     }
-    if (currMap == 3) {
-        lettuce[0].worldCol = 120;
-        lettuce[0].worldRow = 120;
-                lettuce[0].active = 1;
-                lettuce[0].onScreen = 1;
-
-    }
 
 
     for (int g = 0; g < 6; g++) {
@@ -2319,6 +2312,10 @@ void initEnemies() {
 
             initBoss1();
         break;
+
+        case 3:
+            initBoss2();
+        break;
     }
 
 }
@@ -2372,9 +2369,9 @@ void initMaps() {
         maps[currMap].startingVOff = 0;
 
         collisionMap = boss2CollisionBitmap;
-        maps[currMap].map = boss1Map;
+        maps[currMap].map = boss2Map;
         maps[currMap].palette = boss1Pal;
-        maps[currMap].tiles = boss1Tiles;
+        maps[currMap].tiles = boss2Tiles;
         (*(volatile unsigned short *)0x0400001A) = 0;
         break;
 
@@ -2416,12 +2413,6 @@ void updateGame() {
     if (currMap == 3) {
         updateBoss2();
     }
-                    if (currMap == 3) {
-            shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
-            shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (156)) | (0 << 14);
-            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15)));
-            shadowOAMIndex++;
-        }
 
 
     if (player.hearts < 1 || player.worldRow > 238) {
@@ -2572,7 +2563,7 @@ void updatePlayer() {
                 break;
             }
         }
-# 604 "game.c"
+# 595 "game.c"
     for (int i = 1; i <= yVel; i++) {
         if (pCheckCollision(player.worldCol, player.worldRow + player.height + i)
         || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
@@ -2623,7 +2614,7 @@ void updatePlayer() {
         player.worldRow += yVel;
 
     }
-# 663 "game.c"
+# 654 "game.c"
         if (!grounded) {
         }
 
@@ -3395,7 +3386,7 @@ void hurtPlayer() {
 
 
 void drawFont() {
-# 1489 "game.c"
+# 1480 "game.c"
 }
 
 void drawTimer() {
