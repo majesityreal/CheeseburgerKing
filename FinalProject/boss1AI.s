@@ -24,7 +24,7 @@ initBoss1:
 	mov	r2, #0
 	push	{r4, r5, r6, lr}
 	mov	lr, #6
-	mov	r6, #24
+	mov	r6, #2
 	mov	r5, #8
 	mov	r4, #1
 	mov	ip, #45
@@ -387,61 +387,67 @@ spawnLettuce:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	mov	r3, #0
-	push	{r4, r5, r6, r7, lr}
-	mov	ip, #1
+	ldr	r2, .L57
+	push	{r4, r5, r6, r7, r8, r9, lr}
+	ldr	r9, [r2]
+	cmp	r9, r3
+	movne	r8, r3
+	moveq	r8, #2
+	mov	r5, r3
 	mov	r7, #80
-	mov	r4, r3
 	mov	r6, #200
-	mov	r5, #2
-	ldr	r1, .L58
-.L48:
+	mov	lr, #1
+	ldr	r1, .L57+4
+.L49:
 	add	r0, r3, r3, lsl #3
-	ldr	r2, [r1, r0, lsl #3]
-	cmp	r2, #0
-	lsl	lr, r3, #3
+	ldr	ip, [r1, r0, lsl #3]
+	cmp	ip, #0
 	add	r2, r1, r0, lsl #3
+	lsl	r4, r3, #3
 	bne	.L43
-	cmp	r4, #1
-	beq	.L47
+	cmp	r5, #1
+	beq	.L48
 	add	r3, r3, #1
 	cmp	r3, #7
 	str	r7, [r2, #8]
 	str	r6, [r2, #12]
-	str	ip, [r2, #28]
-	str	r5, [r2, #48]
-	str	ip, [r1, r0, lsl #3]
-	add	lr, r3, r3, lsl #3
+	str	lr, [r2, #28]
+	str	r8, [r2, #48]
+	str	lr, [r1, r0, lsl #3]
+	add	r4, r3, r3, lsl #3
 	beq	.L42
-	ldr	r2, [r1, lr, lsl #3]
+	ldr	r2, [r1, r4, lsl #3]
 	cmp	r2, #0
-	lsl	lr, r3, #3
-	bne	.L57
-.L47:
+	lsl	r4, r3, #3
+	bne	.L56
+.L48:
+	cmp	r9, #0
 	mov	r0, #1
+	moveq	ip, #2
 	mov	r5, #80
-	mov	r4, #40
-	mov	ip, #2
-	add	r3, lr, r3
+	mov	lr, #40
+	add	r3, r4, r3
 	add	r2, r1, r3, lsl #3
-	str	r5, [r2, #8]
-	str	r4, [r2, #12]
 	str	ip, [r2, #48]
+	str	r5, [r2, #8]
+	str	lr, [r2, #12]
 	str	r0, [r2, #28]
 	str	r0, [r1, r3, lsl #3]
 .L42:
-	pop	{r4, r5, r6, r7, lr}
+	pop	{r4, r5, r6, r7, r8, r9, lr}
 	bx	lr
-.L57:
-	mov	r4, #1
+.L56:
+	mov	r5, #1
 .L43:
 	add	r3, r3, #1
 	cmp	r3, #7
-	bne	.L48
-	pop	{r4, r5, r6, r7, lr}
+	bne	.L49
+	pop	{r4, r5, r6, r7, r8, r9, lr}
 	bx	lr
-.L59:
-	.align	2
 .L58:
+	.align	2
+.L57:
+	.word	cheating
 	.word	lettuce
 	.size	spawnLettuce, .-spawnLettuce
 	.align	2
@@ -455,59 +461,65 @@ spawnBigLettuce:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	mov	r3, #0
-	push	{r4, r5, r6, r7, lr}
+	ldr	r2, .L74
+	push	{r4, r5, r6, r7, r8, r9, lr}
+	ldr	r9, [r2]
+	cmp	r9, r3
+	movne	r8, r3
+	moveq	r8, #2
+	mov	r4, r3
 	mov	r7, #120
-	mov	lr, r3
 	mov	r6, #210
-	mov	r5, #2
-	mov	r4, #1
-	ldr	r2, .L76
+	mov	r5, #1
+	ldr	r2, .L74+4
 .L66:
 	add	r1, r3, r3, lsl #2
-	ldr	r0, [r2, r1, lsl #4]
-	cmp	r0, #0
-	lsl	ip, r3, #2
+	ldr	ip, [r2, r1, lsl #4]
+	cmp	ip, #0
 	add	r0, r2, r1, lsl #4
-	bne	.L61
-	cmp	lr, #1
+	lsl	lr, r3, #2
+	bne	.L60
+	cmp	r4, #1
 	beq	.L65
 	add	r3, r3, #1
 	cmp	r3, #6
 	str	r7, [r0, #8]
 	str	r6, [r0, #12]
-	str	r5, [r0, #48]
-	str	r4, [r2, r1, lsl #4]
-	add	ip, r3, r3, lsl #2
-	beq	.L60
-	ldr	r1, [r2, ip, lsl #4]
+	str	r8, [r0, #48]
+	str	r5, [r2, r1, lsl #4]
+	add	lr, r3, r3, lsl #2
+	beq	.L59
+	ldr	r1, [r2, lr, lsl #4]
 	cmp	r1, #0
-	lsl	ip, r3, #2
-	bne	.L75
+	lsl	lr, r3, #2
+	bne	.L73
 .L65:
-	mov	r4, #1
-	mov	lr, #120
-	mov	r0, #10
-	mov	r1, #2
-	add	r3, ip, r3
-	str	r4, [r2, r3, lsl #4]
-	add	r2, r2, r3, lsl #4
-	str	lr, [r2, #8]
-	str	r0, [r2, #12]
-	str	r1, [r2, #48]
-.L60:
-	pop	{r4, r5, r6, r7, lr}
+	cmp	r9, #0
+	moveq	ip, #2
+	mov	r5, #120
+	mov	r4, #10
+	mov	r0, #1
+	add	r3, lr, r3
+	add	r1, r2, r3, lsl #4
+	str	ip, [r1, #48]
+	str	r5, [r1, #8]
+	str	r4, [r1, #12]
+	str	r0, [r2, r3, lsl #4]
+.L59:
+	pop	{r4, r5, r6, r7, r8, r9, lr}
 	bx	lr
-.L75:
-	mov	lr, #1
-.L61:
+.L73:
+	mov	r4, #1
+.L60:
 	add	r3, r3, #1
 	cmp	r3, #6
 	bne	.L66
-	pop	{r4, r5, r6, r7, lr}
+	pop	{r4, r5, r6, r7, r8, r9, lr}
 	bx	lr
-.L77:
+.L75:
 	.align	2
-.L76:
+.L74:
+	.word	cheating
 	.word	big_lettuce
 	.size	spawnBigLettuce, .-spawnBigLettuce
 	.align	2
@@ -533,8 +545,7 @@ updateBoss1:
 	str	r2, [r5]
 	str	r3, [r6]
 	sub	sp, sp, #16
-	ble	.L105
-.L79:
+	ble	.L103
 	ldr	r3, .L112+12
 	add	r2, r3, #8
 	ldr	r0, [r3, #28]
@@ -549,11 +560,11 @@ updateBoss1:
 	mov	lr, pc
 	bx	r7
 	cmp	r0, #0
-	bne	.L106
-.L80:
+	bne	.L104
 	ldr	r3, [r4, #32]
 	cmp	r3, #0
-	beq	.L82
+	beq	.L81
+.L110:
 	ldr	r3, [r6, #4]
 	add	r3, r3, #1
 	cmp	r3, #20
@@ -561,38 +572,107 @@ updateBoss1:
 	strle	r3, [r6, #4]
 	strgt	r3, [r6, #4]
 	strgt	r3, [r4, #32]
-.L82:
+.L81:
 	ldr	r3, [r5]
 	ldr	r7, .L112+20
 	cmp	r3, #150
 	ldr	r2, [r7]
 	ldr	r6, [r4, #28]
-	ble	.L85
+	bgt	.L105
+.L84:
 	cmp	r2, #2
-	ble	.L107
+	bgt	.L85
 .L86:
+	ldr	r8, .L112+24
+	cmp	r3, #250
+	ldr	r3, [r8]
+	ble	.L92
+	cmp	r3, #2
+	ble	.L106
+.L93:
+	cmp	r6, #1
+	beq	.L107
+.L94:
 	cmp	r6, #0
-	bne	.L87
+	bne	.L76
+	ldr	r2, [r4, #4]
+.L96:
+	ldr	r1, [r7]
+	ldr	r3, [r4, #36]
+	cmp	r1, #0
+	lsl	r3, r3, #1
+	ldr	r1, [r5]
+	sub	r3, r3, #1
+	beq	.L108
+	cmp	r1, #14
+	addle	r3, r3, r2
+	addgt	r3, r2, r3, lsl #1
+	str	r3, [r4, #4]
+.L76:
+	add	sp, sp, #16
+	@ sp needed
+	pop	{r4, r5, r6, r7, r8, r9, r10, lr}
+	bx	lr
+.L105:
+	cmp	r2, #2
+	bgt	.L85
+	cmp	r6, #0
+	bne	.L86
+	add	r2, r2, #1
+	ldr	r3, .L112+28
+	str	r2, [r7]
+	str	r6, [r5]
+	mov	lr, pc
+	bx	r3
+	mov	r2, #113
+	subs	r3, r0, #0
+	ldr	r1, [r7]
+	and	r3, r3, #1
+	rsblt	r3, r3, #0
+	cmp	r1, #2
+	str	r3, [r4, #36]
+	str	r2, [r4, #8]
+	ble	.L109
+.L87:
+	cmp	r3, #0
+	movne	r3, #17
+	moveq	r3, #192
+	ldr	r2, [r7]
+	str	r3, [r4, #4]
+	ldr	r6, [r4, #28]
+	ldr	r3, [r5]
+	b	.L84
+.L104:
+	ldr	r3, .L112+32
+	mov	lr, pc
+	bx	r3
+	ldr	r3, [r4, #32]
+	cmp	r3, #0
+	beq	.L81
+	b	.L110
+.L85:
+	cmp	r6, #0
+	bne	.L86
 	mov	r1, #1
-	ldr	r2, .L112+24
+	ldr	r2, .L112+36
 	cmp	r3, #250
 	ldr	r3, [r2]
-	ldr	r10, .L112+28
-	ldr	r9, .L112+32
+	ldr	r10, .L112+40
+	ldr	r9, .L112+44
 	add	r3, r3, r1
 	ldr	r0, [r10]
 	str	r3, [r2]
-	ldr	r8, .L112+36
+	ldr	r8, .L112+24
 	ldr	r3, [r9]
 	str	r6, [r7]
 	str	r3, [r4, #4]
 	str	r0, [r4, #8]
 	str	r1, [r4, #28]
 	ldr	r3, [r8]
-	ble	.L90
+	ble	.L89
 	cmp	r3, #2
-	bgt	.L92
-.L91:
+	bgt	.L91
+.L90:
 	ldr	r2, [r2]
 	add	r1, r3, #1
 	cmp	r2, #1
@@ -604,99 +684,37 @@ updateBoss1:
 	cmp	r2, r0
 	str	r1, [r8]
 	str	r0, [r5]
-	bne	.L108
+	bne	.L111
 	add	r3, r3, #2
 	str	r3, [r8]
 	bl	spawnLettuce
 	ldr	r3, [r8]
 	ldr	r6, [r4, #28]
-.L93:
+.L92:
 	cmp	r3, #2
-	ble	.L95
-.L94:
-	cmp	r6, #1
-	beq	.L109
-.L95:
-	cmp	r6, #0
-	bne	.L78
-	ldr	r2, [r4, #4]
-.L97:
-	ldr	r1, [r7]
-	ldr	r3, [r4, #36]
-	cmp	r1, #0
-	lsl	r3, r3, #1
-	ldr	r1, [r5]
-	sub	r3, r3, #1
-	beq	.L110
-	cmp	r1, #14
-	addle	r3, r3, r2
-	addgt	r3, r2, r3, lsl #1
-	str	r3, [r4, #4]
-.L78:
+	ble	.L94
+	b	.L93
+.L103:
+	ldr	r2, .L112+48
+	ldr	r3, [r2]
+	ldr	r1, .L112+52
+	add	r3, r3, #1
+	str	r3, [r2]
+	mov	lr, pc
+	bx	r1
 	add	sp, sp, #16
 	@ sp needed
 	pop	{r4, r5, r6, r7, r8, r9, r10, lr}
 	bx	lr
-.L107:
-	cmp	r6, #0
-	bne	.L87
-	add	r2, r2, #1
-	ldr	r3, .L112+40
-	str	r2, [r7]
-	str	r6, [r5]
-	mov	lr, pc
-	bx	r3
-	mov	r3, #113
-	cmp	r0, #0
-	ldr	r2, [r7]
-	and	r0, r0, #1
-	rsblt	r0, r0, #0
-	cmp	r2, #2
-	str	r0, [r4, #36]
-	str	r3, [r4, #8]
-	ble	.L111
-.L88:
-	cmp	r0, #0
-	movne	r3, #17
-	moveq	r3, #192
-	ldr	r2, [r7]
-	str	r3, [r4, #4]
-	ldr	r6, [r4, #28]
-	ldr	r3, [r5]
-.L85:
-	cmp	r2, #2
-	bgt	.L86
-.L87:
-	ldr	r8, .L112+36
-	cmp	r3, #250
-	ldr	r3, [r8]
-	ble	.L93
-	cmp	r3, #2
-	bgt	.L94
-	cmp	r6, #1
-	bne	.L95
-	ldr	r2, .L112+24
-	b	.L91
 .L106:
-	ldr	r3, .L112+44
-	mov	lr, pc
-	bx	r3
-	b	.L80
-.L105:
-	mov	r1, #1
-	ldr	r2, .L112+48
-	ldr	r3, [r2]
-	add	r3, r3, r1
-	str	r3, [r2]
-	ldr	r3, .L112+52
-	str	r1, [r4, #40]
-	mov	lr, pc
-	bx	r3
-	b	.L79
-.L90:
-	cmp	r3, #2
-	ble	.L78
-.L92:
+	cmp	r6, #1
+	bne	.L94
+	ldr	r2, .L112+36
+	b	.L90
+.L107:
+	ldr	r10, .L112+40
+	ldr	r9, .L112+44
+.L91:
 	ldr	r3, .L112+56
 	mov	r2, #0
 	ldr	r1, [r3]
@@ -710,8 +728,8 @@ updateBoss1:
 	str	r1, [r4, #8]
 	str	r3, [r8]
 	str	r3, [r4, #28]
-	b	.L97
-.L110:
+	b	.L96
+.L108:
 	add	r3, r2, r3, lsl #1
 	add	r1, r1, #1
 	str	r3, [r4, #4]
@@ -720,24 +738,24 @@ updateBoss1:
 	@ sp needed
 	pop	{r4, r5, r6, r7, r8, r9, r10, lr}
 	bx	lr
-.L111:
+.L89:
+	cmp	r3, #2
+	ble	.L76
+	b	.L91
+.L109:
 	ldr	r3, .L112+56
-	ldr	r0, .L112+60
-	ldr	r1, [r3]
 	mov	r2, r6
+	ldr	r1, [r3]
+	ldr	r0, .L112+60
 	ldr	r3, .L112+64
 	mov	lr, pc
 	bx	r3
-	ldr	r0, [r4, #36]
-	b	.L88
-.L108:
+	ldr	r3, [r4, #36]
+	b	.L87
+.L111:
 	bl	spawnBigLettuce
 	ldr	r3, [r8]
 	ldr	r6, [r4, #28]
-	b	.L93
-.L109:
-	ldr	r10, .L112+28
-	ldr	r9, .L112+32
 	b	.L92
 .L113:
 	.align	2
@@ -748,12 +766,12 @@ updateBoss1:
 	.word	player
 	.word	collision
 	.word	rollCounter
-	.word	roundCounter
-	.word	hoverY
-	.word	hoverX
 	.word	hoverCounter
 	.word	rand
 	.word	hurtPlayer
+	.word	roundCounter
+	.word	hoverY
+	.word	hoverX
 	.word	currMap
 	.word	initGame
 	.word	sfx_lettuce_roll_length

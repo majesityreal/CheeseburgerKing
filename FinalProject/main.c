@@ -32,7 +32,8 @@ What I want to highlight:
         See: boss1AI.c, line 177 - 183 ish in the drawBoss1() method, 
     - LARGE MAP (1024 x 256) I use multiple screen blocks to load in multiple maps
         See: game.c, line 635 for left motion and 661 for right motion (updatePlayer method)
-    - There is a speedrun timer
+    - There is a speedrun timer which uses interrupts to get timing, in interrupts.c
+    - running particles under player if they have been running in the same direction for > 0.5 seconds (I made them myself :) )
 
 What is finished:
     - ALL mechanics (double jump, dash, attack)
@@ -124,6 +125,9 @@ OBJ_ATTR shadowOAM[128];
 // waits slightly after pressing the play button
 int startTime = 0;
 
+// to count how many LR's have been pressed (we want 3 to activate)
+int cheatingCounter = 0;
+
 int main()
 {
     timer = 0;
@@ -176,6 +180,7 @@ void setupTitleScreen() {
     time_s = 0;
     time_m = 0;
     startTime = 0;
+    cheating = 0;
     pauseTimer();
 
     REG_DISPCTL = MODE0 | BG2_ENABLE | SPRITE_ENABLE;
@@ -214,6 +219,15 @@ void titleScreen() {
     waterfallTimer++;
     shadowOAMIndex = 0;
     hideSprites();
+
+    if (BUTTON_PRESSED(BUTTON_R) && BUTTON_PRESSED(BUTTON_L)) {
+        cheatingCounter++;
+    }
+
+    if (cheatingCounter >= 3) {
+        cheating = 1;
+    }
+
     if (BUTTON_PRESSED(BUTTON_UP)) {
         playSoundB(sfxmenu_move_data, sfxmenu_move_length, 0);
         currSelection--;
@@ -294,8 +308,8 @@ void levelSelect() {
     }
 
         if (startTime != 0 && startTime < waterfallTimer - 10) {
-            startGame();
             currMap = currSelection;
+            startGame();
             initGame();
         }
 

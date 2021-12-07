@@ -47,7 +47,7 @@ int currentState;
 
 void initBoss1() {
     timer = 0;
-    boss.lives = BOSS_LIVES;
+    boss.lives = 2;
     hoverX = 104;
     hoverY = 45;
     boss.worldRow = hoverY;
@@ -70,9 +70,9 @@ void updateBoss1() {
     time++;
     // TODO - do something special when the boss dies???
     if (boss.lives <= 0) {
-        boss.hide = 1;
         currMap++;
         initGame();
+        return;
     }
 
     if (collision(boss.worldCol, boss.worldRow, boss.width, boss.height, player.worldCol, player.worldRow, player.width, player.height)) {
@@ -320,7 +320,12 @@ void spawnLettuce() {
                 lettuce[g].worldRow = 80;
                 lettuce[g].worldCol = 40;
                 lettuce[g].aniState = 1;
-                lettuce[g].lives = 2;
+                if (cheating) {
+                    lettuce[g].lives = 0;
+                }
+                else {
+                    lettuce[g].lives = 2;
+                }
                 lettuce[g].active = 1;
                 return;
             }
@@ -328,7 +333,12 @@ void spawnLettuce() {
                 lettuce[g].worldRow = 80;
                 lettuce[g].worldCol = 200;
                 lettuce[g].aniState = 1;
-                lettuce[g].lives = 2;
+                if (cheating) {
+                    lettuce[g].lives = 0;
+                }
+                else {
+                    lettuce[g].lives = 2;
+                }
                 lettuce[g].active = 1;
                 counter++;
             }
@@ -343,14 +353,24 @@ void spawnBigLettuce() {
             if (counter == 1) {
                 big_lettuce[g].worldRow = 120;
                 big_lettuce[g].worldCol = 10;
-                big_lettuce[g].lives = 2;
+                if (cheating) {
+                    big_lettuce[g].lives = 0;
+                }
+                else {
+                    big_lettuce[g].lives = 2;
+                }
                 big_lettuce[g].active = 1;
                 return;
             }
             else {
                 big_lettuce[g].worldRow = 120;
                 big_lettuce[g].worldCol = 210;
-                big_lettuce[g].lives = 2;
+                if (cheating) {
+                    big_lettuce[g].lives = 0;
+                }
+                else {
+                    big_lettuce[g].lives = 2;
+                }
                 counter++;
                 big_lettuce[g].active = 1;
             }

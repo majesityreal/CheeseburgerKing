@@ -20,6 +20,7 @@
 
 // keeps track of whether the player has 'won'
 int winning = 0;
+int cheating = 0;
 
 OBJ_ATTR shadowOAM[128];
 
@@ -52,6 +53,9 @@ int grounded = 1;
 int jumping = 0;
 // check for player double jump
 int doubleJumping = 0;
+
+// for running particle, to track when to place
+int running = 0;
 
 // if player is dying
 int dying = 0;
@@ -99,6 +103,7 @@ enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP, DYING };
 // #region init
 void initGame() {
     if (currMap == 2) {
+        winning = 1;
         pauseTimer();
     }
     else {
@@ -198,11 +203,16 @@ void initEnemies() {
         lettuce[g].xRange = 128;
         lettuce[g].yRange = 96;
         lettuce[g].speed = 1;
-        lettuce[g].lives = 1;
+        if (cheating) {
+            lettuce[g].lives = 0;
+        }
+        else {
+            lettuce[g].lives = 1;
+        }
         lettuce[g].damaged = 0;
     }
 
-        // the big L. goes through all and sets defaults
+    // the big L. goes through all and sets defaults
     for (int g = 0; g < BIGLETTUCECOUNT; g++) {
         big_lettuce[g].active = 0;
         big_lettuce[g].width = 13;
@@ -217,7 +227,12 @@ void initEnemies() {
         big_lettuce[g].xRange = 240;
         big_lettuce[g].yRange = 60;
         big_lettuce[g].shootSpeed = 60;
-        big_lettuce[g].lives = 2;
+        if (cheating) {
+            big_lettuce[g].lives = 0;
+        }
+        else {
+            big_lettuce[g].lives = 2;
+        }
         big_lettuce[g].damaged = 0;
     }
 
@@ -338,7 +353,6 @@ void initMaps() {
 
         REG_BG2VOFF = 0;
         break;
-
     case 2:
         winning = 1;
     break;
@@ -641,12 +655,21 @@ void updatePlayer() {
         dashing = 1;
         // makes slower movement on the ground
         if (grounded) {
-            player.movementCycle = 2;
+            if (cheating) {
+                player.movementCycle = 1;
+            }
+            else {
+                player.movementCycle = 2;
+            }
             player.cdel = 3;
         }
         else if (!dashed) {
             dashed = 1;
             player.movementCycle = 1;
+            if (cheating) {
+                player.cdel = 4;
+            }
+            
         }
     }
     // #endregion dashing
@@ -660,6 +683,11 @@ void updatePlayer() {
             && !pCheckCollision(player.worldCol - player.cdel, player.worldRow + player.height - 1)) {
             if (player.worldCol >= 0) {
                 player.worldCol -= player.cdel;
+                // stops the running particles if changing direction. Since player.direction is updated after this, it has previous frame data
+                if (!player.direction) {
+                    running = 0;
+                }
+
                 if (!cameraLock) {
                     if (hOff > 0 && (player.worldCol - hOff < (SCREENWIDTH / 2))) {
                         // Update background offset variable if the above is true
@@ -687,6 +715,10 @@ void updatePlayer() {
             && !pCheckCollision(player.worldCol + player.width + player.cdel, player.worldRow + player.height - 1)) {
             if (pMapPos + player.width <= MAPWIDTH) {
                 player.worldCol += player.cdel;
+                // if changing direction, stop running particles
+                if (player.direction) {
+                    running = 0;
+                }
                 if (!cameraLock) {
                     if (hOff <= 256 && (player.worldCol - hOff > (SCREENWIDTH / 2)) && pMapPos <= (MAPWIDTH - 120)) {
                         hOff += player.cdel;
@@ -1024,6 +1056,27 @@ void drawPlayer() {
         }
     }
     shadowOAMIndex++;
+
+    if (player.aniState == RUNNING) {
+        running++;
+        if (running > 30) {
+            shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & (player.worldRow - vOff + player.height - 7)) | ATTR0_SQUARE;
+            int temp = (running / 5) % 6;
+            shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((temp * 2), 27);
+            if (player.direction) {
+                shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (player.worldCol - hOff)) | ATTR1_SMALL;
+                shadowOAM[shadowOAMIndex].attr1 |= ATTR1_HFLIP;
+            }
+            else {
+                shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (player.worldCol - hOff - 7)) | ATTR1_SMALL;
+            }
+            shadowOAMIndex++;
+        }
+    }
+    else {
+        running = 0;
+    }
+
 }
 
 void drawEnemies() {

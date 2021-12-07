@@ -1492,6 +1492,7 @@ extern BL_BULLET bl_bullets[6];
 extern int pauseVar;
 extern int winning;
 extern int level;
+extern int cheating;
 
 
 extern int dead;
@@ -1563,7 +1564,7 @@ extern const unsigned short HowToPlayScreenPal[256];
 # 9 "main.c" 2
 # 1 "victoryScreen.h" 1
 # 22 "victoryScreen.h"
-extern const unsigned short victoryScreenTiles[2256];
+extern const unsigned short victoryScreenTiles[16384];
 
 
 extern const unsigned short victoryScreenMap[1024];
@@ -1670,7 +1671,7 @@ extern const signed char sfxmenu_move_data[];
 # 25 "main.c" 2
 
 SOUND menuSong;
-# 62 "main.c"
+# 63 "main.c"
 void initialize();
 
 
@@ -1735,6 +1736,9 @@ OBJ_ATTR shadowOAM[128];
 
 
 int startTime = 0;
+
+
+int cheatingCounter = 0;
 
 int main()
 {
@@ -1826,6 +1830,15 @@ void titleScreen() {
     waterfallTimer++;
     shadowOAMIndex = 0;
     hideSprites();
+
+    if ((!(~(oldButtons) & ((1 << 8))) && (~buttons & ((1 << 8)))) && (!(~(oldButtons) & ((1 << 9))) && (~buttons & ((1 << 9))))) {
+        cheatingCounter++;
+    }
+
+    if (cheatingCounter >= 3) {
+        cheating = 1;
+    }
+
     if ((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6))))) {
         playSoundB(sfxmenu_move_data, sfxmenu_move_length, 0);
         currSelection--;
@@ -1906,8 +1919,8 @@ void levelSelect() {
     }
 
         if (startTime != 0 && startTime < waterfallTimer - 10) {
-            startGame();
             currMap = currSelection;
+            startGame();
             initGame();
         }
 
@@ -2138,7 +2151,7 @@ void goToPause() {
 
 
 void pause() {
-# 549 "main.c"
+# 562 "main.c"
     if ((!(~(oldButtons) & ((1 << 0))) && (~buttons & ((1 << 0)))) | (!(~(oldButtons) & ((1 << 1))) && (~buttons & ((1 << 1)))) | (!(~(oldButtons) & ((1 << 3))) && (~buttons & ((1 << 3)))) | (!(~(oldButtons) & ((1 << 2))) && (~buttons & ((1 << 2))))) {
         pauseVar = 0;
 
@@ -2156,7 +2169,7 @@ void pause() {
 void goToWin() {
     hideSprites();
         DMANow(3, victoryScreenPal, ((unsigned short *)0x5000000), 512 / 2);
-        DMANow(3, victoryScreenTiles, &((charblock *)0x6000000)[0], 4512 / 2);
+        DMANow(3, victoryScreenTiles, &((charblock *)0x6000000)[0], 32768 / 2);
         DMANow(3, victoryScreenMap, &((screenblock *)0x6000000)[24], 2048 / 2);
         DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
 

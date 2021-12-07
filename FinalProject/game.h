@@ -113,6 +113,7 @@ extern BL_BULLET bl_bullets[BIGLETTUCECOUNT];
 extern int pauseVar;
 extern int winning;
 extern int level;
+extern int cheating;
 
 // int to track whether player has died yet
 extern int dead;

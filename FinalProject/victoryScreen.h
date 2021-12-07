@@ -5,11 +5,11 @@
 //
 //	victoryScreen, 256x256@4, 
 //	+ palette 256 entries, not compressed
-//	+ 141 tiles (t|f|p reduced) not compressed
+//	+ 1024 tiles not compressed
 //	+ regular map (in SBBs), not compressed, 32x32 
-//	Total size: 512 + 4512 + 2048 = 7072
+//	Total size: 512 + 32768 + 2048 = 35328
 //
-//	Time-stamp: 2021-12-06, 22:26:10
+//	Time-stamp: 2021-12-07, 00:54:36
 //	Exported by Cearn's GBA Image Transmogrifier, v0.8.3
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -18,8 +18,8 @@
 #ifndef GRIT_VICTORYSCREEN_H
 #define GRIT_VICTORYSCREEN_H
 
-#define victoryScreenTilesLen 4512
-extern const unsigned short victoryScreenTiles[2256];
+#define victoryScreenTilesLen 32768
+extern const unsigned short victoryScreenTiles[16384];
 
 #define victoryScreenMapLen 2048
 extern const unsigned short victoryScreenMap[1024];

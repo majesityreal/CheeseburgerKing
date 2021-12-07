@@ -1740,6 +1740,7 @@ extern BL_BULLET bl_bullets[6];
 extern int pauseVar;
 extern int winning;
 extern int level;
+extern int cheating;
 
 
 extern int dead;
@@ -1939,6 +1940,7 @@ extern const signed char sfx_lettuce_projectile_data[];
 
 
 int winning = 0;
+int cheating = 0;
 
 OBJ_ATTR shadowOAM[128];
 
@@ -1971,6 +1973,9 @@ int grounded = 1;
 int jumping = 0;
 
 int doubleJumping = 0;
+
+
+int running = 0;
 
 
 int dying = 0;
@@ -2018,6 +2023,7 @@ enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP, DYING };
 
 void initGame() {
     if (currMap == 2) {
+        winning = 1;
         pauseTimer();
     }
     else {
@@ -2117,7 +2123,12 @@ void initEnemies() {
         lettuce[g].xRange = 128;
         lettuce[g].yRange = 96;
         lettuce[g].speed = 1;
-        lettuce[g].lives = 1;
+        if (cheating) {
+            lettuce[g].lives = 0;
+        }
+        else {
+            lettuce[g].lives = 1;
+        }
         lettuce[g].damaged = 0;
     }
 
@@ -2136,7 +2147,12 @@ void initEnemies() {
         big_lettuce[g].xRange = 240;
         big_lettuce[g].yRange = 60;
         big_lettuce[g].shootSpeed = 60;
-        big_lettuce[g].lives = 2;
+        if (cheating) {
+            big_lettuce[g].lives = 0;
+        }
+        else {
+            big_lettuce[g].lives = 2;
+        }
         big_lettuce[g].damaged = 0;
     }
 
@@ -2257,7 +2273,6 @@ void initMaps() {
 
         (*(volatile unsigned short *)0x0400001A) = 0;
         break;
-
     case 2:
         winning = 1;
     break;
@@ -2440,7 +2455,7 @@ void updatePlayer() {
                 break;
             }
         }
-# 542 "game.c"
+# 556 "game.c"
     for (int i = 1; i <= yVel; i++) {
         if (pCheckCollision(player.worldCol, player.worldRow + player.height + i)
         || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
@@ -2491,7 +2506,7 @@ void updatePlayer() {
         player.worldRow += yVel;
 
     }
-# 601 "game.c"
+# 615 "game.c"
         if (!grounded) {
         }
 
@@ -2535,12 +2550,21 @@ void updatePlayer() {
         dashing = 1;
 
         if (grounded) {
-            player.movementCycle = 2;
+            if (cheating) {
+                player.movementCycle = 1;
+            }
+            else {
+                player.movementCycle = 2;
+            }
             player.cdel = 3;
         }
         else if (!dashed) {
             dashed = 1;
             player.movementCycle = 1;
+            if (cheating) {
+                player.cdel = 4;
+            }
+
         }
     }
 
@@ -2554,6 +2578,11 @@ void updatePlayer() {
             && !pCheckCollision(player.worldCol - player.cdel, player.worldRow + player.height - 1)) {
             if (player.worldCol >= 0) {
                 player.worldCol -= player.cdel;
+
+                if (!player.direction) {
+                    running = 0;
+                }
+
                 if (!cameraLock) {
                     if (hOff > 0 && (player.worldCol - hOff < (240 / 2))) {
 
@@ -2581,6 +2610,10 @@ void updatePlayer() {
             && !pCheckCollision(player.worldCol + player.width + player.cdel, player.worldRow + player.height - 1)) {
             if (pMapPos + player.width <= 2048) {
                 player.worldCol += player.cdel;
+
+                if (player.direction) {
+                    running = 0;
+                }
                 if (!cameraLock) {
                     if (hOff <= 256 && (player.worldCol - hOff > (240 / 2)) && pMapPos <= (2048 - 120)) {
                         hOff += player.cdel;
@@ -2918,6 +2951,27 @@ void drawPlayer() {
         }
     }
     shadowOAMIndex++;
+
+    if (player.aniState == RUNNING) {
+        running++;
+        if (running > 30) {
+            shadowOAM[shadowOAMIndex].attr0 = (0xFF & (player.worldRow - vOff + player.height - 7)) | (0 << 14);
+            int temp = (running / 5) % 6;
+            shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((27)*32 + ((temp * 2)));
+            if (player.direction) {
+                shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (player.worldCol - hOff)) | (1 << 14);
+                shadowOAM[shadowOAMIndex].attr1 |= (1 << 12);
+            }
+            else {
+                shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (player.worldCol - hOff - 7)) | (1 << 14);
+            }
+            shadowOAMIndex++;
+        }
+    }
+    else {
+        running = 0;
+    }
+
 }
 
 void drawEnemies() {
@@ -3210,7 +3264,7 @@ void hurtPlayer() {
 
 
 void drawFont() {
-# 1374 "game.c"
+# 1427 "game.c"
 }
 
 void drawTimer() {
