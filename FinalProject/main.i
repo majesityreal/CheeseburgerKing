@@ -1654,9 +1654,23 @@ extern const unsigned int sfx_jump1_sampleRate;
 extern const unsigned int sfx_jump1_length;
 extern const signed char sfx_jump1_data[];
 # 23 "main.c" 2
+# 1 "sfxmenu_select.h" 1
+
+
+extern const unsigned int sfxmenu_select_sampleRate;
+extern const unsigned int sfxmenu_select_length;
+extern const signed char sfxmenu_select_data[];
+# 24 "main.c" 2
+# 1 "sfxmenu_move.h" 1
+
+
+extern const unsigned int sfxmenu_move_sampleRate;
+extern const unsigned int sfxmenu_move_length;
+extern const signed char sfxmenu_move_data[];
+# 25 "main.c" 2
 
 SOUND menuSong;
-# 60 "main.c"
+# 62 "main.c"
 void initialize();
 
 
@@ -1719,6 +1733,9 @@ int kingFrames = 0;
 
 OBJ_ATTR shadowOAM[128];
 
+
+int startTime = 0;
+
 int main()
 {
     timer = 0;
@@ -1770,6 +1787,7 @@ void setupTitleScreen() {
 
     time_s = 0;
     time_m = 0;
+    startTime = 0;
     pauseTimer();
 
     (*(volatile unsigned short *)0x4000000) = 0 | (1 << 10) | (1 << 12);
@@ -1809,24 +1827,27 @@ void titleScreen() {
     shadowOAMIndex = 0;
     hideSprites();
     if ((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6))))) {
+        playSoundB(sfxmenu_move_data, sfxmenu_move_length, 0);
         currSelection--;
         if (currSelection < 0) {
             currSelection = 3 - 1;
         }
     }
     if ((!(~(oldButtons) & ((1 << 7))) && (~buttons & ((1 << 7))))) {
+        playSoundB(sfxmenu_move_data, sfxmenu_move_length, 0);
         currSelection++;
         if (currSelection > 3 - 1) {
             currSelection = 0;
         }
     }
 
-    if ((!(~(oldButtons) & ((1 << 8))) && (~buttons & ((1 << 8))))) {
-        playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
-    }
-
 
     if ((!(~(oldButtons) & ((1 << 0))) && (~buttons & ((1 << 0)))) && !(~((*(volatile unsigned short *)0x04000130)) & ((1 << 6)))) {
+        playSoundB(sfxmenu_select_data, sfxmenu_select_length, 0);
+        startTime = waterfallTimer;
+    }
+    if (startTime != 0 && startTime < waterfallTimer - 10) {
+        startTime = 0;
         switch (currSelection) {
             case 0:
                 startGame();
@@ -1865,12 +1886,14 @@ void levelSelect() {
     shadowOAMIndex = 0;
     hideSprites();
     if ((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6))))) {
+        playSoundB(sfxmenu_move_data, sfxmenu_move_length, 0);
         currSelection--;
         if (currSelection < 0) {
             currSelection = 3 + 1;
         }
     }
     if ((!(~(oldButtons) & ((1 << 7))) && (~buttons & ((1 << 7))))) {
+        playSoundB(sfxmenu_move_data, sfxmenu_move_length, 0);
         currSelection++;
         if (currSelection > 3 + 1) {
             currSelection = 0;
@@ -1878,10 +1901,16 @@ void levelSelect() {
     }
 
     if ((!(~(oldButtons) & ((1 << 0))) && (~buttons & ((1 << 0)))) && !(~((*(volatile unsigned short *)0x04000130)) & ((1 << 6)))) {
-        startGame();
-        currMap = currSelection;
-        initGame();
+        startTime = waterfallTimer;
+        playSoundB(sfxmenu_select_data, sfxmenu_select_length, 0);
     }
+
+        if (startTime != 0 && startTime < waterfallTimer - 10) {
+            startGame();
+            currMap = currSelection;
+            initGame();
+        }
+
 
     if ((!(~(oldButtons) & ((1 << 1))) && (~buttons & ((1 << 1))))) {
         currSelection = 0;
@@ -2109,7 +2138,7 @@ void goToPause() {
 
 
 void pause() {
-# 532 "main.c"
+# 549 "main.c"
     if ((!(~(oldButtons) & ((1 << 0))) && (~buttons & ((1 << 0)))) | (!(~(oldButtons) & ((1 << 1))) && (~buttons & ((1 << 1)))) | (!(~(oldButtons) & ((1 << 3))) && (~buttons & ((1 << 3)))) | (!(~(oldButtons) & ((1 << 2))) && (~buttons & ((1 << 2))))) {
         pauseVar = 0;
 

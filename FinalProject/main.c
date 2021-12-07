@@ -20,6 +20,8 @@
 #include "menuSong.h"
 
 #include "sfx_jump1.h"
+#include "sfxmenu_select.h"
+#include "sfxmenu_move.h"
 
 SOUND menuSong;
 
@@ -119,6 +121,9 @@ int kingFrames = 0;
 // Shadow OAM
 OBJ_ATTR shadowOAM[128];
 
+// waits slightly after pressing the play button
+int startTime = 0;
+
 int main()
 {
     timer = 0;
@@ -170,8 +175,9 @@ void setupTitleScreen() {
     // ensures there is no timer while in title
     time_s = 0;
     time_m = 0;
+    startTime = 0;
     pauseTimer();
-    
+
     REG_DISPCTL = MODE0 | BG2_ENABLE | SPRITE_ENABLE;
     REG_BG2CNT = BG_4BPP | BG_CHARBLOCK(0) | BG_SCREENBLOCK(24);
     // draw the title screen image
@@ -209,24 +215,27 @@ void titleScreen() {
     shadowOAMIndex = 0;
     hideSprites();
     if (BUTTON_PRESSED(BUTTON_UP)) {
+        playSoundB(sfxmenu_move_data, sfxmenu_move_length, 0);
         currSelection--;
         if (currSelection < 0) {
             currSelection = BUTTON_COUNT - 1;
         }
     }
     if (BUTTON_PRESSED(BUTTON_DOWN)) {
+        playSoundB(sfxmenu_move_data, sfxmenu_move_length, 0);
         currSelection++;
         if (currSelection > BUTTON_COUNT - 1) {
             currSelection = 0;
         }
     }
-
-    if (BUTTON_PRESSED(BUTTON_R)) {
-        playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
-    }
     
     // if start,select pressed, launch into game
     if (BUTTON_PRESSED(BUTTON_A) && !BUTTON_HELD(BUTTON_UP)) {
+        playSoundB(sfxmenu_select_data, sfxmenu_select_length, 0);
+        startTime = waterfallTimer;
+    }
+    if (startTime != 0 && startTime < waterfallTimer - 10) {
+        startTime = 0;
         switch (currSelection) {
             case 0:
                 startGame();
@@ -265,12 +274,14 @@ void levelSelect() {
     shadowOAMIndex = 0;
     hideSprites();
     if (BUTTON_PRESSED(BUTTON_UP)) {
+        playSoundB(sfxmenu_move_data, sfxmenu_move_length, 0);
         currSelection--;
         if (currSelection < 0) {
             currSelection = BUTTON_COUNT + 1;
         }
     }
     if (BUTTON_PRESSED(BUTTON_DOWN)) {
+        playSoundB(sfxmenu_move_data, sfxmenu_move_length, 0);
         currSelection++;
         if (currSelection > BUTTON_COUNT + 1) {
             currSelection = 0;
@@ -278,10 +289,16 @@ void levelSelect() {
     }
     
     if (BUTTON_PRESSED(BUTTON_A) && !BUTTON_HELD(BUTTON_UP)) {
-        startGame();
-        currMap = currSelection;
-        initGame();
+        startTime = waterfallTimer;
+        playSoundB(sfxmenu_select_data, sfxmenu_select_length, 0);
     }
+
+        if (startTime != 0 && startTime < waterfallTimer - 10) {
+            startGame();
+            currMap = currSelection;
+            initGame();
+        }
+
 
     if (BUTTON_PRESSED(BUTTON_B)) {
         currSelection = 0;
