@@ -1975,6 +1975,8 @@ int coyoteTimer = 0;
 
 int gTimer = 0;
 
+int airTimer = 0;
+
 
 int currMap;
 
@@ -2009,6 +2011,7 @@ void initGame() {
     initSlash();
     initEnemies();
     gTimer = 0;
+    airTimer = 0;
     shadowOAMIndex = 2;
 
     hOff = maps[currMap].startingHOff;
@@ -2343,22 +2346,29 @@ void updatePlayer() {
     }
 
 
+
     grounded = groundCheck(player.worldCol, player.worldRow, player.width, player.height);
+
+
+
 
     if (grounded) {
         jumpThud = 0;
         doubleJumping = 0;
         dashed = 0;
         coyoteTimer = 0;
+        jumping = 0;
+
     }
 
 
 
     if((!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) && !doubleJumping && ((jumping || (!grounded && coyoteTimer >= 8)))) {
-        playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
+
         doubleJumping = 1;
         yVel = -5;
         framesInAir = 0;
+        airTimer = 0;
 
         jumpThud = 0;
 
@@ -2372,10 +2382,11 @@ void updatePlayer() {
         && !pCheckCollision(player.worldCol, player.worldRow - 1)
         && !pCheckCollision(player.worldCol + player.width, player.worldRow - 1)) {
 
-            playSoundB(sfx_jump2_data, sfx_jump2_length, 0);
+
 
             yVel = -5;
             framesInAir = 0;
+            airTimer = 0;
 
             grounded = 0;
             jumping = 1;
@@ -2390,6 +2401,7 @@ void updatePlayer() {
                 if (!cameraLock) {
                     vOff += (i + 1);
                 }
+
                 yVel = 0;
                 jumping = 0;
                 jumpThud = 1;
@@ -2398,38 +2410,27 @@ void updatePlayer() {
                 break;
             }
         }
+# 526 "game.c"
+    for (int i = 1; i <= yVel; i++) {
+        if (pCheckCollision(player.worldCol, player.worldRow + player.height + i)
+        || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
+            playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
 
-
-
-        if ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))) && (~((*(volatile unsigned short *)0x04000130)) & ((1 << 4))) && yVel > 0) {
-            for (int i = 0; i > -2; i--) {
-                if (pCheckCollision(player.worldCol - i, player.worldRow + i)
-                || pCheckCollision(player.worldCol + player.width - i, player.worldRow + i)) {
-
-                    yVel = 0;
-                    jumping = 0;
-                    jumpThud = 1;
-                    break;
-                }
+            player.worldRow += (i);
+            if (!cameraLock) {
+                vOff += (i);
             }
+            yVel = 0;
+            grounded = 1;
+            break;
         }
+    }
 
 
     if (!grounded) {
 
-        for (int i = 0; i < yVel; i++) {
-            if (pCheckCollision(player.worldCol, player.worldRow + player.height + i)
-            || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
 
-                player.worldRow += (i - 1);
-                if (!cameraLock) {
-                    vOff += (i - 1);
-                }
-                yVel = 0;
-                grounded = 1;
-                break;
-            }
-        }
+
 
         if ((~((*(volatile unsigned short *)0x04000130)) & ((1 << 6))) && jumping && !jumpThud && !doubleJumping) {
             yVel = -5 + (1 * framesInAir);
@@ -2452,24 +2453,18 @@ void updatePlayer() {
 
         yVel = fmin(3, yVel);
 
-        if (gTimer % 4 == 0) {
+        if (airTimer % 4 == 0) {
             framesInAir++;
         }
 
         coyoteTimer++;
 
+        player.worldRow += yVel;
 
     }
-
-
-    if (grounded) {
-        yVel = 0;
-        framesInAir = 0;
-        jumping = 0;
-    }
-
-
-    player.worldRow += yVel;
+# 586 "game.c"
+        if (!grounded) {
+        }
 
 
     if (vOff < 254 - 160 && (player.worldRow - vOff >= 160 / 2) && (yVel > 0)) {
@@ -2651,6 +2646,7 @@ void updatePlayer() {
 
 
     gTimer++;
+    airTimer++;
 
     animatePlayer();
 }
@@ -3184,7 +3180,39 @@ void hurtPlayer() {
 
 
 void drawFont() {
-# 1337 "game.c"
+# 1326 "game.c"
+    int c3 = framesInAir / 100;
+    int c2 = (framesInAir % 100) / 10;
+    int c1 = framesInAir % 10;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (148)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + c3)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (156)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + c2)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (164)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + c1)));
+        shadowOAMIndex++;
+
+    int e3 = player.worldRow / 100;
+    int e2 = (player.worldRow % 100) / 10;
+    int e1 = player.worldRow % 10;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (82)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + e3)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (90)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + e2)));
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (0xFF & 0) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr1 = (0x1FF & (98)) | (0 << 14);
+        shadowOAM[shadowOAMIndex].attr2 = ((0) << 12) | ((3)*32 + ((15 + e1)));
+        shadowOAMIndex++;
+
 }
 
 void drawHUD() {

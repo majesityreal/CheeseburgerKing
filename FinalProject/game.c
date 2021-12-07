@@ -70,6 +70,8 @@ int coyoteTimer = 0;
 // gravity timer, for falling velocity
 int gTimer = 0;
 
+int airTimer = 0;
+
 // current map counter
 int currMap;
 
@@ -104,6 +106,7 @@ void initGame() {
     initSlash();
     initEnemies();
     gTimer = 0;
+    airTimer = 0;
     shadowOAMIndex = 2;
     // changes per which map to load in!
     hOff = maps[currMap].startingHOff;
@@ -437,23 +440,31 @@ void updatePlayer() {
         return;
     }
 
-    // #region yVel + jumping
+    
+    
     grounded = groundCheck(player.worldCol, player.worldRow, player.width, player.height);
+
+    // #region yVel + jumping
+    // grounded = groundCheck(player.worldCol, player.worldRow, player.width, player.height);
     // this ensures no jumpThud glitches
     if (grounded)  {
         jumpThud = 0;
         doubleJumping = 0;
         dashed = 0;
         coyoteTimer = 0;
+        jumping = 0;
+        // leaving here, but it ocassionaly leads to 1 pixel above landings
+        // yVel = 0;
     }
 
     // the check for double jumping - must go before regular jumping to prevent double counting
     // checks for whether the player jumped, or whether they are just falling
     if(BUTTON_PRESSED(BUTTON_UP) && !doubleJumping && ((jumping || (!grounded && coyoteTimer >= COYOTE_TIME)))) {
-        playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
+        // playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
         doubleJumping = 1;
         yVel = JUMPVEL;
         framesInAir = 0;
+        airTimer = 0;
         // this resets so you can continue holding the dJ
         jumpThud = 0;
         // this is for the case where you fall of ledge without jumping
@@ -467,10 +478,11 @@ void updatePlayer() {
         && !pCheckCollision(player.worldCol, player.worldRow - 1)
         && !pCheckCollision(player.worldCol + player.width, player.worldRow - 1)) {
             // delay
-            playSoundB(sfx_jump2_data, sfx_jump2_length, 0);
+            // playSoundB(sfx_jump2_data, sfx_jump2_length, 0);
             // sets y to -4 for upwards movement, gravity will eventually bring it down
             yVel = JUMPVEL;
             framesInAir = 0;
+            airTimer = 0;
             // need this
             grounded = 0;
             jumping = 1;
@@ -480,11 +492,12 @@ void updatePlayer() {
         for (int i = 0; i > yVel; i--) {
             if (pCheckCollision(player.worldCol, player.worldRow + i)
             || pCheckCollision(player.worldCol + player.width, player.worldRow + i)) {
-                // snaps player to ground and resets yVel
+                // this makes it so it appears the player head goes up till the collision
                 player.worldRow += (i + 1);
                 if (!cameraLock) {
                     vOff += (i + 1);
                 }
+
                 yVel = 0;
                 jumping = 0;
                 jumpThud = 1;
@@ -496,35 +509,41 @@ void updatePlayer() {
 
         // TODO - UNINTENTIONAL ZIPLINE
         // hardcoded upright check
-        if (BUTTON_HELD(BUTTON_UP) && BUTTON_HELD(BUTTON_RIGHT) && yVel > 0) {
-            for (int i = 0; i > -2; i--) {
-                if (pCheckCollision(player.worldCol - i, player.worldRow + i)
-                || pCheckCollision(player.worldCol + player.width - i, player.worldRow + i)) {
-                    // snaps player to ground and resets yVel
-                    yVel = 0;
-                    jumping = 0;
-                    jumpThud = 1;
-                    break;
-                }
-            }   
+        // if (BUTTON_HELD(BUTTON_UP) && BUTTON_HELD(BUTTON_RIGHT) && yVel > 0) {
+        //     for (int i = 0; i > -2; i--) {
+        //         if (pCheckCollision(player.worldCol - i, player.worldRow + i)
+        //         || pCheckCollision(player.worldCol + player.width - i, player.worldRow + i)) {
+        //             // snaps player to ground and resets yVel
+        //             yVel = 0;
+        //             jumping = 0;
+        //             jumpThud = 1;
+        //             break;
+        //         }
+        //     }   
+        // }
+
+    // loops through pixels below player to check ground, if they are falling (yVel > 0)
+    // IMPORTANT - that this is called BEFORE the air calculations, as the snapping will changeeverything
+    for (int i = 1; i <= yVel; i++) {
+        if (pCheckCollision(player.worldCol, player.worldRow + player.height + i)
+        || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
+            playSoundB(sfx_jump1_data, sfx_jump1_length, 0);
+            // snaps player to ground and resets yVel
+            player.worldRow += (i);
+            if (!cameraLock) {
+                vOff += (i);
+            }
+            yVel = 0;
+            grounded = 1;
+            break;
         }
+    }
 
     // moves down if in air, handles gravity
     if (!grounded) {
-        // loops through pixels below player to check ground, if they are falling (yVel > 0)
-        for (int i = 0; i < yVel; i++) {
-            if (pCheckCollision(player.worldCol, player.worldRow + player.height + i)
-            || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
-                // snaps player to ground and resets yVel
-                player.worldRow += (i - 1);
-                if (!cameraLock) {
-                    vOff += (i - 1);
-                }
-                yVel = 0;
-                grounded = 1;
-                break;
-            }
-        }
+
+
+
         // first jump, holding up gets higher velocity
         if (BUTTON_HELD(BUTTON_UP) && jumping && !jumpThud && !doubleJumping) {
             yVel = JUMPVEL + (GRAVITY * framesInAir);
@@ -547,24 +566,26 @@ void updatePlayer() {
         // makes sure gravity never gets too insane
         yVel = fmin(3, yVel);
         // smooths out air frames
-        if (gTimer % 4 == 0) {
+        if (airTimer % 4 == 0) {
             framesInAir++;
         }
         // allows for jumps slightly after leaving ledge
         coyoteTimer++;
-        // this adds in button holding to affect jump height. (&& jumping) is to prevent quick release and press again
+
+        player.worldRow += yVel;
 
     }
 
     // if on the ground, shouldn't have vertical motionn
-    if (grounded) {
-        yVel = 0;
-        framesInAir = 0;
-        jumping = 0;
-    }
+    // if (grounded) {
+    //     yVel = 0;
+    //     // framesInAir = 0;
+    //     jumping = 0;
+    // }
 
         // moves the y vel accordingly
-    player.worldRow += yVel;
+        if (!grounded) {
+        }
 
     // moves camera down if player is moving down
     if (vOff < 254 - SCREENHEIGHT && (player.worldRow - vOff >= SCREENHEIGHT / 2) && (yVel > 0)) {
@@ -746,6 +767,7 @@ void updatePlayer() {
 
     // update the gravity check timer, so gravity is more smooth
     gTimer++;
+    airTimer++;
 
     animatePlayer();
 }
@@ -1302,37 +1324,37 @@ void drawFont() {
     //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + d1), 3);
     //     shadowOAMIndex++;
 
-    // int c3 = player.worldRow / 100;
-    // int c2 = (player.worldRow % 100) / 10;
-    // int c1 = player.worldRow % 10;
-    //     shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-    //     shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (148)) | ATTR1_TINY;
-    //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c3), 3);
-    //     shadowOAMIndex++;
-    //     shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-    //     shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (156)) | ATTR1_TINY;
-    //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c2), 3);
-    //     shadowOAMIndex++;
-    //     shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-    //     shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (164)) | ATTR1_TINY;
-    //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c1), 3);
-    //     shadowOAMIndex++;
+    int c3 = framesInAir / 100;
+    int c2 = (framesInAir % 100) / 10;
+    int c1 = framesInAir % 10;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (148)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c3), 3);
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (156)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c2), 3);
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (164)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + c1), 3);
+        shadowOAMIndex++;
 
-    // int e3 = pMapPos / 100;
-    // int e2 = (pMapPos % 100) / 10;
-    // int e1 = pMapPos % 10;
-    //     shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-    //     shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (82)) | ATTR1_TINY;
-    //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e3), 3);
-    //     shadowOAMIndex++;
-    //     shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-    //     shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (90)) | ATTR1_TINY;
-    //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e2), 3);
-    //     shadowOAMIndex++;
-    //     shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
-    //     shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (98)) | ATTR1_TINY;
-    //     shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e1), 3);
-    //     shadowOAMIndex++;
+    int e3 = player.worldRow / 100;
+    int e2 = (player.worldRow % 100) / 10;
+    int e1 = player.worldRow % 10;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (82)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e3), 3);
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (90)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e2), 3);
+        shadowOAMIndex++;
+        shadowOAM[shadowOAMIndex].attr0 = (ROWMASK & 0) | ATTR0_SQUARE;
+        shadowOAM[shadowOAMIndex].attr1 = (COLMASK & (98)) | ATTR1_TINY;
+        shadowOAM[shadowOAMIndex].attr2 = ATTR2_PALROW(0) | ATTR2_TILEID((15 + e1), 3);
+        shadowOAMIndex++;
 
 }
 
