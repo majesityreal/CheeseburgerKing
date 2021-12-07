@@ -1792,6 +1792,7 @@ void setupTitleScreen() {
     time_s = 0;
     time_m = 0;
     startTime = 0;
+    cheating = 0;
     pauseTimer();
 
     (*(volatile unsigned short *)0x4000000) = 0 | (1 << 10) | (1 << 12);
@@ -2151,7 +2152,7 @@ void goToPause() {
 
 
 void pause() {
-# 562 "main.c"
+# 563 "main.c"
     if ((!(~(oldButtons) & ((1 << 0))) && (~buttons & ((1 << 0)))) | (!(~(oldButtons) & ((1 << 1))) && (~buttons & ((1 << 1)))) | (!(~(oldButtons) & ((1 << 3))) && (~buttons & ((1 << 3)))) | (!(~(oldButtons) & ((1 << 2))) && (~buttons & ((1 << 2))))) {
         pauseVar = 0;
 
@@ -2168,6 +2169,7 @@ void pause() {
 
 void goToWin() {
     hideSprites();
+    waterfallTimer = 0;
         DMANow(3, victoryScreenPal, ((unsigned short *)0x5000000), 512 / 2);
         DMANow(3, victoryScreenTiles, &((charblock *)0x6000000)[0], 32768 / 2);
         DMANow(3, victoryScreenMap, &((screenblock *)0x6000000)[24], 2048 / 2);
@@ -2179,13 +2181,19 @@ void goToWin() {
 
 void win() {
     shadowOAMIndex = 0;
+    waterfallTimer++;
+    drawTimer();
+    DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
+
+    if (waterfallTimer < 120) {
+        return;
+    }
     if ((!(~(oldButtons) & ((1 << 0))) && (~buttons & ((1 << 0)))) | (!(~(oldButtons) & ((1 << 1))) && (~buttons & ((1 << 1)))) | (!(~(oldButtons) & ((1 << 3))) && (~buttons & ((1 << 3)))) | (!(~(oldButtons) & ((1 << 2))) && (~buttons & ((1 << 2))))
      | (!(~(oldButtons) & ((1 << 6))) && (~buttons & ((1 << 6)))) | (!(~(oldButtons) & ((1 << 7))) && (~buttons & ((1 << 7)))) | (!(~(oldButtons) & ((1 << 5))) && (~buttons & ((1 << 5)))) | (!(~(oldButtons) & ((1 << 4))) && (~buttons & ((1 << 4))))
       | (!(~(oldButtons) & ((1 << 8))) && (~buttons & ((1 << 8)))) | (!(~(oldButtons) & ((1 << 9))) && (~buttons & ((1 << 9))))) {
         setupTitleScreen();
     }
-    drawTimer();
-    DMANow(3, shadowOAM, ((OBJ_ATTR *)(0x7000000)), 128 * 4);
+
 }
 
 

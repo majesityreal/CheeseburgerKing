@@ -576,6 +576,7 @@ void pause() {
 // Sets up the win state
 void goToWin() {
     hideSprites();
+    waterfallTimer = 0;
         DMANow(3, victoryScreenPal, PALETTE, victoryScreenPalLen / 2);
         DMANow(3, victoryScreenTiles, &CHARBLOCK[0], victoryScreenTilesLen / 2);
         DMANow(3, victoryScreenMap, &SCREENBLOCK[24], victoryScreenMapLen / 2);
@@ -587,13 +588,19 @@ void goToWin() {
 // Runs every frame of the win state
 void win() {
     shadowOAMIndex = 0;
+    waterfallTimer++;
+    drawTimer();
+    DMANow(3, shadowOAM, OAM, 128 * 4);
+    // ensures that you don't accidentally leave the win screen immediately after beating the boss
+    if (waterfallTimer < 120) {
+        return;
+    }
     if (BUTTON_PRESSED(BUTTON_A) | BUTTON_PRESSED(BUTTON_B) | BUTTON_PRESSED(BUTTON_START) | BUTTON_PRESSED(BUTTON_SELECT)
      | BUTTON_PRESSED(BUTTON_UP) | BUTTON_PRESSED(BUTTON_DOWN) | BUTTON_PRESSED(BUTTON_LEFT) | BUTTON_PRESSED(BUTTON_RIGHT)
       | BUTTON_PRESSED(BUTTON_R) | BUTTON_PRESSED(BUTTON_L)) {
         setupTitleScreen();
     }
-    drawTimer();
-    DMANow(3, shadowOAM, OAM, 128 * 4);
+
 }
 
 // Sets up the lose state

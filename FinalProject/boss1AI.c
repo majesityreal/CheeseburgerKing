@@ -47,7 +47,7 @@ int currentState;
 
 void initBoss1() {
     timer = 0;
-    boss.lives = 2;
+    boss.lives = BOSS_LIVES;
     hoverX = 104;
     hoverY = 45;
     boss.worldRow = hoverY;
@@ -75,7 +75,7 @@ void updateBoss1() {
         return;
     }
 
-    if (collision(boss.worldCol, boss.worldRow, boss.width, boss.height, player.worldCol, player.worldRow, player.width, player.height)) {
+    if (collision(boss.worldCol + 1, boss.worldRow + 3, boss.width - 3, boss.height - 5, player.worldCol, player.worldRow, player.width, player.height)) {
         hurtPlayer();
     }
 

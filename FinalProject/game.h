@@ -17,7 +17,7 @@
 #define ATTACK_DURATION 20
 #define ATTACK_SPEED 10
 
-#define DASH_TIME 15
+#define DASH_TIME 30
 
 #define BUTTON_COUNT 3
 

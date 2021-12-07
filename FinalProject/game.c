@@ -644,7 +644,7 @@ void updatePlayer() {
             player.cdel = 3;
         }
         // has timer on dash
-        if (dashingTimer > DASH_TIME) {
+        if (dashingTimer > DASH_TIME - 15) {
             dashing = 0;
             dashingTimer = 0;
             player.movementCycle = 2;
@@ -997,9 +997,7 @@ void updateBullets() {
         if (collision(bl_bullets[g].worldCol + 3, bl_bullets[g].worldRow + 4, bl_bullets[g].width, bl_bullets[g].height, pMapPos, player.worldRow, player.width, player.height)
          && bl_bullets[g].onScreen) {
             if (!player.damaged) {
-                playSoundB(sfx_player_hurt_data, sfx_player_hurt_length, 0);
-                player.hearts--;
-                player.damaged = 1;
+                hurtPlayer();
                 bl_bullets[g].active = 0;
             }
             // SOUND - maybe play sound here?
@@ -1358,6 +1356,12 @@ int eCheckCollision(int col, int row) {
 
 void hurtPlayer() {
     if (!player.damaged) {
+        if (cheating && dashing) {
+            return;
+        }
+        if (dashing && grounded) {
+            return;
+        }
         playSoundB(sfx_player_hurt_data, sfx_player_hurt_length, 0);
         player.hearts--;
         player.damaged = 1;

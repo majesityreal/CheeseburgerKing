@@ -24,7 +24,7 @@ initBoss1:
 	mov	r2, #0
 	push	{r4, r5, r6, lr}
 	mov	lr, #6
-	mov	r6, #2
+	mov	r6, #24
 	mov	r5, #8
 	mov	r4, #1
 	mov	ip, #45
@@ -546,17 +546,23 @@ updateBoss1:
 	str	r3, [r6]
 	sub	sp, sp, #16
 	ble	.L103
-	ldr	r3, .L112+12
-	add	r2, r3, #8
-	ldr	r0, [r3, #28]
-	ldr	r1, [r3, #24]
-	ldm	r2, {r2, r3}
+	ldr	r2, .L112+12
+	add	r0, r2, #24
+	ldm	r0, {r0, r1}
+	ldr	lr, [r2, #8]
+	ldr	ip, [r2, #12]
+	ldr	r3, [r4, #16]
+	ldr	r2, [r4, #12]
+	str	r1, [sp, #12]
+	str	r0, [sp, #8]
+	ldr	r1, [r4, #8]
+	ldr	r0, [r4, #4]
+	stm	sp, {ip, lr}
 	ldr	r7, .L112+16
-	str	r0, [sp, #12]
-	str	r1, [sp, #8]
-	str	r2, [sp, #4]
-	str	r3, [sp]
-	ldmib	r4, {r0, r1, r2, r3}
+	sub	r3, r3, #5
+	sub	r2, r2, #3
+	add	r1, r1, #3
+	add	r0, r0, #1
 	mov	lr, pc
 	bx	r7
 	cmp	r0, #0

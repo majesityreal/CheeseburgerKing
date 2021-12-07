@@ -1530,6 +1530,7 @@ extern BL_BULLET bl_bullets[6];
 extern int pauseVar;
 extern int winning;
 extern int level;
+extern int cheating;
 
 
 extern int dead;
