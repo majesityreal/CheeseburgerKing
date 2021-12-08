@@ -1444,14 +1444,14 @@ typedef struct {
     void animateEnemies();
     void updateEnemies();
 # 5 "game.h" 2
-# 24 "game.h"
+# 26 "game.h"
 typedef struct {
     int currFrame;
     int totalFrames;
     int xLocation;
     int yLocation;
 } SELECTOR;
-# 38 "game.h"
+# 40 "game.h"
 typedef struct {
     int index;
     unsigned char* map;

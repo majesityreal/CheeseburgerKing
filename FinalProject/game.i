@@ -1654,14 +1654,14 @@ typedef struct {
     void animateEnemies();
     void updateEnemies();
 # 5 "game.h" 2
-# 24 "game.h"
+# 26 "game.h"
 typedef struct {
     int currFrame;
     int totalFrames;
     int xLocation;
     int yLocation;
 } SELECTOR;
-# 38 "game.h"
+# 40 "game.h"
 typedef struct {
     int index;
     unsigned char* map;
@@ -1803,6 +1803,24 @@ extern const unsigned short map1CollisionBitmap[262144];
 extern const unsigned short map1CollisionPal[256];
 # 7 "game.c" 2
 
+# 1 "map2.h" 1
+# 22 "map2.h"
+extern const unsigned short map2Tiles[976];
+
+
+extern const unsigned short map2Map[8192];
+
+
+extern const unsigned short map2Pal[256];
+# 9 "game.c" 2
+# 1 "map2Collision.h" 1
+# 21 "map2Collision.h"
+extern const unsigned short map2CollisionBitmap[262144];
+
+
+extern const unsigned short map2CollisionPal[256];
+# 10 "game.c" 2
+
 # 1 "boss1.h" 1
 # 22 "boss1.h"
 extern const unsigned short boss1Tiles[400];
@@ -1812,14 +1830,14 @@ extern const unsigned short boss1Map[8192];
 
 
 extern const unsigned short boss1Pal[256];
-# 9 "game.c" 2
+# 12 "game.c" 2
 # 1 "boss1Collision.h" 1
 # 21 "boss1Collision.h"
 extern const unsigned short boss1CollisionBitmap[262144];
 
 
 extern const unsigned short boss1CollisionPal[256];
-# 10 "game.c" 2
+# 13 "game.c" 2
 # 1 "boss1AI.h" 1
 
 
@@ -1854,7 +1872,7 @@ void drawHealthBar();
 
 void spawnLettuce();
 void spawnBigLettuce();
-# 11 "game.c" 2
+# 14 "game.c" 2
 
 # 1 "boss2.h" 1
 # 22 "boss2.h"
@@ -1865,15 +1883,17 @@ extern const unsigned short boss2Map[8192];
 
 
 extern const unsigned short boss2Pal[256];
-# 13 "game.c" 2
+# 16 "game.c" 2
 # 1 "boss2Collision.h" 1
 # 21 "boss2Collision.h"
 extern const unsigned short boss2CollisionBitmap[262144];
 
 
 extern const unsigned short boss2CollisionPal[256];
-# 14 "game.c" 2
+# 17 "game.c" 2
 # 1 "boss2AI.h" 1
+
+
 
 
 typedef struct {
@@ -1915,6 +1935,8 @@ typedef struct {
 
 extern BOSS2 boss2;
 
+extern KNIFE knives[5];
+
 void initBoss2();
 void updateBoss2();
 void drawBoss2();
@@ -1927,7 +1949,9 @@ void drawHealthBar2();
 
 void spawnLettuce2();
 void spawnBigLettuce2();
-# 15 "game.c" 2
+
+void drawKnives();
+# 18 "game.c" 2
 
 # 1 "interrupts.h" 1
 void setupSounds();
@@ -1960,56 +1984,56 @@ typedef struct{
 
 SOUND soundA;
 SOUND soundB;
-# 17 "game.c" 2
+# 20 "game.c" 2
 # 1 "map1Song.h" 1
 
 
 extern const unsigned int map1Song_sampleRate;
 extern const unsigned int map1Song_length;
 extern const signed char map1Song_data[];
-# 18 "game.c" 2
+# 21 "game.c" 2
 # 1 "bossSong.h" 1
 
 
 extern const unsigned int bossSong_sampleRate;
 extern const unsigned int bossSong_length;
 extern const signed char bossSong_data[];
-# 19 "game.c" 2
+# 22 "game.c" 2
 # 1 "sfx_attack.h" 1
 
 
 extern const unsigned int sfx_attack_sampleRate;
 extern const unsigned int sfx_attack_length;
 extern const signed char sfx_attack_data[];
-# 20 "game.c" 2
+# 23 "game.c" 2
 # 1 "sfx_player_hurt.h" 1
 
 
 extern const unsigned int sfx_player_hurt_sampleRate;
 extern const unsigned int sfx_player_hurt_length;
 extern const signed char sfx_player_hurt_data[];
-# 21 "game.c" 2
+# 24 "game.c" 2
 # 1 "sfx_jump1.h" 1
 
 
 extern const unsigned int sfx_jump1_sampleRate;
 extern const unsigned int sfx_jump1_length;
 extern const signed char sfx_jump1_data[];
-# 22 "game.c" 2
+# 25 "game.c" 2
 # 1 "sfx_jump2.h" 1
 
 
 extern const unsigned int sfx_jump2_sampleRate;
 extern const unsigned int sfx_jump2_length;
 extern const signed char sfx_jump2_data[];
-# 23 "game.c" 2
+# 26 "game.c" 2
 # 1 "sfx_lettuce_projectile.h" 1
 
 
 extern const unsigned int sfx_lettuce_projectile_sampleRate;
 extern const unsigned int sfx_lettuce_projectile_length;
 extern const signed char sfx_lettuce_projectile_data[];
-# 24 "game.c" 2
+# 27 "game.c" 2
 
 
 int winning = 0;
@@ -2096,7 +2120,7 @@ enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP, DYING };
 
 void initGame() {
 
-    if (currMap == 2) {
+    if (currMap == 4) {
         winning = 1;
         pauseTimer();
     }
@@ -2153,8 +2177,8 @@ void initPlayer() {
         player.worldCol = 120;
         break;
     case 2:
-        player.worldRow = 80;
-        player.worldCol = 120;
+        player.worldRow = 140;
+        player.worldCol = 20;
         break;
     default:
         player.worldRow = 80;
@@ -2359,6 +2383,24 @@ void initMaps() {
         (*(volatile unsigned short *)0x0400001A) = 0;
         break;
     case 2:
+        playSoundA(map1Song_data, map1Song_length, 1);
+
+        cameraLock = 0;
+        maps[currMap].startingHOff = 0;
+        maps[currMap].startingVOff = 60;
+
+        collisionMap = map2CollisionBitmap;
+        maps[currMap].map = map2Map;
+        maps[currMap].palette = map2Pal;
+        maps[currMap].tiles = map2Tiles;
+
+        maps[currMap].doorX = 1978;
+        maps[currMap].doorY = 66;
+        maps[currMap].doorWidth = 28;
+        maps[currMap].doorHeight = 28;
+        break;
+        break;
+    case 4:
         winning = 1;
     break;
     case 3:
@@ -2551,9 +2593,9 @@ void updatePlayer() {
             || pCheckCollision(player.worldCol + player.width, player.worldRow + i)) {
 
                 player.worldRow += (i + 1);
-                if (!cameraLock) {
-                    vOff += (i + 1);
-                }
+
+
+
 
                 yVel = 0;
                 jumping = 0;
@@ -2563,15 +2605,15 @@ void updatePlayer() {
                 break;
             }
         }
-# 595 "game.c"
+# 616 "game.c"
     for (int i = 1; i <= yVel; i++) {
         if (pCheckCollision(player.worldCol, player.worldRow + player.height + i)
         || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
 
             player.worldRow += (i);
-            if (!cameraLock) {
-                vOff += (i);
-            }
+
+
+
             yVel = 0;
             grounded = 1;
             break;
@@ -2614,7 +2656,7 @@ void updatePlayer() {
         player.worldRow += yVel;
 
     }
-# 654 "game.c"
+# 675 "game.c"
         if (!grounded) {
         }
 
@@ -3386,7 +3428,7 @@ void hurtPlayer() {
 
 
 void drawFont() {
-# 1480 "game.c"
+# 1501 "game.c"
 }
 
 void drawTimer() {

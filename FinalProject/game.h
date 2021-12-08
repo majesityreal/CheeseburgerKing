@@ -11,6 +11,8 @@
 #define JUMPVEL -5
 #define PARALLAXFACTOR 3
 
+#define WINNING_MAP 4
+
 #define COYOTE_TIME 8
 
 // number of frames the attack is

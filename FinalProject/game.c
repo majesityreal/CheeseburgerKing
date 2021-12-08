@@ -5,6 +5,9 @@
 #include "map1.h"
 #include "map1Collision.h"
 
+#include "map2.h"
+#include "map2Collision.h"
+
 #include "boss1.h"
 #include "boss1Collision.h"
 #include "boss1AI.h"
@@ -107,7 +110,7 @@ enum {IDLE, RUNNING, JUMPUP, JUMPDOWN, ATTACK, DAMAGED, DOUBLEJUMP, DYING };
 // #region init
 void initGame() {
 
-    if (currMap == 2) {
+    if (currMap == WINNING_MAP) {
         winning = 1;
         pauseTimer();
     }
@@ -164,8 +167,8 @@ void initPlayer() {
         player.worldCol = 120;    
         break;
     case 2:
-        player.worldRow = 80;
-        player.worldCol = 120;
+        player.worldRow = 140;
+        player.worldCol = 20;
         break;
     default:
         player.worldRow = 80;
@@ -370,6 +373,24 @@ void initMaps() {
         REG_BG2VOFF = 0;
         break;
     case 2:
+        playSoundA(map1Song_data, map1Song_length, 1);
+
+        cameraLock = 0;
+        maps[currMap].startingHOff = 0;
+        maps[currMap].startingVOff = 60;
+
+        collisionMap = map2CollisionBitmap;
+        maps[currMap].map = map2Map;
+        maps[currMap].palette = map2Pal;
+        maps[currMap].tiles = map2Tiles;
+
+        maps[currMap].doorX = 1978;
+        maps[currMap].doorY = 66;
+        maps[currMap].doorWidth = 28;
+        maps[currMap].doorHeight = 28;
+        break;
+        break;
+    case WINNING_MAP:
         winning = 1;
     break;
     case 3:
@@ -562,10 +583,6 @@ void updatePlayer() {
             || pCheckCollision(player.worldCol + player.width, player.worldRow + i)) {
                 // this makes it so it appears the player head goes up till the collision
                 player.worldRow += (i + 1);
-                if (!cameraLock) {
-                    vOff += (i + 1);
-                }
-
                 yVel = 0;
                 jumping = 0;
                 jumpThud = 1;
@@ -575,21 +592,6 @@ void updatePlayer() {
             }
         }
 
-        // TODO - UNINTENTIONAL ZIPLINE
-        // hardcoded upright check
-        // if (BUTTON_HELD(BUTTON_UP) && BUTTON_HELD(BUTTON_RIGHT) && yVel > 0) {
-        //     for (int i = 0; i > -2; i--) {
-        //         if (pCheckCollision(player.worldCol - i, player.worldRow + i)
-        //         || pCheckCollision(player.worldCol + player.width - i, player.worldRow + i)) {
-        //             // snaps player to ground and resets yVel
-        //             yVel = 0;
-        //             jumping = 0;
-        //             jumpThud = 1;
-        //             break;
-        //         }
-        //     }   
-        // }
-
     // loops through pixels below player to check ground, if they are falling (yVel > 0)
     // IMPORTANT - that this is called BEFORE the air calculations, as the snapping will changeeverything
     for (int i = 1; i <= yVel; i++) {
@@ -597,9 +599,6 @@ void updatePlayer() {
         || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
             // snaps player to ground and resets yVel
             player.worldRow += (i);
-            if (!cameraLock) {
-                vOff += (i);
-            }
             yVel = 0;
             grounded = 1;
             break;
