@@ -1,12 +1,14 @@
 {
     "C_Cpp.errorSquiggles": "Enabled",
     "files.associations": {
+        "*.py": "python",
         "pacmanspritesheet.h": "c",
         "collisionimage.h": "c",
         "map1collision.h": "c",
         "spritesheet.h": "c",
         "hugemap.h": "c",
         "interrupts.h": "c",
-        "boss1collision.h": "c"
+        "boss1collision.h": "c",
+        "*.notquitec": "c"
     }
 }

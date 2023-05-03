@@ -2593,10 +2593,6 @@ void updatePlayer() {
             || pCheckCollision(player.worldCol + player.width, player.worldRow + i)) {
 
                 player.worldRow += (i + 1);
-
-
-
-
                 yVel = 0;
                 jumping = 0;
                 jumpThud = 1;
@@ -2605,15 +2601,14 @@ void updatePlayer() {
                 break;
             }
         }
-# 616 "game.c"
+
+
+
     for (int i = 1; i <= yVel; i++) {
         if (pCheckCollision(player.worldCol, player.worldRow + player.height + i)
         || pCheckCollision(player.worldCol + player.width, player.worldRow + player.height + i)) {
 
             player.worldRow += (i);
-
-
-
             yVel = 0;
             grounded = 1;
             break;
@@ -2656,7 +2651,7 @@ void updatePlayer() {
         player.worldRow += yVel;
 
     }
-# 675 "game.c"
+# 653 "game.c"
         if (!grounded) {
         }
 
@@ -3428,7 +3423,7 @@ void hurtPlayer() {
 
 
 void drawFont() {
-# 1501 "game.c"
+# 1479 "game.c"
 }
 
 void drawTimer() {
